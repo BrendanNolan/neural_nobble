@@ -6,9 +6,11 @@ use ndarray_rand::{
     RandomExt,
 };
 
+#[derive(Debug, Clone)]
 pub struct NeuralNetwork {
     weight_matrices: Vec<Array2<f64>>,
     bias_vectors: Vec<Array1<f64>>,
+    activation_function: fn(F1) -> F1,
 }
 
 impl NeuralNetwork {
@@ -23,14 +25,16 @@ impl NeuralNetwork {
 
 pub struct NeuralNetworkBuilder {
     input_size: usize,
+    activation_function: fn(F1) -> F1,
     weight_matrices: Vec<Array2<f64>>,
     bias_vectors: Vec<Array1<f64>>,
 }
 
 impl NeuralNetworkBuilder {
-    pub fn new(input_size: usize) -> Self {
+    pub fn new(input_size: usize, activation_function: fn(F1) -> F1) -> Self {
         NeuralNetworkBuilder {
             input_size,
+            activation_function,
             weight_matrices: Vec::new(),
             bias_vectors: Vec::new(),
         }
@@ -89,6 +93,7 @@ impl NeuralNetworkBuilder {
         NeuralNetwork {
             weight_matrices: self.weight_matrices,
             bias_vectors: self.bias_vectors,
+            activation_function: self.activation_function,
         }
     }
 }
