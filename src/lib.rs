@@ -2,8 +2,4 @@
 #![allow(dead_code)] // TODO: Remove this
 
 mod array_utils;
-mod neural_network;
-
-fn main() {
-    println!("Hello, world!");
-}
+pub mod neural_network;

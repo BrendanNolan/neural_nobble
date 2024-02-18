@@ -89,7 +89,7 @@ impl NeuralNetworkBuilder {
         column_count(weight_matrix) == self.previous_layer_neuron_count()
     }
 
-    fn build(self) -> NeuralNetwork {
+    pub fn build(self) -> NeuralNetwork {
         NeuralNetwork {
             weight_matrices: self.weight_matrices,
             bias_vectors: self.bias_vectors,
