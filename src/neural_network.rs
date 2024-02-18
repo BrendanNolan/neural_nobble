@@ -1,4 +1,4 @@
-use self::array_utils::*;
+use self::{array_utils::*, network_feed_forward::*};
 use autodiff::*;
 use ndarray::{array, Array1, Array2};
 use ndarray_rand::{
@@ -8,6 +8,7 @@ use ndarray_rand::{
 
 mod array_utils;
 pub mod builder;
+mod network_feed_forward;
 
 #[derive(Debug, Clone)]
 pub struct NeuralNetwork {
