@@ -1,4 +1,5 @@
-use self::{array_utils::*, network_feed_forward::*};
+use self::network_feed_forward::*;
+use crate::array_utils::*;
 use autodiff::*;
 use ndarray::{array, Array1, Array2};
 use ndarray_rand::{
@@ -6,7 +7,6 @@ use ndarray_rand::{
     RandomExt,
 };
 
-mod array_utils;
 pub mod builder;
 mod network_feed_forward;
 

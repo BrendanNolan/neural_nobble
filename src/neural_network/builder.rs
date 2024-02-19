@@ -1,4 +1,5 @@
-use super::{array_utils::*, NeuralNetwork};
+use super::NeuralNetwork;
+use crate::array_utils::*;
 use autodiff::*;
 use ndarray::{array, Array1, Array2};
 use ndarray_rand::{
