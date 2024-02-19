@@ -1,14 +1,9 @@
-use self::network_feed_forward::*;
-use crate::array_utils::*;
-use autodiff::*;
-use ndarray::{array, Array1, Array2};
-use ndarray_rand::{
-    rand_distr::{Distribution, Normal},
-    RandomExt,
-};
+use self::feed_forward::*;
+use crate::common::*;
 
 pub mod builder;
-mod network_feed_forward;
+mod feed_forward;
+mod mini_batch;
 
 #[derive(Debug, Clone)]
 pub struct NeuralNetwork {

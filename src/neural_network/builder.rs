@@ -1,11 +1,5 @@
 use super::NeuralNetwork;
-use crate::array_utils::*;
-use autodiff::*;
-use ndarray::{array, Array1, Array2};
-use ndarray_rand::{
-    rand_distr::{Distribution, Normal},
-    RandomExt,
-};
+use crate::common::*;
 
 pub struct NeuralNetworkBuilder {
     input_size: usize,
