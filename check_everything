@@ -1,0 +1,5 @@
+#!/usr/bin/env fish
+
+cargo fmt
+cargo fmt --check
+cargo run --example neural_network
