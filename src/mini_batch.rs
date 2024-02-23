@@ -1,5 +1,4 @@
-use super::NeuralNetwork;
-use crate::common::*;
+use crate::{common::*, neural_network::NeuralNetwork};
 
 #[derive(Debug)]
 pub struct MiniBatch {

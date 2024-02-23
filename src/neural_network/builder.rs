@@ -1,5 +1,5 @@
-use super::NeuralNetwork;
 use crate::common::*;
+use crate::neural_network::NeuralNetwork;
 
 pub struct NeuralNetworkBuilder {
     input_size: usize,
