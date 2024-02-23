@@ -17,7 +17,6 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
     let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
     let mut weighted_inputs: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
     weighted_inputs.push(Array2::zeros((0, 0))); // Sacrificial empty matrix to make indexing easier
-    activations.push(mini_batch.inputs.clone());
     for layer in 1..network.layer_count() {
         let prev_activations = &activations[layer - 1];
         let mut weighted_input = network.weights()[layer].dot(prev_activations);
@@ -31,6 +30,7 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
         for value in activations.iter_mut().flat_map(|matrix| matrix.iter_mut()) {
             *value = (network.activation_function)((*value).into()).into();
         }
+        *activations.first_mut().unwrap() = mini_batch.inputs.clone();
     }
     FeedForwardResult {
         activations,
