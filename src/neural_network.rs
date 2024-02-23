@@ -7,9 +7,9 @@ mod mini_batch;
 
 #[derive(Debug, Clone)]
 pub struct NeuralNetwork {
-    weight_matrices: Vec<Array2<f64>>,
-    bias_vectors: Vec<Array1<f64>>,
-    activation_function: fn(F1) -> F1,
+    pub weight_matrices: Vec<Array2<f64>>,
+    pub bias_vectors: Vec<Array1<f64>>,
+    pub activation_function: fn(F1) -> F1,
 }
 
 impl NeuralNetwork {

@@ -2,12 +2,12 @@ use super::NeuralNetwork;
 use crate::common::*;
 
 #[derive(Debug)]
-struct MiniBatch {
+pub struct MiniBatch {
     pub inputs: Array2<f64>,
     pub targets: Array2<f64>,
 }
 
-enum MiniBatchSizeError {
+pub enum MiniBatchSizeError {
     InputTargetCountMismatch,
     InputsOfDifferingSizes,
     TargetsOfDifferingSizes,
@@ -22,6 +22,14 @@ impl MiniBatch {
         let mut mini_batch = MiniBatch::new_zeroed(inputs[0].len(), targets[0].len(), batch_size);
         mini_batch.populate(inputs, targets)?;
         Ok(mini_batch)
+    }
+
+    pub fn input_size(&self) -> usize {
+        row_count(&self.inputs)
+    }
+
+    pub fn target_size(&self) -> usize {
+        row_count(&self.targets)
     }
 
     fn new_zeroed(input_size: usize, target_size: usize, batch_size: usize) -> Self {
