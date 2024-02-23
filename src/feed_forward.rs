@@ -51,39 +51,33 @@ mod tests {
         let network = neural_network::builder::NeuralNetworkBuilder::new(2, identity)
             .add_layer(
                 arr2(&[[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]),
-                arr1(&[0.0, 0.0, 0.0]),
+                arr1(&[1.0, 2.0, 3.0]),
+            )
+            .unwrap()
+            .add_layer(
+                arr2(&[[6.0, 4.0, 2.0], [5.0, 3.0, 1.0]]),
+                arr1(&[10.0, 20.0]),
             )
             .unwrap()
             .build();
         let mini_batch = MiniBatch {
-            inputs: arr2(&[[1.0, 2.0], [3.0, 4.0]]),
-            targets: arr2(&[[5.0], [6.0]]),
+            inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
+            targets: arr2(&[[1.0], [0.0]]),
         };
         let result = feed_forward(&network, &mini_batch);
-        assert_eq!(result.activations.len(), 3);
         assert_eq!(result.weighted_inputs.len(), 3);
+        assert_eq!(result.activations.len(), 3);
+        assert_eq!(result.weighted_inputs[0], arr2(&[[0.0, 0.0], [0.0, 0.0]]));
         assert_eq!(result.activations[0], mini_batch.inputs);
         assert_eq!(
             result.weighted_inputs[1],
-            arr2(&[
-                [0.9998766054240137, 0.9999938558253978],
-                [0.9999938558253978, 0.999999694097773]
-            ])
+            arr2(&[[15.0, 15.0], [21.0, 21.0], [27.0, 27.0],])
         );
-        assert_eq!(
-            result.activations[1],
-            arr2(&[
-                [0.7310585786300049, 0.7310585786300049],
-                [0.7310585786300049, 0.7310585786300049]
-            ])
-        );
+        assert_eq!(result.activations[1], result.weighted_inputs[1],);
         assert_eq!(
             result.weighted_inputs[2],
-            arr2(&[[0.9998766054240137], [0.9999938558253978]])
+            arr2(&[[238.0, 238.0], [185.0, 185.0]])
         );
-        assert_eq!(
-            result.activations[2],
-            arr2(&[[0.7310585786300049], [0.7310585786300049]])
-        );
+        assert_eq!(result.activations[2], result.weighted_inputs[2],);
     }
 }
