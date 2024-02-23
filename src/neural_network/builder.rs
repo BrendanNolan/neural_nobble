@@ -13,8 +13,10 @@ impl NeuralNetworkBuilder {
         NeuralNetworkBuilder {
             input_size,
             activation_function,
-            weight_matrices: Vec::new(),
-            bias_vectors: Vec::new(),
+            // Sacrificial zeroth layer to make indexing easier
+            weight_matrices: vec![Array2::zeros((0, 0))],
+            // Sacrificial zeroth layer to make indexing easier
+            bias_vectors: vec![Array1::zeros(0)],
         }
     }
 
