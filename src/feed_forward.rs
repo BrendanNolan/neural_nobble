@@ -37,3 +37,53 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
         weighted_inputs,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::activation_functions::*;
+    use crate::feed_forward::*;
+    use crate::neural_network;
+    use crate::neural_network::*;
+    use ndarray::{arr1, arr2, Array1};
+
+    #[test]
+    fn test_feed_forward() {
+        let network = neural_network::builder::NeuralNetworkBuilder::new(2, identity)
+            .add_layer(
+                arr2(&[[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]),
+                arr1(&[0.0, 0.0, 0.0]),
+            )
+            .unwrap()
+            .build();
+        let mini_batch = MiniBatch {
+            inputs: arr2(&[[1.0, 2.0], [3.0, 4.0]]),
+            targets: arr2(&[[5.0], [6.0]]),
+        };
+        let result = feed_forward(&network, &mini_batch);
+        assert_eq!(result.activations.len(), 3);
+        assert_eq!(result.weighted_inputs.len(), 3);
+        assert_eq!(result.activations[0], mini_batch.inputs);
+        assert_eq!(
+            result.weighted_inputs[1],
+            arr2(&[
+                [0.9998766054240137, 0.9999938558253978],
+                [0.9999938558253978, 0.999999694097773]
+            ])
+        );
+        assert_eq!(
+            result.activations[1],
+            arr2(&[
+                [0.7310585786300049, 0.7310585786300049],
+                [0.7310585786300049, 0.7310585786300049]
+            ])
+        );
+        assert_eq!(
+            result.weighted_inputs[2],
+            arr2(&[[0.9998766054240137], [0.9999938558253978]])
+        );
+        assert_eq!(
+            result.activations[2],
+            arr2(&[[0.7310585786300049], [0.7310585786300049]])
+        );
+    }
+}
