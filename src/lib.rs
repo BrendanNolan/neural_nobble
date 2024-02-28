@@ -4,6 +4,7 @@
 
 pub mod activation_functions;
 mod array_utils;
+mod back_propagation;
 mod common;
 pub mod cost_functions;
 mod feed_forward;
