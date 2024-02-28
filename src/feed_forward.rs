@@ -44,6 +44,7 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
 #[cfg(test)]
 mod tests {
     use crate::activation_functions::*;
+    use crate::cost_functions::quadratic;
     use crate::feed_forward::*;
     use crate::neural_network;
     use crate::neural_network::*;
@@ -51,7 +52,7 @@ mod tests {
 
     #[test]
     fn test_feed_forward() {
-        let network = neural_network::builder::NeuralNetworkBuilder::new(2, identity)
+        let network = neural_network::builder::NeuralNetworkBuilder::new(2, identity, quadratic)
             .add_layer(
                 arr2(&[[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]),
                 arr1(&[1.0, 2.0, 3.0]),
