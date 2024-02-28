@@ -1,4 +1,5 @@
 use crate::{common::*, feed_forward::*};
+use std::num::NonZeroUsize;
 
 pub mod builder;
 
@@ -10,23 +11,23 @@ pub struct NeuralNetwork {
 }
 
 impl NeuralNetwork {
-    pub fn weights(&self) -> &[Array2<f64>] {
-        &self.weight_matrices
+    pub fn weights(&self, layer: NonZeroUsize) -> &Array2<f64> {
+        &self.weight_matrices[layer.get()]
     }
 
-    pub fn biases(&self) -> &[Array1<f64>] {
-        &self.bias_vectors
+    pub fn biases(&self, layer: NonZeroUsize) -> &Array1<f64> {
+        &self.bias_vectors[layer.get()]
     }
 
     pub fn layer_count(&self) -> usize {
         self.weight_matrices.len()
     }
 
-    pub fn neuron_count(&self, layer: usize) -> Option<usize> {
-        if layer < self.weight_matrices.len() {
-            Some(row_count(&self.weight_matrices[layer]))
+    pub fn neuron_count(&self, layer: usize) -> usize {
+        if layer == 0 {
+            column_count(&self.weight_matrices[1])
         } else {
-            None
+            row_count(&self.weight_matrices[layer])
         }
     }
 }

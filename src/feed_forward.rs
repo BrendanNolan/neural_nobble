@@ -1,4 +1,4 @@
-use std::ops::AddAssign;
+use std::{num::NonZeroUsize, ops::AddAssign};
 
 use crate::{common::*, mini_batch::MiniBatch, neural_network::NeuralNetwork};
 
@@ -15,15 +15,18 @@ pub enum FeedForwardError {
 
 pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForwardResult {
     let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
+    activations.push(mini_batch.inputs.clone());
     let mut weighted_inputs: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
     weighted_inputs.push(Array2::zeros((0, 0))); // Sacrificial empty matrix to make indexing easier
     for layer in 1..network.layer_count() {
         let prev_activations = &activations[layer - 1];
-        let mut weighted_input = network.weights()[layer].dot(prev_activations);
+        let mut weighted_input = network
+            .weights(NonZeroUsize::new(layer).unwrap())
+            .dot(prev_activations);
         for column in 0..weighted_input.ncols() {
             weighted_input
                 .column_mut(column)
-                .add_assign(&network.biases()[layer]);
+                .add_assign(network.biases(NonZeroUsize::new(layer).unwrap()));
         }
         weighted_inputs.push(weighted_input.clone());
         activations = weighted_inputs.clone();
@@ -67,7 +70,7 @@ mod tests {
         let result = feed_forward(&network, &mini_batch);
         assert_eq!(result.weighted_inputs.len(), 3);
         assert_eq!(result.activations.len(), 3);
-        assert_eq!(result.weighted_inputs[0], arr2(&[[0.0, 0.0], [0.0, 0.0]]));
+        assert_eq!(result.weighted_inputs[0], Array2::zeros((0, 0)));
         assert_eq!(result.activations[0], mini_batch.inputs);
         assert_eq!(
             result.weighted_inputs[1],
