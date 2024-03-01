@@ -31,7 +31,7 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
         weighted_inputs.push(weighted_input.clone());
         activations = weighted_inputs.clone();
         for value in activations.iter_mut().flat_map(|matrix| matrix.iter_mut()) {
-            *value = (network.activation_function)((*value).into()).into();
+            *value = (network.activation_function)(*value);
         }
         *activations.first_mut().unwrap() = mini_batch.inputs.clone();
     }
