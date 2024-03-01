@@ -1,5 +1,6 @@
 #!/usr/bin/env fish
 
-cargo check
-cargo fmt --check
+cgca
 cargo run --example neural_network
+cargo run --example ndarray
+cargo test
