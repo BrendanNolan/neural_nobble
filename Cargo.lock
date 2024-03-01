@@ -72,7 +72,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "neural_nolan"
+name = "neural_nobble"
 version = "0.1.0"
 dependencies = [
  "ndarray",

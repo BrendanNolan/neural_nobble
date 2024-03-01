@@ -1,5 +1,5 @@
 use ndarray::*;
-use neural_nolan::{
+use neural_nobble::{
     activation_functions::sigmoid, cost_functions::quadratic,
     neural_network::builder::NeuralNetworkBuilder,
 };
