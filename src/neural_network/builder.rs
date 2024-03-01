@@ -7,11 +7,7 @@ pub struct NeuralNetworkBuilder {
 }
 
 impl NeuralNetworkBuilder {
-    pub fn new(
-        input_size: usize,
-        activation_function: fn(f64) -> f64,
-        cost_function: fn(&Array1<f64>, &Array1<f64>) -> f64,
-    ) -> Self {
+    pub fn new(input_size: usize) -> Self {
         NeuralNetworkBuilder {
             input_size,
             network: NeuralNetwork {
@@ -19,8 +15,6 @@ impl NeuralNetworkBuilder {
                 weight_matrices: vec![Array2::zeros((0, 0))],
                 // Sacrificial zeroth layer to make indexing easier
                 bias_vectors: vec![Array1::zeros(0)],
-                activation_function,
-                cost_function,
             },
         }
     }

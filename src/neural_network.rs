@@ -7,8 +7,6 @@ pub mod builder;
 pub struct NeuralNetwork {
     weight_matrices: Vec<Array2<f64>>,
     bias_vectors: Vec<Array1<f64>>,
-    pub activation_function: fn(f64) -> f64,
-    pub cost_function: fn(&Array1<f64>, &Array1<f64>) -> f64,
 }
 
 impl NeuralNetwork {

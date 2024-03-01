@@ -13,7 +13,11 @@ pub enum FeedForwardError {
     InappropriateMiniBatchTargetSize,
 }
 
-pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForwardResult {
+pub fn feed_forward(
+    network: &NeuralNetwork,
+    activation_function: fn(f64) -> f64,
+    mini_batch: &MiniBatch,
+) -> FeedForwardResult {
     let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
     activations.push(mini_batch.inputs.clone());
     let mut weighted_inputs: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
@@ -31,7 +35,7 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
         weighted_inputs.push(weighted_input.clone());
         activations = weighted_inputs.clone();
         for value in activations.iter_mut().flat_map(|matrix| matrix.iter_mut()) {
-            *value = (network.activation_function)(*value);
+            *value = activation_function(*value);
         }
         *activations.first_mut().unwrap() = mini_batch.inputs.clone();
     }
@@ -44,7 +48,6 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
 #[cfg(test)]
 mod tests {
     use crate::activation_functions::*;
-    use crate::cost_functions::quadratic;
     use crate::feed_forward::*;
     use crate::neural_network;
     use crate::neural_network::*;
@@ -52,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_feed_forward() {
-        let network = neural_network::builder::NeuralNetworkBuilder::new(2, identity, quadratic)
+        let network = neural_network::builder::NeuralNetworkBuilder::new(2)
             .add_layer(
                 arr2(&[[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]),
                 arr1(&[1.0, 2.0, 3.0]),
@@ -68,7 +71,7 @@ mod tests {
             inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
             targets: arr2(&[[1.0], [0.0]]),
         };
-        let result = feed_forward(&network, &mini_batch);
+        let result = feed_forward(&network, identity, &mini_batch);
         assert_eq!(result.weighted_inputs.len(), 3);
         assert_eq!(result.activations.len(), 3);
         assert_eq!(result.weighted_inputs[0], Array2::zeros((0, 0)));
