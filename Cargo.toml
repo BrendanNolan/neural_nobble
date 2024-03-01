@@ -8,6 +8,5 @@ name = "neural_nolan"
 path = "src/lib.rs"
 
 [dependencies]
-autodiff = "0.7.0"
 ndarray = "0.15.6"
 ndarray-rand = "0.14.0"
