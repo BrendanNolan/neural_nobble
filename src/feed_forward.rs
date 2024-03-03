@@ -1,4 +1,4 @@
-use std::{num::NonZeroUsize, ops::AddAssign};
+use std::ops::AddAssign;
 
 use crate::{common::*, mini_batch::MiniBatch, neural_network::NeuralNetwork};
 

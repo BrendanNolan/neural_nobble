@@ -1,5 +1,4 @@
 use crate::{common::*, feed_forward::*};
-use std::num::NonZeroUsize;
 
 pub mod builder;
 
