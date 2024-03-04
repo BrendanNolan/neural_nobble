@@ -3,23 +3,51 @@ use crate::{
     feed_forward::FeedForwardResult, mini_batch::MiniBatch, neural_network::NeuralNetwork,
 };
 
+pub fn compute_gradient_of_cost_wrt_weights(
+    network: &NeuralNetwork,
+    mini_batch: &MiniBatch,
+    feedforward_result: &FeedForwardResult,
+    layer: NonZeroUsize,
+    errors_by_layer: &[Array2<f64>],
+) -> Array2<f64> {
+    todo!(); //let mut gradient = Array2::zeros(network.weights(layer).dim());
+}
+
+fn compute_errors_by_layer(
+    network: &NeuralNetwork,
+    mini_batch: &MiniBatch,
+    feedforward_result: &FeedForwardResult,
+    activation_function: fn(f64) -> f64,
+    cost_function: &impl CostFunction,
+) -> Vec<Array2<f64>> {
+    let mut errors = vec![];
+    for layer in (1..=network.final_layer().get()).rev() {
+        if layer == network.final_layer().get() {
+            errors.push(compute_error_at_last_layer(
+                feedforward_result,
+                activation_function,
+                cost_function,
+                mini_batch,
+            ));
+            continue;
+        }
+    }
+    todo!("Finish");
+}
+
 fn propagate_error_back(
     network: &NeuralNetwork,
     feedforward_result: &FeedForwardResult,
     activation_function: fn(f64) -> f64,
-    known_layer: usize,
+    known_layer: NonZeroUsize,
     known_error: &Array2<f64>,
 ) -> Array2<f64> {
     let activation_derivatives_at_weighted_inputs =
         compute_activation_derivatives_at_weighted_inputs(
-            &feedforward_result.activations[known_layer - 1],
+            &feedforward_result.activations[known_layer.get() - 1],
             activation_function,
         );
-    network
-        .weights(NonZeroUsize::new(known_layer).unwrap())
-        .t()
-        .dot(known_error)
-        * activation_derivatives_at_weighted_inputs
+    network.weights(known_layer).t().dot(known_error) * activation_derivatives_at_weighted_inputs
 }
 
 fn compute_error_at_last_layer(

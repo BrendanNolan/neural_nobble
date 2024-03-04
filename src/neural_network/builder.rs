@@ -3,28 +3,27 @@ use crate::neural_network::NeuralNetwork;
 
 pub struct NeuralNetworkBuilder {
     input_size: usize,
-    network: NeuralNetwork,
+    weight_matrices: Vec<Array2<f64>>,
+    bias_vectors: Vec<Array1<f64>>,
 }
 
 impl NeuralNetworkBuilder {
     pub fn new(input_size: usize) -> Self {
         NeuralNetworkBuilder {
             input_size,
-            network: NeuralNetwork {
-                // Sacrificial zeroth layer to make indexing easier
-                weight_matrices: vec![Array2::zeros((0, 0))],
-                // Sacrificial zeroth layer to make indexing easier
-                bias_vectors: vec![Array1::zeros(0)],
-            },
+            // Sacrificial zeroth layer to make indexing easier
+            weight_matrices: vec![Array2::zeros((0, 0))],
+            // Sacrificial zeroth layer to make indexing easier
+            bias_vectors: vec![Array1::zeros(0)],
         }
     }
 
     fn last_layer_neuron_count(&self) -> usize {
-        let last_layer = self.network.layer_count() - 1;
-        if last_layer == 0 {
+        let last_layer = self.weight_matrices.len() == 1;
+        if last_layer {
             self.input_size
         } else {
-            self.network.neuron_count(last_layer)
+            row_count(self.weight_matrices.last().unwrap())
         }
     }
 
@@ -36,8 +35,8 @@ impl NeuralNetworkBuilder {
         if !self.new_layer_valid(&weight_matrix, &bias_vector) {
             return None;
         }
-        self.network.weight_matrices.push(weight_matrix);
-        self.network.bias_vectors.push(bias_vector);
+        self.weight_matrices.push(weight_matrix);
+        self.bias_vectors.push(bias_vector);
         Some(self)
     }
 
@@ -58,6 +57,9 @@ impl NeuralNetworkBuilder {
     }
 
     pub fn build(self) -> NeuralNetwork {
-        self.network
+        NeuralNetwork {
+            weight_matrices: self.weight_matrices,
+            bias_vectors: self.bias_vectors,
+        }
     }
 }

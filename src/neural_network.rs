@@ -17,8 +17,12 @@ impl NeuralNetwork {
         &self.bias_vectors[layer.get()]
     }
 
-    pub fn layer_count(&self) -> usize {
-        self.weight_matrices.len()
+    pub fn layer_count(&self) -> NonZeroUsize {
+        NonZeroUsize::new(self.weight_matrices.len()).unwrap()
+    }
+
+    pub fn final_layer(&self) -> NonZeroUsize {
+        NonZeroUsize::new(self.weight_matrices.len()).unwrap()
     }
 
     pub fn neuron_count(&self, layer: usize) -> usize {

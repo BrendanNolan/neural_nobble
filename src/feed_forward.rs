@@ -18,11 +18,11 @@ pub fn feed_forward(
     activation_function: fn(f64) -> f64,
     mini_batch: &MiniBatch,
 ) -> FeedForwardResult {
-    let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
+    let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
     activations.push(mini_batch.inputs.clone());
-    let mut weighted_inputs: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count());
+    let mut weighted_inputs: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
     weighted_inputs.push(Array2::zeros((0, 0))); // Sacrificial empty matrix to make indexing easier
-    for layer in 1..network.layer_count() {
+    for layer in 1..network.layer_count().get() {
         let prev_activations = &activations[layer - 1];
         let mut weighted_input = network
             .weights(NonZeroUsize::new(layer).unwrap())
