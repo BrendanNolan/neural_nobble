@@ -119,6 +119,7 @@ mod tests {
     use ndarray::{arr1, arr2, Array1, Array2};
 
     use super::compute_errors_by_layer;
+    use super::compute_gradient_of_cost_wrt_biases;
     use super::compute_gradient_of_cost_wrt_weights;
 
     #[test]
@@ -148,12 +149,17 @@ mod tests {
             sigmoid,
             &cost_function,
         );
-        let cost_gradient = compute_gradient_of_cost_wrt_weights(
-            &network,
-            &mini_batch,
-            &feedforward_result,
-            NonZeroUsize::new(2).unwrap(),
-            &errors_by_layer,
-        );
+        for layer in 1..=2 {
+            let layer = NonZeroUsize::new(layer).unwrap();
+            let cost_gradient_with_respect_to_weights = compute_gradient_of_cost_wrt_weights(
+                &network,
+                &mini_batch,
+                &feedforward_result,
+                layer,
+                &errors_by_layer,
+            );
+            let cost_gradient_with_respect_to_biases =
+                compute_gradient_of_cost_wrt_biases(layer, &errors_by_layer);
+        }
     }
 }
