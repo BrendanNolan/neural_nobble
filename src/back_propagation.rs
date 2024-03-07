@@ -10,16 +10,11 @@ pub fn compute_gradient_of_cost_wrt_weights(
     layer: NonZeroUsize,
     errors_by_layer: &[Array2<f64>],
 ) -> Array2<f64> {
-    let (rows, columns) = network.weights(layer).dim();
-    let mut gradient = Array2::zeros((rows, columns));
+    let row_count = row_count(network.weights(layer));
     let layer = layer.get();
-    for (j, k) in (0..rows).zip(0..columns) {
-        gradient[(j, k)] = feedforward_result.activations[layer - 1]
-            .row(k)
-            .dot(&errors_by_layer[layer].row(j));
-    }
+    let gradient = &feedforward_result.activations[layer - 1].dot(&errors_by_layer[layer].t());
     // Effectively averaging over the gradients of the batch members
-    (1.0 / rows as f64) * gradient
+    (1.0 / row_count as f64) * gradient
 }
 
 pub fn compute_gradient_of_cost_wrt_biases(
