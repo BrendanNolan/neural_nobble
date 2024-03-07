@@ -69,7 +69,7 @@ mod tests {
             .build();
         let mini_batch = MiniBatch {
             inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
-            targets: arr2(&[[1.0], [0.0]]),
+            targets: arr2(&[[1.0, 1.0], [0.0, 0.0]]),
         };
         let result = feed_forward(&network, identity, &mini_batch);
         assert_eq!(result.weighted_inputs.len(), 3);

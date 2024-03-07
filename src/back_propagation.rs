@@ -98,3 +98,54 @@ fn compute_activation_derivatives_at_weighted_inputs(
 ) -> Array2<f64> {
     weighted_inputs.map(|x| derivative(activation_function, *x).unwrap())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::activation_functions::*;
+    use crate::common::*;
+    use crate::cost_functions::SSECostFunction;
+    use crate::feed_forward::*;
+    use crate::mini_batch::*;
+    use crate::neural_network;
+    use crate::neural_network::*;
+    use ndarray::{arr1, arr2, Array1, Array2};
+
+    use super::compute_errors_by_layer;
+    use super::compute_gradient_of_cost_wrt_weights;
+
+    #[test]
+    fn test_back_prop() {
+        let network = neural_network::builder::NeuralNetworkBuilder::new(2)
+            .add_layer(
+                arr2(&[[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]),
+                arr1(&[1.0, 2.0, 3.0]),
+            )
+            .unwrap()
+            .add_layer(
+                arr2(&[[6.0, 4.0, 2.0], [5.0, 3.0, 1.0]]),
+                arr1(&[10.0, 20.0]),
+            )
+            .unwrap()
+            .build();
+        let mini_batch = MiniBatch {
+            inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
+            targets: arr2(&[[1.0, 1.0], [0.0, 0.0]]),
+        };
+        let feedforward_result = feed_forward(&network, identity, &mini_batch);
+        let cost_function = SSECostFunction;
+        let errors_by_layer = compute_errors_by_layer(
+            &network,
+            &mini_batch,
+            &feedforward_result,
+            sigmoid,
+            &cost_function,
+        );
+        let cost_gradient = compute_gradient_of_cost_wrt_weights(
+            &network,
+            &mini_batch,
+            &feedforward_result,
+            NonZeroUsize::new(2).unwrap(),
+            &errors_by_layer,
+        );
+    }
+}
