@@ -54,7 +54,7 @@ fn compute_errors_by_layer(
             network,
             feedforward_result,
             activation_function,
-            NonZeroUsize::new(layer + 1).unwrap(),
+            NonZeroUsize::new(layer).unwrap(),
             errors.last().unwrap(),
         ));
     }
