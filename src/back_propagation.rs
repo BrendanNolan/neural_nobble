@@ -16,7 +16,7 @@ pub fn compute_gradient_of_cost_wrt_weights(
     for (j, k) in (0..rows).zip(0..columns) {
         gradient[(j, k)] = feedforward_result.activations[layer - 1]
             .row(k)
-            .dot(&errors_by_layer[layer].column(j));
+            .dot(&errors_by_layer[layer].row(j));
     }
     // Effectively averaging over the gradients of the batch members
     (1.0 / rows as f64) * gradient
