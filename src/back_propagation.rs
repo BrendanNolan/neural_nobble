@@ -13,10 +13,12 @@ pub fn compute_gradient_of_cost_wrt_weights(
     let (rows, columns) = network.weights(layer).dim();
     let mut gradient = Array2::zeros((rows, columns));
     let layer = layer.get();
+    let gh = errors_by_layer[layer].column(0);
     for (j, k) in (0..rows).zip(0..columns) {
         gradient[(j, k)] = feedforward_result.activations[layer - 1]
             .row(k)
-            .dot(&errors_by_layer[layer].column(j));
+            * errors_by_layer[layer].column(j)
+            .sum();
     }
     // Effectively averaging over the gradients of the batch members
     (1.0 / rows as f64) * gradient
