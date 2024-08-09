@@ -12,3 +12,4 @@ mod feed_forward;
 mod gradient_descent;
 pub mod mini_batch;
 pub mod neural_network;
+pub mod train;
