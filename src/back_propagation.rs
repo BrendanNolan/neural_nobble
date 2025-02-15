@@ -5,7 +5,6 @@ use crate::{
 
 pub fn compute_gradient_of_cost_wrt_weights(
     network: &NeuralNetwork,
-    mini_batch: &MiniBatch,
     feedforward_result: &FeedForwardResult,
     layer: NonZeroUsize,
     errors_by_layer: &[Array2<f64>],
@@ -147,7 +146,6 @@ mod tests {
             let layer = NonZeroUsize::new(layer).unwrap();
             let cost_gradient_with_respect_to_weights = compute_gradient_of_cost_wrt_weights(
                 &network,
-                &mini_batch,
                 &feedforward_result,
                 layer,
                 &errors_by_layer,
