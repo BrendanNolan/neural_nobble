@@ -33,11 +33,11 @@ pub fn feed_forward(
                 .add_assign(network.biases(NonZeroUsize::new(layer).unwrap()));
         }
         weighted_inputs.push(weighted_input.clone());
-        activations = weighted_inputs.clone();
-        for value in activations.iter_mut().flat_map(|matrix| matrix.iter_mut()) {
-            *value = activation_function(*value);
-        }
-        *activations.first_mut().unwrap() = mini_batch.inputs.clone();
+        activations.push(weighted_inputs.last().unwrap().clone());
+        activations
+            .last_mut()
+            .unwrap()
+            .map_inplace(|x| *x = activation_function(*x));
     }
     FeedForwardResult {
         activations,
