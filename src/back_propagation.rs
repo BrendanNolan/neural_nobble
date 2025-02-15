@@ -20,11 +20,8 @@ pub fn compute_gradient_of_cost_wrt_weights(
 pub fn compute_gradient_of_cost_wrt_biases(
     layer: NonZeroUsize,
     errors_by_layer: &[Array2<f64>],
-) -> Array1<f64> {
-    errors_by_layer[layer.get()]
-        .mean_axis(Axis(1))
-        .unwrap()
-        .to_owned()
+) -> &Array2<f64> {
+    &errors_by_layer[layer.get()]
 }
 
 fn compute_errors_by_layer(
