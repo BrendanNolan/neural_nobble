@@ -11,9 +11,9 @@ impl NeuralNetworkBuilder {
     pub fn new(input_size: usize) -> Self {
         NeuralNetworkBuilder {
             input_size,
-            // Sacrificial zeroth layer to make indexing easier
+            // sacrificial zeroth layer to make indexing easier
             weight_matrices: vec![Array2::zeros((0, 0))],
-            // Sacrificial zeroth layer to make indexing easier
+            // sacrificial zeroth layer to make indexing easier
             bias_vectors: vec![Array1::zeros(0)],
         }
     }

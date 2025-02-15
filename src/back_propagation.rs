@@ -13,7 +13,7 @@ pub fn compute_gradient_of_cost_wrt_weights(
     let row_count = row_count(network.weights(layer));
     let layer = layer.get();
     let gradient = &feedforward_result.activations[layer - 1].dot(&errors_by_layer[layer].t());
-    // Effectively averaging over the gradients of the batch members
+    // effectively averaging over the gradients of the batch members
     (1.0 / row_count as f64) * gradient
 }
 
