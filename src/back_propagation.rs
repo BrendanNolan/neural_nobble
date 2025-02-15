@@ -84,14 +84,16 @@ fn compute_error_at_last_layer(
             activation_function,
         );
     let mut cost_gradients = feedforward_result.activations.last().unwrap().clone();
-    cost_gradients
-        .columns_mut()
-        .into_iter()
-        .enumerate()
-        .for_each(|(i, mut x)| {
-            x[i] =
-                cost_function.partial_derivative(i, x.view(), mini_batch.targets.column(i).view())
-        });
+    cost_gradients.rows_mut().into_iter().enumerate().for_each(
+        |(i, mut activations_of_batch_examples_at_ith_neuron_in_final_layer)| {
+            activations_of_batch_examples_at_ith_neuron_in_final_layer[i] = cost_function
+                .partial_derivative(
+                    i,
+                    activations_of_batch_examples_at_ith_neuron_in_final_layer.view(),
+                    mini_batch.targets.row(i).view(),
+                )
+        },
+    );
     cost_gradients * activation_derivatives_at_weighted_inputs
 }
 
