@@ -8,6 +8,12 @@ pub struct FeedForwardResult {
     pub weighted_inputs: Vec<Array2<f64>>,
 }
 
+impl FeedForwardResult {
+    pub fn number_of_training_examples(&self) -> usize {
+        column_count(self.activations.first().unwrap())
+    }
+}
+
 pub enum FeedForwardError {
     InappropriateMiniBatchInputSize,
     InappropriateMiniBatchTargetSize,
