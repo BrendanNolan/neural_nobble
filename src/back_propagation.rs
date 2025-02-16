@@ -132,8 +132,8 @@ mod tests {
             .unwrap()
             .build();
         let mini_batch = MiniBatch {
-            inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
-            targets: arr2(&[[1.0, 1.0], [0.0, 0.0]]),
+            inputs: arr2(&[[2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]]),
+            targets: arr2(&[[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0]]),
         };
         let activation_function = IdFunc::default();
         let feedforward_result = feed_forward(&network, activation_function, &mini_batch);
@@ -145,7 +145,7 @@ mod tests {
             activation_function,
             &cost_function,
         );
-        assert_eq!(errors_by_layer[2], arr2(&[[237.0, 237.0], [185.0, 185.0]]));
+        assert_eq!(errors_by_layer[2], arr2(&[[237.0, 237.0, 237.0, 237.0], [183.0, 183.0, 183.0, 183.0]]));
         for layer in 1..=2 {
             let layer = NonZeroUsize::new(layer).unwrap();
             let cost_gradient_with_respect_to_weights = compute_gradient_of_cost_wrt_weights(
