@@ -37,6 +37,6 @@ impl CostFunction for HalfSSECostFunction {
         final_layer_activation: ArrayView1<f64>,
         expected_activation: ArrayView1<f64>,
     ) -> f64 {
-        2.0 * (final_layer_activation[partial_position] - expected_activation[partial_position])
+        final_layer_activation[partial_position] - expected_activation[partial_position]
     }
 }
