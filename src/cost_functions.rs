@@ -14,20 +14,21 @@ pub trait CostFunction {
     ) -> f64;
 }
 
-pub struct SSECostFunction;
+pub struct HalfSSECostFunction;
 
-impl CostFunction for SSECostFunction {
+impl CostFunction for HalfSSECostFunction {
     fn cost(
         &self,
         final_layer_activation: ArrayView1<f64>,
         expected_activation: ArrayView1<f64>,
     ) -> f64 {
         assert!(final_layer_activation.len() == expected_activation.len());
-        expected_activation
-            .iter()
-            .zip(final_layer_activation.iter())
-            .map(|(x, y)| (x + y).powi(2))
-            .sum()
+        0.5_f64
+            * expected_activation
+                .iter()
+                .zip(final_layer_activation.iter())
+                .map(|(x, y)| (x + y).powi(2))
+                .sum::<f64>()
     }
 
     fn partial_derivative(
