@@ -31,7 +31,7 @@ fn compute_errors_by_layer(
     network: &NeuralNetwork,
     mini_batch: &MiniBatch,
     feedforward_result: &FeedForwardResult,
-    activation_function: fn(f64) -> f64,
+    activation_function: impl DifferentiableFunction,
     cost_function: &impl CostFunction,
 ) -> Vec<Array2<f64>> {
     let mut errors = vec![];
@@ -60,7 +60,7 @@ fn compute_errors_by_layer(
 fn propagate_error_back(
     network: &NeuralNetwork,
     feedforward_result: &FeedForwardResult,
-    activation_function: fn(f64) -> f64,
+    activation_function: impl DifferentiableFunction,
     known_layer: NonZeroUsize,
     known_error: &Array2<f64>,
 ) -> Array2<f64> {
@@ -73,7 +73,7 @@ fn propagate_error_back(
 
 fn compute_error_at_last_layer(
     feedforward_result: &FeedForwardResult,
-    activation_function: fn(f64) -> f64,
+    activation_function: impl DifferentiableFunction,
     cost_function: &impl CostFunction,
     mini_batch: &MiniBatch,
 ) -> Array2<f64> {
@@ -97,9 +97,9 @@ fn compute_error_at_last_layer(
 
 fn compute_derivative_elementwise(
     weighted_inputs: &Array2<f64>,
-    activation_function: fn(f64) -> f64,
+    activation_function: impl DifferentiableFunction,
 ) -> Array2<f64> {
-    weighted_inputs.map(|x| derivative(activation_function, *x).unwrap())
+    weighted_inputs.map(|x| activation_function.derivative(*x))
 }
 
 #[cfg(test)]
@@ -135,13 +135,14 @@ mod tests {
             inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
             targets: arr2(&[[1.0, 1.0], [0.0, 0.0]]),
         };
-        let feedforward_result = feed_forward(&network, identity, &mini_batch);
+        let activation_function = IdFunc::default();
+        let feedforward_result = feed_forward(&network, activation_function, &mini_batch);
         let cost_function = HalfSSECostFunction;
         let errors_by_layer = compute_errors_by_layer(
             &network,
             &mini_batch,
             &feedforward_result,
-            identity,
+            activation_function,
             &cost_function,
         );
         assert_eq!(errors_by_layer[2], arr2(&[[237.0, 237.0], [185.0, 185.0]]));

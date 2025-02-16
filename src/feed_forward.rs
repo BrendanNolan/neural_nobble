@@ -1,6 +1,8 @@
+use crate::{
+    common::*, derivative::DifferentiableFunction, mini_batch::MiniBatch,
+    neural_network::NeuralNetwork,
+};
 use std::ops::AddAssign;
-
-use crate::{common::*, mini_batch::MiniBatch, neural_network::NeuralNetwork};
 
 #[derive(Debug, Default)]
 pub struct FeedForwardResult {
@@ -21,7 +23,7 @@ pub enum FeedForwardError {
 
 pub fn feed_forward(
     network: &NeuralNetwork,
-    activation_function: fn(f64) -> f64,
+    activation_function: impl DifferentiableFunction,
     mini_batch: &MiniBatch,
 ) -> FeedForwardResult {
     let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
@@ -43,7 +45,7 @@ pub fn feed_forward(
         activations
             .last_mut()
             .unwrap()
-            .map_inplace(|x| *x = activation_function(*x));
+            .map_inplace(|x| *x = activation_function.apply(*x));
     }
     FeedForwardResult {
         activations,
@@ -77,7 +79,7 @@ mod tests {
             inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
             targets: arr2(&[[1.0, 1.0], [0.0, 0.0]]),
         };
-        let result = feed_forward(&network, identity, &mini_batch);
+        let result = feed_forward(&network, IdFunc::default(), &mini_batch);
         assert_eq!(result.weighted_inputs.len(), 3);
         assert_eq!(result.activations.len(), 3);
         assert_eq!(result.weighted_inputs[0], Array2::zeros((0, 0)));
