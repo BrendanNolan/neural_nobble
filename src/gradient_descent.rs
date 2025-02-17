@@ -1,5 +1,8 @@
 use crate::common::*;
 
+// TODO: needs to report details about the magnitude of the new
+// gradient and the difference in the cost between the pre-
+// and post- descended weights and biases
 pub fn descend(
     weight_gradients: &[&Array2<f64>],
     bias_gradients: &[&Array1<f64>],

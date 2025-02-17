@@ -2,8 +2,8 @@ use rand::Rng;
 
 use crate::{
     activation_functions, back_propagation, common::*, cost_functions::CostFunction,
-    derivative::DifferentiableFunction, feed_forward::feed_forward, mini_batch::MiniBatch,
-    neural_network::NeuralNetwork,
+    derivative::DifferentiableFunction, feed_forward::feed_forward, gradient_descent::descend,
+    mini_batch::MiniBatch, neural_network::NeuralNetwork,
 };
 use std::collections::hash_set::HashSet;
 
@@ -14,6 +14,7 @@ pub fn train(
     targets: &Array2<f64>,
     cost_function: &impl CostFunction,
     batch_size: usize,
+    learning_rate: f64,
 ) {
     let mini_batch = create_minibatch(inputs, targets, batch_size);
     let mut finished = false;
@@ -46,6 +47,13 @@ pub fn train(
                 )
             })
             .collect::<Vec<_>>();
+        descend(
+            &weight_gradients,
+            &bias_gradients,
+            &mut network.weight_matrices,
+            &mut network.bias_vectors,
+            learning_rate,
+        );
         finished = true;
     }
 }

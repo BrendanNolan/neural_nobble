@@ -4,8 +4,8 @@ pub mod builder;
 
 #[derive(Debug, Clone)]
 pub struct NeuralNetwork {
-    weight_matrices: Vec<Array2<f64>>,
-    bias_vectors: Vec<Array1<f64>>,
+    pub weight_matrices: Vec<Array2<f64>>,
+    pub bias_vectors: Vec<Array1<f64>>,
 }
 
 impl NeuralNetwork {
