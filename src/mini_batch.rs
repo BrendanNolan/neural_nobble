@@ -23,6 +23,10 @@ impl MiniBatch {
         Ok(mini_batch)
     }
 
+    pub fn create(inputs: Array2<f64>, targets: Array2<f64>) -> Self {
+        Self { inputs, targets }
+    }
+
     pub fn input_size(&self) -> usize {
         row_count(&self.inputs)
     }
