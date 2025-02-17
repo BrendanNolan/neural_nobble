@@ -5,7 +5,7 @@ pub fn descend(
     bias_gradients: &[&Array1<f64>],
     weights: &mut [&mut Array2<f64>],
     biases: &mut [&mut Array1<f64>],
-    learning_rate: NonZeroUsize,
+    learning_rate: f64,
 ) {
     let gradient_dim = weight_gradients.iter().map(|m| m.len()).sum::<usize>()
         + bias_gradients.iter().map(|m| m.len()).sum::<usize>();
@@ -19,7 +19,7 @@ pub fn descend(
                 .map(|m| sum_of_squares(m))
                 .sum::<f64>())
         .sqrt();
-    let adjustment_factor = -(1.0 / learning_rate.get() as f64) * gradient_magnitude;
+    let adjustment_factor = -(learning_rate * gradient_magnitude);
     for (weight_gradient, weight) in weight_gradients.iter().zip(weights.iter_mut()) {
         for row in 0..row_count(weight_gradient) {
             for col in 0..column_count(weight_gradient) {
