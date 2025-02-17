@@ -17,17 +17,35 @@ pub fn train(
 ) {
     let mini_batch = create_minibatch(inputs, targets, batch_size);
     let mut finished = false;
+    let feed_forward_result = feed_forward(network, activation_function, &mini_batch);
+    let errors_by_layer = back_propagation::compute_errors_by_layer(
+        network,
+        &mini_batch,
+        &feed_forward_result,
+        activation_function,
+        cost_function,
+    );
     while !finished {
-        let feed_forward_result = feed_forward(network, activation_function, &mini_batch);
-        let weight_gradients = 1..network
-            .layer_count()
-            .map(back_propagation::compute_gradient_of_cost_wrt_weights(
-                network,
-                feedforward_result,
-                layer,
-                errors_by_layer,
-            ))
-            .accumulate();
+        let weight_gradients = (1..network.layer_count().get())
+            .rev()
+            .map(|layer| {
+                back_propagation::compute_gradient_of_cost_wrt_weights(
+                    network,
+                    &feed_forward_result,
+                    NonZeroUsize::new(layer).unwrap(),
+                    &errors_by_layer,
+                )
+            })
+            .collect::<Vec<_>>();
+        let bias_gradients = (1..network.layer_count().get())
+            .rev()
+            .map(|layer| {
+                back_propagation::compute_gradient_of_cost_wrt_biases(
+                    NonZeroUsize::new(layer).unwrap(),
+                    &errors_by_layer,
+                )
+            })
+            .collect::<Vec<_>>();
         finished = true;
     }
 }

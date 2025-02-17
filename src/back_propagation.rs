@@ -27,7 +27,7 @@ pub fn compute_gradient_of_cost_wrt_biases(
         .to_owned()
 }
 
-fn compute_errors_by_layer(
+pub fn compute_errors_by_layer(
     network: &NeuralNetwork,
     mini_batch: &MiniBatch,
     feedforward_result: &FeedForwardResult,
