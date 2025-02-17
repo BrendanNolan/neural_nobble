@@ -81,16 +81,9 @@ fn compute_error_at_last_layer(
         feedforward_result.weighted_inputs.last().unwrap(),
         activation_function,
     );
-    let mut cost_gradients = feedforward_result.activations.last().unwrap().clone();
-    cost_gradients.rows_mut().into_iter().enumerate().for_each(
-        |(i, mut activations_of_batch_examples_at_ith_neuron_in_final_layer)| {
-            activations_of_batch_examples_at_ith_neuron_in_final_layer[i] = cost_function
-                .partial_derivative(
-                    i,
-                    activations_of_batch_examples_at_ith_neuron_in_final_layer.view(),
-                    mini_batch.targets.row(i).view(),
-                )
-        },
+    let mut cost_gradients = cost_function.partial_derivative(
+        feedforward_result.activations.last().unwrap(),
+        &mini_batch.targets,
     );
     cost_gradients * activation_derivatives_at_weighted_inputs
 }
@@ -145,7 +138,10 @@ mod tests {
             activation_function,
             &cost_function,
         );
-        assert_eq!(errors_by_layer[2], arr2(&[[237.0, 237.0, 237.0, 237.0], [183.0, 183.0, 183.0, 183.0]]));
+        assert_eq!(
+            errors_by_layer[2],
+            arr2(&[[237.0, 237.0, 237.0, 237.0], [183.0, 183.0, 183.0, 183.0]])
+        );
         for layer in 1..=2 {
             let layer = NonZeroUsize::new(layer).unwrap();
             let cost_gradient_with_respect_to_weights = compute_gradient_of_cost_wrt_weights(

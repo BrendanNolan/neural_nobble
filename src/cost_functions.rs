@@ -1,27 +1,19 @@
 use crate::common::*;
 
 pub trait CostFunction {
-    fn cost(
-        &self,
-        final_layer_activation: ArrayView1<f64>,
-        expected_activation: ArrayView1<f64>,
-    ) -> f64;
+    fn cost(&self, final_layer_activation: &Array2<f64>, expected_activation: &Array2<f64>) -> f64;
+
     fn partial_derivative(
         &self,
-        partial_position: usize,
-        final_layer_activation: ArrayView1<f64>,
-        expected_activation: ArrayView1<f64>,
-    ) -> f64;
+        final_layer_activation: &Array2<f64>,
+        expected_activation: &Array2<f64>,
+    ) -> Array2<f64>;
 }
 
 pub struct HalfSSECostFunction;
 
 impl CostFunction for HalfSSECostFunction {
-    fn cost(
-        &self,
-        final_layer_activation: ArrayView1<f64>,
-        expected_activation: ArrayView1<f64>,
-    ) -> f64 {
+    fn cost(&self, final_layer_activation: &Array2<f64>, expected_activation: &Array2<f64>) -> f64 {
         assert!(final_layer_activation.len() == expected_activation.len());
         0.5_f64
             * expected_activation
@@ -33,10 +25,9 @@ impl CostFunction for HalfSSECostFunction {
 
     fn partial_derivative(
         &self,
-        partial_position: usize,
-        final_layer_activation: ArrayView1<f64>,
-        expected_activation: ArrayView1<f64>,
-    ) -> f64 {
-        final_layer_activation[partial_position] - expected_activation[partial_position]
+        final_layer_activation: &Array2<f64>,
+        expected_activation: &Array2<f64>,
+    ) -> Array2<f64> {
+        final_layer_activation - expected_activation
     }
 }
