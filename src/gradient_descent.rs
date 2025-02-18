@@ -1,20 +1,12 @@
 use crate::{common::*, neural_network::NeuralNetwork};
 
-// TODO: needs to report details about the magnitude of the new
-// gradient and the difference in the cost between the pre-
-// and post- descended weights and biases
 pub fn descend(
     weight_gradients: &[Array2<f64>],
     bias_gradients: &[Array1<f64>],
     network: &mut NeuralNetwork,
     learning_rate: f64,
 ) {
-    let gradient_dim = weight_gradients.iter().map(|m| m.len()).sum::<usize>()
-        + bias_gradients.iter().map(|m| m.len()).sum::<usize>();
-    let gradient_magnitude = (1.0 / gradient_dim as f64)
-        * (weight_gradients.iter().map(sum_of_squares).sum::<f64>()
-            + bias_gradients.iter().map(sum_of_squares).sum::<f64>())
-        .sqrt();
+    let gradient_magnitude = gradient_magnitude(weight_gradients, bias_gradients);
     let adjustment_factor = -(learning_rate * gradient_magnitude);
     for (weight_gradient, weight) in weight_gradients
         .iter()
@@ -31,6 +23,15 @@ pub fn descend(
             bias[index] = adjustment_factor * bias_gradient[index];
         }
     }
+}
+
+pub fn gradient_magnitude(weight_gradients: &[Array2<f64>], bias_gradients: &[Array1<f64>]) -> f64 {
+    let gradient_dim = weight_gradients.iter().map(|m| m.len()).sum::<usize>()
+        + bias_gradients.iter().map(|m| m.len()).sum::<usize>();
+    (1.0 / gradient_dim as f64)
+        * (weight_gradients.iter().map(sum_of_squares).sum::<f64>()
+            + bias_gradients.iter().map(sum_of_squares).sum::<f64>())
+        .sqrt()
 }
 
 fn assert_dimensions(weight_gradients: &[&Array2<f64>], bias_gradients: &[&Array1<f64>]) {
