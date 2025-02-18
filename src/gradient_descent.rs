@@ -1,36 +1,32 @@
-use crate::common::*;
+use crate::{common::*, neural_network::NeuralNetwork};
 
 // TODO: needs to report details about the magnitude of the new
 // gradient and the difference in the cost between the pre-
 // and post- descended weights and biases
 pub fn descend(
-    weight_gradients: &[&Array2<f64>],
-    bias_gradients: &[&Array1<f64>],
-    weights: &mut [&mut Array2<f64>],
-    biases: &mut [&mut Array1<f64>],
+    weight_gradients: &[Array2<f64>],
+    bias_gradients: &[Array1<f64>],
+    network: &mut NeuralNetwork,
     learning_rate: f64,
 ) {
     let gradient_dim = weight_gradients.iter().map(|m| m.len()).sum::<usize>()
         + bias_gradients.iter().map(|m| m.len()).sum::<usize>();
     let gradient_magnitude = (1.0 / gradient_dim as f64)
-        * (weight_gradients
-            .iter()
-            .map(|m| sum_of_squares(m))
-            .sum::<f64>()
-            + bias_gradients
-                .iter()
-                .map(|m| sum_of_squares(m))
-                .sum::<f64>())
+        * (weight_gradients.iter().map(sum_of_squares).sum::<f64>()
+            + bias_gradients.iter().map(sum_of_squares).sum::<f64>())
         .sqrt();
     let adjustment_factor = -(learning_rate * gradient_magnitude);
-    for (weight_gradient, weight) in weight_gradients.iter().zip(weights.iter_mut()) {
+    for (weight_gradient, weight) in weight_gradients
+        .iter()
+        .zip(network.weight_matrices.iter_mut())
+    {
         for row in 0..row_count(weight_gradient) {
             for col in 0..column_count(weight_gradient) {
                 weight[(row, col)] = adjustment_factor * weight_gradient[(row, col)];
             }
         }
     }
-    for (bias_gradient, bias) in bias_gradients.iter().zip(biases.iter_mut()) {
+    for (bias_gradient, bias) in bias_gradients.iter().zip(network.bias_vectors.iter_mut()) {
         for index in 0..bias_gradient.len() {
             bias[index] = adjustment_factor * bias_gradient[index];
         }

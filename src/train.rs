@@ -47,13 +47,7 @@ pub fn train(
                 )
             })
             .collect::<Vec<_>>();
-        descend(
-            &weight_gradients,
-            &bias_gradients,
-            &mut network.weight_matrices,
-            &mut network.bias_vectors,
-            learning_rate,
-        );
+        descend(&weight_gradients, &bias_gradients, network, learning_rate);
         finished = true;
     }
 }
