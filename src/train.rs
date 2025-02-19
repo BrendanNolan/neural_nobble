@@ -1,9 +1,10 @@
 use rand::Rng;
 
 use crate::{
-    activation_functions, back_propagation,
+    activation_functions::{self, SigmoidFunc},
+    back_propagation,
     common::*,
-    cost_functions::CostFunction,
+    cost_functions::{self, CostFunction},
     derivative::DifferentiableFunction,
     feed_forward::feed_forward,
     gradient_descent::{descend, gradient_magnitude},
@@ -12,29 +13,33 @@ use crate::{
 };
 use std::collections::hash_set::HashSet;
 
-pub fn train(
-    network: &mut NeuralNetwork,
-    activation_function: impl DifferentiableFunction,
-    inputs: &Array2<f64>,
-    targets: &Array2<f64>,
-    cost_function: &impl CostFunction,
+pub struct TrainingOptions<C: CostFunction> {
+    cost_function: C,
     batch_size: usize,
     learning_rate: f64,
     gradient_magnitude_stopping_criterion: f64,
     cost_difference_stopping_criterion: f64,
+}
+
+pub fn train<C: CostFunction, D: DifferentiableFunction>(
+    network: &mut NeuralNetwork,
+    activation_function: D,
+    inputs: &Array2<f64>,
+    targets: &Array2<f64>,
+    training_options: &TrainingOptions<C>,
 ) {
     let mut previous_cost: Option<f64> = None;
     loop {
-        let mini_batch = create_minibatch(inputs, targets, batch_size);
+        let mini_batch = create_minibatch(inputs, targets, training_options.batch_size);
         let feed_forward_result = feed_forward(network, activation_function, &mini_batch);
         let errors_by_layer = back_propagation::compute_errors_by_layer(
             network,
             &mini_batch,
             &feed_forward_result,
             activation_function,
-            cost_function,
+            &training_options.cost_function,
         );
-        let cost = cost_function.cost(
+        let cost = training_options.cost_function.cost(
             feed_forward_result.activations.last().unwrap(),
             &mini_batch.targets,
         );
@@ -62,13 +67,19 @@ pub fn train(
             .collect::<Vec<_>>();
         let pre_descent_gradient_magnitude = gradient_magnitude(&weight_gradients, &bias_gradients);
         if let Some(prev_cost) = previous_cost {
-            if cost - prev_cost < cost_difference_stopping_criterion
-                && pre_descent_gradient_magnitude < gradient_magnitude_stopping_criterion
+            if cost - prev_cost < training_options.cost_difference_stopping_criterion
+                && pre_descent_gradient_magnitude
+                    < training_options.gradient_magnitude_stopping_criterion
             {
                 break;
             }
         }
-        descend(&weight_gradients, &bias_gradients, network, learning_rate);
+        descend(
+            &weight_gradients,
+            &bias_gradients,
+            network,
+            training_options.learning_rate,
+        );
     }
 }
 
@@ -89,4 +100,39 @@ fn create_minibatch(inputs: &Array2<f64>, targets: &Array2<f64>, size: usize) ->
             .assign(&targets.slice(s![.., *global_index]));
     }
     MiniBatch::create(batch_inputs, batch_targets)
+}
+
+#[cfg(test)]
+use crate::neural_network::builder;
+
+#[test]
+fn test_training() {
+    let mut network = builder::NeuralNetworkBuilder::new(2)
+        .add_layer(
+            arr2(&[[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]),
+            arr1(&[1.0, 2.0, 3.0]),
+        )
+        .unwrap()
+        .add_layer(
+            arr2(&[[6.0, 4.0, 2.0], [5.0, 3.0, 1.0]]),
+            arr1(&[10.0, 20.0]),
+        )
+        .unwrap()
+        .build();
+    let inputs = arr2(&[[2.0, 2.0], [3.0, 3.0]]);
+    let targets = arr2(&[[1.0, 1.0], [0.0, 0.0]]);
+    let training_options = TrainingOptions {
+        cost_function: cost_functions::HalfSSECostFunction,
+        batch_size: 2,
+        learning_rate: 0.001,
+        gradient_magnitude_stopping_criterion: 0.000001,
+        cost_difference_stopping_criterion: 0.000001,
+    };
+    train(
+        &mut network,
+        SigmoidFunc::default(),
+        &inputs,
+        &targets,
+        &training_options,
+    );
 }
