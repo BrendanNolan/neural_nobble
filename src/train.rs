@@ -87,7 +87,7 @@ fn create_minibatch(inputs: &Array2<f64>, targets: &Array2<f64>, size: usize) ->
     let mut random_number_generator = rand::rng();
     let mut indices = HashSet::new();
     while indices.len() < size {
-        indices.insert(random_number_generator.random_range(0..inputs.len()));
+        indices.insert(random_number_generator.random_range(0..column_count(inputs)));
     }
     let mut batch_inputs = Array2::<f64>::zeros((row_count(inputs), size));
     let mut batch_targets = Array2::<f64>::zeros((row_count(inputs), size));
