@@ -8,6 +8,7 @@ name = "neural_nobble"
 path = "src/lib.rs"
 
 [dependencies]
+image = "0.25.5"
 mnist = "0.6.0"
 ndarray = "0.15.6"
 ndarray-rand = "0.14.0"

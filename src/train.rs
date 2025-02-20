@@ -14,11 +14,11 @@ use crate::{
 use std::collections::hash_set::HashSet;
 
 pub struct TrainingOptions<C: CostFunction> {
-    cost_function: C,
-    batch_size: usize,
-    learning_rate: f64,
-    gradient_magnitude_stopping_criterion: f64,
-    cost_difference_stopping_criterion: f64,
+    pub cost_function: C,
+    pub batch_size: usize,
+    pub learning_rate: f64,
+    pub gradient_magnitude_stopping_criterion: f64,
+    pub cost_difference_stopping_criterion: f64,
 }
 
 pub fn train<C: CostFunction, D: DifferentiableFunction>(
