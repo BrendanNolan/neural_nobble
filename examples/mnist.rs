@@ -27,12 +27,10 @@ fn main() {
         .expect("Error converting images to Array2 struct")
         .t()
         .map(|x| *x as f64 / 256.0);
-    print_first_image(&train_data, image_size, "image.png");
 
-    let train_labels: Array2<f64> = Array2::from_shape_vec((50_000, 1), trn_lbl)
-        .expect("Error converting training labels to Array2 struct")
-        .t()
-        .map(|x| *x as f64);
+    let train_labels = Array1::from_shape_vec(50_000, trn_lbl)
+        .expect("Error converting training labels to Array2 struct");
+    let train_labels = one_hot_encode(&train_labels, 10).map(|x| *x as f64 / 256.0);
 
     let _test_data = Array2::from_shape_vec((10_000, image_size), tst_img)
         .expect("Error converting images to Array2 struct")
@@ -86,6 +84,16 @@ fn main() {
         &train_labels,
         &training_options,
     );
+}
+
+fn one_hot_encode(row_matrix: &Array1<u8>, limit: u8) -> Array2<u8> {
+    let col_count = row_matrix.dim();
+    let mut one_hot = Array2::<u8>::zeros((limit as usize, col_count));
+    for col in 0..col_count {
+        let number = row_matrix[col];
+        one_hot[(number as usize, col)] = 1;
+    }
+    one_hot
 }
 
 fn print_first_image(image_array: &Array2<f64>, image_size: usize, image_file_name: &str) {

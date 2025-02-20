@@ -93,7 +93,7 @@ fn create_minibatch(inputs: &Array2<f64>, targets: &Array2<f64>, size: usize) ->
         indices.insert(random_number_generator.random_range(0..column_count(inputs)));
     }
     let mut batch_inputs = Array2::<f64>::zeros((row_count(inputs), size));
-    let mut batch_targets = Array2::<f64>::zeros((row_count(inputs), size));
+    let mut batch_targets = Array2::<f64>::zeros((row_count(targets), size));
     for (batch_index, global_index) in indices.iter().enumerate() {
         batch_inputs
             .slice_mut(s![.., batch_index])
