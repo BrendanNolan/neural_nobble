@@ -10,7 +10,8 @@ pub fn descend(
     let adjustment_factor = -(learning_rate * gradient_magnitude);
     for (weight_gradient, weight) in weight_gradients
         .iter()
-        .zip(network.weight_matrices.iter_mut())
+        .zip(network.weight_matrices.iter_mut().skip(1))
+    // Skip the sacrificial first entry
     {
         for row in 0..row_count(weight_gradient) {
             for col in 0..column_count(weight_gradient) {
@@ -18,7 +19,11 @@ pub fn descend(
             }
         }
     }
-    for (bias_gradient, bias) in bias_gradients.iter().zip(network.bias_vectors.iter_mut()) {
+    for (bias_gradient, bias) in bias_gradients
+        .iter()
+        .zip(network.bias_vectors.iter_mut().skip(1))
+    // Skip the sacrificial first entry
+    {
         for index in 0..bias_gradient.len() {
             bias[index] = adjustment_factor * bias_gradient[index];
         }
