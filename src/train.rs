@@ -74,6 +74,7 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
                 break;
             }
         }
+        previous_cost = Some(cost);
         descend(
             &weight_gradients,
             &bias_gradients,
