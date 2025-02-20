@@ -8,6 +8,7 @@ pub fn descend(
 ) {
     let gradient_magnitude = gradient_magnitude(weight_gradients, bias_gradients);
     let adjustment_factor = -(learning_rate * gradient_magnitude);
+    println!("Adjustment factor: {adjustment_factor}");
     for (weight_gradient, weight) in weight_gradients
         .iter()
         .zip(network.weight_matrices.iter_mut().skip(1))
