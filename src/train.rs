@@ -67,7 +67,9 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
             .collect::<Vec<_>>();
         let pre_descent_gradient_magnitude = gradient_magnitude(&weight_gradients, &bias_gradients);
         if let Some(prev_cost) = previous_cost {
-            if cost - prev_cost < training_options.cost_difference_stopping_criterion
+            let cost_reduction = prev_cost - cost;
+            if cost_reduction > 0.0
+                && cost_reduction < training_options.cost_difference_stopping_criterion
                 && pre_descent_gradient_magnitude
                     < training_options.gradient_magnitude_stopping_criterion
             {
