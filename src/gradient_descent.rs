@@ -31,12 +31,9 @@ pub fn descend(
 }
 
 pub fn gradient_magnitude(weight_gradients: &[Array2<f64>], bias_gradients: &[Array1<f64>]) -> f64 {
-    let gradient_dim = weight_gradients.iter().map(|m| m.len()).sum::<usize>()
-        + bias_gradients.iter().map(|m| m.len()).sum::<usize>();
-    (1.0 / gradient_dim as f64)
-        * (weight_gradients.iter().map(sum_of_squares).sum::<f64>()
-            + bias_gradients.iter().map(sum_of_squares).sum::<f64>())
-        .sqrt()
+    (weight_gradients.iter().map(sum_of_squares).sum::<f64>()
+        + bias_gradients.iter().map(sum_of_squares).sum::<f64>())
+    .sqrt()
 }
 
 fn assert_dimensions(weight_gradients: &[&Array2<f64>], bias_gradients: &[&Array1<f64>]) {
