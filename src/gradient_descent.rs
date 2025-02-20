@@ -15,7 +15,7 @@ pub fn descend(
     {
         for row in 0..row_count(weight_gradient) {
             for col in 0..column_count(weight_gradient) {
-                weight[(row, col)] = adjustment_factor * weight_gradient[(row, col)];
+                weight[(row, col)] += adjustment_factor * weight_gradient[(row, col)];
             }
         }
     }
@@ -25,7 +25,7 @@ pub fn descend(
     // Skip the sacrificial first entry
     {
         for index in 0..bias_gradient.len() {
-            bias[index] = adjustment_factor * bias_gradient[index];
+            bias[index] += adjustment_factor * bias_gradient[index];
         }
     }
 }
