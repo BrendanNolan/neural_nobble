@@ -69,11 +69,8 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
         println!("Cost: {cost}. Gradient magnitude: {pre_descent_gradient_magnitude}");
         if let Some(prev_cost) = previous_cost {
             let cost_reduction = prev_cost - cost;
-            if cost_reduction.abs() < 1e-25 {
-                println!("No reduction in cost");
-                break;
-            }
-            if cost_reduction > 0.0
+            if cost < 0.05
+                && cost_reduction > 0.0
                 && cost_reduction < training_options.cost_difference_stopping_criterion
                 && pre_descent_gradient_magnitude
                     < training_options.gradient_magnitude_stopping_criterion
