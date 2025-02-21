@@ -74,8 +74,8 @@ fn main() {
 
     let training_options = TrainingOptions {
         cost_function: HalfSSECostFunction,
-        batch_size: 100,
-        learning_rate: 50.0,
+        batch_size: 200,
+        learning_rate: 75.0,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
     };
