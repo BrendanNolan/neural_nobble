@@ -5,7 +5,9 @@ use ndarray::Array;
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
 use neural_nobble::activation_functions::SigmoidFunc;
-use neural_nobble::{cost_functions::*, neural_network::*, train::*};
+use neural_nobble::{
+    cost_functions::*, feed_forward::*, mini_batch::*, neural_network::*, train::*,
+};
 
 fn main() {
     let Mnist {
@@ -24,21 +26,22 @@ fn main() {
     let image_size = 28 * 28;
 
     let train_data = Array2::from_shape_vec((50_000, image_size), trn_img)
-        .expect("Error converting images to Array2 struct")
+        .expect("Error converting traininig images")
         .t()
         .map(|x| *x as f64 / 256.0);
 
-    let train_labels = Array1::from_shape_vec(50_000, trn_lbl)
-        .expect("Error converting training labels to Array2 struct");
+    let train_labels =
+        Array1::from_shape_vec(50_000, trn_lbl).expect("Error converting training labels");
     let train_labels = one_hot_encode(&train_labels, 10).map(|x| *x as f64 / 256.0);
 
-    let _test_data = Array2::from_shape_vec((10_000, image_size), tst_img)
-        .expect("Error converting images to Array2 struct")
+    let test_data = Array2::from_shape_vec((10_000, image_size), tst_img)
+        .expect("Error converting test images")
+        .t()
         .map(|x| *x as f64 / 256.0);
 
-    let _test_labels: Array2<f64> = Array2::from_shape_vec((10_000, 1), tst_lbl)
-        .expect("Error converting testing labels to Array2 struct")
-        .map(|x| *x as f64);
+    let test_labels =
+        Array1::from_shape_vec(10_000, tst_lbl).expect("Error converting test labels");
+    let test_labels = one_hot_encode(&test_labels, 10).map(|x| *x as f64 / 256.0);
 
     let normal_dist = Normal::new(0.5, 1.0).unwrap();
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
@@ -72,17 +75,29 @@ fn main() {
     let training_options = TrainingOptions {
         cost_function: HalfSSECostFunction,
         batch_size: 100,
-        learning_rate: 0.001,
+        learning_rate: 1000.0,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
     };
 
+    let activation = SigmoidFunc::default();
+
     train(
         &mut network,
-        SigmoidFunc::default(),
+        activation,
         &train_data,
         &train_labels,
         &training_options,
+    );
+
+    let inputs = MiniBatch {
+        inputs: test_data.clone(),
+        targets: test_labels.clone(),
+    };
+    let feed_forward_result = feed_forward(&network, activation, &inputs);
+    let cost = training_options.cost_function.cost(
+        feed_forward_result.activations.last().unwrap(),
+        &mini_batch.targets,
     );
 }
 

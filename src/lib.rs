@@ -8,7 +8,7 @@ mod back_propagation;
 mod common;
 pub mod cost_functions;
 mod derivative;
-mod feed_forward;
+pub mod feed_forward;
 mod gradient_descent;
 pub mod mini_batch;
 pub mod neural_network;
