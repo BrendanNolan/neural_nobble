@@ -1,6 +1,6 @@
 use crate::common::*;
 
-pub trait CostFunction {
+pub trait CostFunction: Copy + Clone {
     fn cost(&self, final_layer_activation: &Array2<f64>, expected_activation: &Array2<f64>) -> f64;
 
     fn partial_derivative(
@@ -10,6 +10,7 @@ pub trait CostFunction {
     ) -> Array2<f64>;
 }
 
+#[derive(Copy, Clone)]
 pub struct HalfSSECostFunction;
 
 impl CostFunction for HalfSSECostFunction {
@@ -32,4 +33,39 @@ impl CostFunction for HalfSSECostFunction {
     ) -> Array2<f64> {
         final_layer_activation - expected_activation
     }
+}
+
+#[cfg(test)]
+
+use super::*;
+
+#[test]
+fn test_half_sse_cost() {
+    let final_layer_activation = Array::from_shape_vec((10, 2), 
+        vec![0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+             0.1, 0.2,
+            ]).unwrap();
+    let expected_activation = Array::from_shape_vec((10, 2), 
+        vec![1.0, 0.0,
+             0.0, 0.0,
+             0.0, 0.0,
+             0.0, 0.0,
+             0.0, 1.0,
+             0.0, 0.0,
+             0.0, 0.0,
+             0.0, 0.0,
+             0.0, 0.0,
+             0.0, 0.0,
+            ]).unwrap();
+    let cost_func = HalfSSECostFunction;
+    let cost = cost_func.cost(&final_layer_activation, &expected_activation);
+    println!("Cost: {cost}");
 }
