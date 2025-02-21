@@ -28,6 +28,7 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
     targets: &Array2<f64>,
     training_options: &TrainingOptions<C>,
 ) {
+    let mut small_cost_count = 0;
     let mut previous_cost: Option<f64> = None;
     loop {
         let mini_batch = create_minibatch(inputs, targets, training_options.batch_size);
@@ -67,9 +68,17 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
             .collect::<Vec<_>>();
         let pre_descent_gradient_magnitude = gradient_magnitude(&weight_gradients, &bias_gradients);
         println!("Cost: {cost}. Gradient magnitude: {pre_descent_gradient_magnitude}");
+        if cost < 0.01 {
+            small_cost_count += 1;
+        } else {
+            small_cost_count = 0;
+        }
+        if small_cost_count > 4 {
+            break;
+        }
         if let Some(prev_cost) = previous_cost {
             let cost_reduction = prev_cost - cost;
-            if cost < 0.05
+            if cost < 0.1
                 && cost_reduction > 0.0
                 && cost_reduction < training_options.cost_difference_stopping_criterion
                 && pre_descent_gradient_magnitude
