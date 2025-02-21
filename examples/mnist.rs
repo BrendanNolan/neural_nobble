@@ -40,7 +40,7 @@ fn main() {
         .map(|x| *x as f64 / 256.0);
 
     let test_labels =
-        Array1::from_shape_vec(10_000, tst_lbl).expect("Error converting test labels");
+        Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
     let test_labels = one_hot_encode(&test_labels, 10).map(|x| *x as f64 / 256.0);
 
     let normal_dist = Normal::new(0.5, 1.0).unwrap();
@@ -95,10 +95,36 @@ fn main() {
         targets: test_labels.clone(),
     };
     let feed_forward_result = feed_forward(&network, activation, &inputs);
-    let cost = training_options.cost_function.cost(
-        feed_forward_result.activations.last().unwrap(),
-        &mini_batch.targets,
-    );
+    let prediction_matrix = feed_forward_result.activations.last().unwrap();
+    let mut predictions = vec![];
+    for example in 0..prediction_matrix.dim().1 {
+        let mut max = None;
+        for row in 0..prediction_matrix.dim().0 {
+            if max.is_none() {
+                max = Some(row as u8);
+                continue;
+            }
+            if let Some(old_max) = max {
+                let current = prediction_matrix[(row, example)];
+                if current > prediction_matrix[(old_max as usize, example)] {
+                    max = Some(row as u8);
+                }
+            }
+        }
+        assert!(max.is_some());
+        predictions.push(max.unwrap());
+    }
+    let mut hit_count = 0;
+    let mut miss_count = 0;
+    assert!(predictions.len() == tst_lbl.len());
+    for image in 0..tst_lbl.len() {
+        if predictions[image] == tst_lbl[image] {
+            hit_count += 1;
+        } else {
+            miss_count += 1;
+        }
+    }
+    print!("Hits: {hit_count}, Misses: {miss_count}");
 }
 
 fn one_hot_encode(row_matrix: &Array1<u8>, limit: u8) -> Array2<u8> {
