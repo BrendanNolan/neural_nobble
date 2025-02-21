@@ -14,7 +14,7 @@ pub struct HalfSSECostFunction;
 
 impl CostFunction for HalfSSECostFunction {
     fn cost(&self, final_layer_activation: &Array2<f64>, expected_activation: &Array2<f64>) -> f64 {
-        let number_of_examples = final_layer_activation.len();
+        let number_of_examples = column_count(final_layer_activation);
         assert!(final_layer_activation.dim() == expected_activation.dim());
         (1.0 / number_of_examples as f64)
             * 0.5_f64
