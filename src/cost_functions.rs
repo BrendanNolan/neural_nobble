@@ -36,35 +36,26 @@ impl CostFunction for HalfSSECostFunction {
 }
 
 #[cfg(test)]
-
 use super::*;
 
 #[test]
 fn test_half_sse_cost() {
-    let final_layer_activation = Array::from_shape_vec((10, 2), 
-        vec![0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-             0.1, 0.2,
-            ]).unwrap();
-    let expected_activation = Array::from_shape_vec((10, 2), 
-        vec![1.0, 0.0,
-             0.0, 0.0,
-             0.0, 0.0,
-             0.0, 0.0,
-             0.0, 1.0,
-             0.0, 0.0,
-             0.0, 0.0,
-             0.0, 0.0,
-             0.0, 0.0,
-             0.0, 0.0,
-            ]).unwrap();
+    let final_layer_activation = Array::from_shape_vec(
+        (10, 2),
+        vec![
+            0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1,
+            0.2, 0.1, 0.2,
+        ],
+    )
+    .unwrap();
+    let expected_activation = Array::from_shape_vec(
+        (10, 2),
+        vec![
+            1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+        ],
+    )
+    .unwrap();
     let cost_func = HalfSSECostFunction;
     let cost = cost_func.cost(&final_layer_activation, &expected_activation);
     println!("Cost: {cost}");

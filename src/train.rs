@@ -73,7 +73,7 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
         } else {
             small_cost_count = 0;
         }
-        if small_cost_count > 4 {
+        if small_cost_count > 5 {
             break;
         }
         if let Some(prev_cost) = previous_cost {
