@@ -32,7 +32,7 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
     let mut previous_cost: Option<f64> = None;
     println!("Training begins __________");
     loop {
-        println!("Weight sum:{}", network.weight_sum());
+        println!("Weight and bias sum:{}", network.weight_and_bias_sum());
         let mini_batch = create_minibatch(inputs, targets, training_options.batch_size);
         let feed_forward_result = feed_forward(network, activation_function, &mini_batch);
         let errors_by_layer = back_propagation::compute_errors_by_layer(

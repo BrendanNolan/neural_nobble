@@ -33,7 +33,8 @@ impl NeuralNetwork {
         }
     }
 
-    pub fn weight_sum(&self) -> f64 {
-        self.weight_matrices.iter().flatten().sum()
+    pub fn weight_and_bias_sum(&self) -> f64 {
+        self.weight_matrices.iter().flatten().sum::<f64>()
+            + self.bias_vectors.iter().flatten().sum::<f64>()
     }
 }
