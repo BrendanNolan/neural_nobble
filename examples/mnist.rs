@@ -96,42 +96,8 @@ fn main() {
         targets: test_labels_one_hot_encoded.clone(),
     };
     let feed_forward_result = feed_forward(&network, activation, &inputs);
+    print_details(&feed_forward_result, &inputs.targets, 20);
     let prediction_matrix = feed_forward_result.activations.last().unwrap();
-    {
-        let targ = &inputs.targets;
-        println!("Here are some possibly decent guesses");
-        let mut total = 0;
-        for col in 0..prediction_matrix.dim().1 {
-            if prediction_matrix.column(col)[tst_lbl[col] as usize].abs() < 0.001 {
-                continue;
-            }
-            // if prediction_matrix
-            //     .column(col)
-            //     .iter()
-            //     .skip(1)
-            //     .map(|x| x.abs())
-            //     .sum::<f64>()
-            //     < 0.001
-            // {
-            //     continue;
-            // }
-            let column_a: Vec<String> = prediction_matrix
-                .column(col)
-                .iter()
-                .map(|x| format!("{:.3}", x))
-                .collect();
-            let column_b: Vec<String> = targ
-                .column(col)
-                .iter()
-                .map(|x| format!("{:.3}", x))
-                .collect();
-            println!("\nPred   {:?}\nActual: {:?}\n", column_a, column_b);
-            total += 1;
-            if total > 10 {
-                break;
-            }
-        }
-    }
     let mut predictions = vec![];
     for example in 0..prediction_matrix.dim().1 {
         let mut max = None;
