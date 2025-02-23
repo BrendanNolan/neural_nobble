@@ -4,6 +4,7 @@ use ndarray::prelude::*;
 use ndarray::Array;
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
+use neural_nobble::activation_functions::ReluFunc;
 use neural_nobble::activation_functions::SigmoidFunc;
 use neural_nobble::{
     cost_functions::*, feed_forward::*, mini_batch::*, neural_network::*, one_hot::*, train::*,
@@ -28,7 +29,7 @@ fn main() {
     let train_data = Array2::from_shape_vec((50_000, image_size), trn_img)
         .expect("Error converting traininig images")
         .t()
-        .map(|x| *x as f64);
+        .map(|x| *x as f64 / 256.0);
 
     let train_labels =
         Array1::from_shape_vec(50_000, trn_lbl.clone()).expect("Error converting training labels");
@@ -37,13 +38,13 @@ fn main() {
     let test_data = Array2::from_shape_vec((10_000, image_size), tst_img)
         .expect("Error converting test images")
         .t()
-        .map(|x| *x as f64);
+        .map(|x| *x as f64 / 256.0);
 
     let test_labels =
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
     let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f64);
 
-    let normal_dist = Normal::new(0.5, 1.0).unwrap();
+    let normal_dist = Normal::new(1.0, 1.0).unwrap();
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
         .add_layer(
             Array::random((32, image_size), normal_dist),
@@ -75,7 +76,7 @@ fn main() {
     let training_options = TrainingOptions {
         cost_function: HalfSSECostFunction,
         batch_size: 100,
-        learning_rate: 7.0,
+        learning_rate: 0.0000001,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
     };
@@ -97,17 +98,38 @@ fn main() {
     let feed_forward_result = feed_forward(&network, activation, &inputs);
     let prediction_matrix = feed_forward_result.activations.last().unwrap();
     {
-        let a = feed_forward_result.activations.last().unwrap();
-        let b = &inputs.targets;
-
-        println!("Here they are");
+        let targ = &inputs.targets;
+        println!("Here are some possibly decent guesses");
+        let mut total = 0;
         for col in 0..prediction_matrix.dim().1 {
-            if a.column(col).iter().sum::<f64>() < 0.001 {
+            if prediction_matrix.column(col)[tst_lbl[col] as usize].abs() < 0.001 {
                 continue;
             }
-            let column_a: Vec<String> = a.column(col).iter().map(|x| format!("{:.6}", x)).collect();
-            let column_b: Vec<String> = b.column(col).iter().map(|x| format!("{:.6}", x)).collect();
-            println!("Pred {:?}, Actual: {:?}", column_a, column_b);
+            // if prediction_matrix
+            //     .column(col)
+            //     .iter()
+            //     .skip(1)
+            //     .map(|x| x.abs())
+            //     .sum::<f64>()
+            //     < 0.001
+            // {
+            //     continue;
+            // }
+            let column_a: Vec<String> = prediction_matrix
+                .column(col)
+                .iter()
+                .map(|x| format!("{:.3}", x))
+                .collect();
+            let column_b: Vec<String> = targ
+                .column(col)
+                .iter()
+                .map(|x| format!("{:.3}", x))
+                .collect();
+            println!("\nPred   {:?}\nActual: {:?}\n", column_a, column_b);
+            total += 1;
+            if total > 10 {
+                break;
+            }
         }
     }
     let mut predictions = vec![];
