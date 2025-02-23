@@ -99,7 +99,7 @@ fn compute_derivative_elementwise(
 mod tests {
     use crate::activation_functions::*;
     use crate::common::*;
-    use crate::cost_functions::SSECostFunction;
+    use crate::cost_functions::HalfSSECostFunction;
     use crate::feed_forward::*;
     use crate::mini_batch::*;
     use crate::neural_network;
@@ -130,7 +130,7 @@ mod tests {
         };
         let activation_function = IdFunc::default();
         let feedforward_result = feed_forward(&network, activation_function, &mini_batch);
-        let cost_function = SSECostFunction;
+        let cost_function = HalfSSECostFunction;
         let errors_by_layer = compute_errors_by_layer(
             &network,
             &mini_batch,

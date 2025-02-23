@@ -145,7 +145,7 @@ fn test_training() {
     let inputs = arr2(&[[2.0, 2.0], [3.0, 3.0]]);
     let targets = arr2(&[[1.0, 1.0], [0.0, 0.0]]);
     let training_options = TrainingOptions {
-        cost_function: cost_functions::SSECostFunction,
+        cost_function: cost_functions::HalfSSECostFunction,
         batch_size: 2,
         learning_rate: 0.001,
         gradient_magnitude_stopping_criterion: 0.000001,
