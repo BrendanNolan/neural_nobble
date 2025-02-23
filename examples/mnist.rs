@@ -133,7 +133,7 @@ fn main() {
     }
     let mut hit_count = 0;
     let mut miss_count = 0;
-    assert!(predictions.len() == trn_lbl.len());
+    assert!(predictions.len() == tst_lbl.len());
     for image in 0..tst_lbl.len() {
         if predictions[image] == tst_lbl[image] {
             hit_count += 1;
