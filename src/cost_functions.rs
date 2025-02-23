@@ -11,14 +11,13 @@ pub trait CostFunction: Copy + Clone {
 }
 
 #[derive(Copy, Clone)]
-pub struct HalfSSECostFunction;
+pub struct SSECostFunction;
 
-impl CostFunction for HalfSSECostFunction {
+impl CostFunction for SSECostFunction {
     fn cost(&self, final_layer_activation: &Array2<f64>, expected_activation: &Array2<f64>) -> f64 {
         let number_of_examples = column_count(final_layer_activation);
         assert!(final_layer_activation.dim() == expected_activation.dim());
         (1.0 / number_of_examples as f64)
-            * 0.5_f64
             * expected_activation
                 .iter()
                 .zip(final_layer_activation.iter())
@@ -56,7 +55,7 @@ fn test_half_sse_cost() {
         ],
     )
     .unwrap();
-    let cost_func = HalfSSECostFunction;
+    let cost_func = SSECostFunction;
     let cost = cost_func.cost(&final_layer_activation, &expected_activation);
     println!("Cost: {cost}");
 }
