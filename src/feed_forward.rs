@@ -53,6 +53,23 @@ pub fn feed_forward(
     }
 }
 
+pub fn print_details(feed_forward: &FeedForwardResult, targets: &Array2<f64>, count: usize) {
+    let prediction_matrix = feed_forward.activations.last().unwrap();
+    for col in 0..count {
+        let column_a: Vec<String> = prediction_matrix
+            .column(col)
+            .iter()
+            .map(|x| format!("{:.3}", x))
+            .collect();
+        let column_b: Vec<String> = targets
+            .column(col)
+            .iter()
+            .map(|x| format!("{:.3}", x))
+            .collect();
+        println!("\nPred   {:?}\nActual: {:?}\n", column_a, column_b);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::activation_functions::*;
