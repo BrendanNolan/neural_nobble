@@ -101,11 +101,12 @@ fn main() {
         let b = &inputs.targets;
 
         println!("Here they are");
-        // Print first 5 columns one after the other as vectors
-        for col in 0..5 {
-            let column_a: Vec<String> = a.column(col).iter().map(|x| format!("{:.3}", x)).collect();
-            let column_b: Vec<String> = b.column(col).iter().map(|x| format!("{:.3}", x)).collect();
-
+        for col in 0..prediction_matrix.dim().1 {
+            if a.column(col).iter().sum::<f64>() < 0.001 {
+                continue;
+            }
+            let column_a: Vec<String> = a.column(col).iter().map(|x| format!("{:.6}", x)).collect();
+            let column_b: Vec<String> = b.column(col).iter().map(|x| format!("{:.6}", x)).collect();
             println!("Pred {:?}, Actual: {:?}", column_a, column_b);
         }
     }
