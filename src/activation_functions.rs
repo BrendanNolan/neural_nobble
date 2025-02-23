@@ -24,3 +24,19 @@ impl DifferentiableFunction for SigmoidFunc {
         sig * (1.0 - sig)
     }
 }
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ReluFunc {}
+
+impl DifferentiableFunction for ReluFunc {
+    fn apply(&self, input: f64) -> f64 {
+        input.max(0.0)
+    }
+    fn derivative(&self, at: f64) -> f64 {
+        if at > 0.0 {
+            1.0
+        } else {
+            0.0
+        }
+    }
+}
