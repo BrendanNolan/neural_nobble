@@ -30,7 +30,9 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
 ) {
     let mut small_cost_count = 0;
     let mut previous_cost: Option<f64> = None;
+    println!("Training begins __________");
     loop {
+        println!("Weight sum:{}", network.weight_sum());
         let mini_batch = create_minibatch(inputs, targets, training_options.batch_size);
         let feed_forward_result = feed_forward(network, activation_function, &mini_batch);
         let errors_by_layer = back_propagation::compute_errors_by_layer(
@@ -95,6 +97,7 @@ pub fn train<C: CostFunction, D: DifferentiableFunction>(
             training_options.learning_rate,
         );
     }
+    println!("__________ training ends.")
 }
 
 fn create_minibatch(inputs: &Array2<f64>, targets: &Array2<f64>, size: usize) -> MiniBatch {

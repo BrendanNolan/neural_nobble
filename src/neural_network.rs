@@ -32,4 +32,8 @@ impl NeuralNetwork {
             row_count(&self.weight_matrices[layer])
         }
     }
+
+    pub fn weight_sum(&self) -> f64 {
+        self.weight_matrices.iter().flatten().sum()
+    }
 }

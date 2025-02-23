@@ -95,10 +95,6 @@ fn main() {
         targets: test_labels_one_hot_encoded.clone(),
     };
     let feed_forward_result = feed_forward(&network, activation, &inputs);
-    println!(
-        "FFRes sum: {}",
-        feed_forward_result.activations.last().unwrap().sum()
-    );
     let prediction_matrix = feed_forward_result.activations.last().unwrap();
     {
         let a = feed_forward_result.activations.last().unwrap();
