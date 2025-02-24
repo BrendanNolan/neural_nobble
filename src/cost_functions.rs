@@ -1,5 +1,8 @@
 use crate::common::*;
 
+// TODO: Have this take a feedforward result; the FeedForwardResult type contains
+// final layer activation and final layer weighted input - SSE uses the former,
+// CrossEntropy will use the latter when I implement it correctly.
 pub trait CostFunction: Copy + Clone {
     fn cost(&self, final_layer_activation: &Array2<f64>, expected_activation: &Array2<f64>) -> f64;
 
@@ -32,6 +35,35 @@ impl CostFunction for HalfSSECostFunction {
         expected_activation: &Array2<f64>,
     ) -> Array2<f64> {
         final_layer_activation - expected_activation
+    }
+}
+
+#[derive(Default, Copy, Clone)]
+pub struct CrossEntropyCost;
+
+impl CostFunction for CrossEntropyCost {
+    fn cost(&self, final_layer_activation: &Array2<f64>, expected_activation: &Array2<f64>) -> f64 {
+        let number_of_examples = column_count(final_layer_activation);
+        assert!(final_layer_activation.dim() == expected_activation.dim());
+        -(1.0 / number_of_examples as f64)
+            * final_layer_activation
+                .iter()
+                .zip(expected_activation.iter())
+                .map(|(a, y)| y * a.ln() + (1.0 - y) * (1.0 - a).ln())
+                .sum::<f64>()
+    }
+
+    fn partial_derivative(
+        &self,
+        final_layer_activation: &Array2<f64>,
+        expected_activation: &Array2<f64>,
+    ) -> Array2<f64> {
+        let mut result = final_layer_activation.clone();
+        result
+            .iter_mut()
+            .zip(expected_activation.iter())
+            .for_each(|(a, y)| *a = y * (1.0 / *a) + (1.0 - y) * -1.0 / (1.0 - *a));
+        result
     }
 }
 
