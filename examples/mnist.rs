@@ -44,39 +44,41 @@ fn main() {
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
     let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f64);
 
-    let normal_dist = Normal::new(1.0, 1.0).unwrap();
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
         .add_layer(
-            Array::random((32, image_size), normal_dist),
-            Array::random(32, normal_dist),
+            Array::random(
+                (32, image_size),
+                Normal::new(0.0, 1.0 / (image_size as f64)).unwrap(),
+            ),
+            Array::zeros(32),
         )
         .unwrap()
         .add_layer(
-            Array::random((32, 32), normal_dist),
-            Array::random(32, normal_dist),
+            Array::random((32, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
+            Array::zeros(32),
         )
         .unwrap()
         .add_layer(
-            Array::random((32, 32), normal_dist),
-            Array::random(32, normal_dist),
+            Array::random((32, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
+            Array::zeros(32),
         )
         .unwrap()
         .add_layer(
-            Array::random((32, 32), normal_dist),
-            Array::random(32, normal_dist),
+            Array::random((32, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
+            Array::zeros(32),
         )
         .unwrap()
         .add_layer(
-            Array::random((10, 32), normal_dist),
-            Array::random(10, normal_dist),
+            Array::random((10, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
+            Array::zeros(10),
         )
         .unwrap()
         .build();
 
     let training_options = TrainingOptions {
         cost_function: HalfSSECostFunction,
-        batch_size: 100,
-        learning_rate: 0.0000001,
+        batch_size: 200,
+        learning_rate: 0.0001,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
     };
