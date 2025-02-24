@@ -47,29 +47,19 @@ fn main() {
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
         .add_layer(
             Array::random(
-                (32, image_size),
+                (512, image_size),
                 Normal::new(0.0, 1.0 / (image_size as f64)).unwrap(),
             ),
-            Array::zeros(32),
+            Array::zeros(512),
         )
         .unwrap()
         .add_layer(
-            Array::random((32, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
-            Array::zeros(32),
+            Array::random((256, 512), Normal::new(0.0, 1.0 / 512.0).unwrap()),
+            Array::zeros(256),
         )
         .unwrap()
         .add_layer(
-            Array::random((32, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
-            Array::zeros(32),
-        )
-        .unwrap()
-        .add_layer(
-            Array::random((32, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
-            Array::zeros(32),
-        )
-        .unwrap()
-        .add_layer(
-            Array::random((10, 32), Normal::new(0.0, 1.0 / 32.0).unwrap()),
+            Array::random((10, 256), Normal::new(0.0, 1.0 / 256.0).unwrap()),
             Array::zeros(10),
         )
         .unwrap()
@@ -77,7 +67,7 @@ fn main() {
 
     let training_options = TrainingOptions {
         cost_function: HalfSSECostFunction,
-        batch_size: 200,
+        batch_size: 64,
         learning_rate: 0.0001,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
