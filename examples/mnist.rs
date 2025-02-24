@@ -29,7 +29,7 @@ fn main() {
     let train_data = Array2::from_shape_vec((50_000, image_size), trn_img)
         .expect("Error converting traininig images")
         .t()
-        .map(|x| *x as f64 / 256.0);
+        .map(|x| *x as f64 / 32.0);
 
     let train_labels =
         Array1::from_shape_vec(50_000, trn_lbl.clone()).expect("Error converting training labels");
@@ -38,7 +38,7 @@ fn main() {
     let test_data = Array2::from_shape_vec((10_000, image_size), tst_img)
         .expect("Error converting test images")
         .t()
-        .map(|x| *x as f64 / 256.0);
+        .map(|x| *x as f64 / 32.0);
 
     let test_labels =
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
@@ -47,19 +47,19 @@ fn main() {
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
         .add_layer(
             Array::random(
-                (512, image_size),
-                Normal::new(0.0, 1.0 / (image_size as f64)).unwrap(),
+                (32, image_size),
+                Normal::new(0.0, 2.0 / (image_size as f64)).unwrap(),
             ),
-            Array::zeros(512),
+            Array::zeros(32),
         )
         .unwrap()
         .add_layer(
-            Array::random((256, 512), Normal::new(0.0, 1.0 / 512.0).unwrap()),
-            Array::zeros(256),
+            Array::random((32, 32), Normal::new(0.0, 2.0 / 32.0).unwrap()),
+            Array::zeros(32),
         )
         .unwrap()
         .add_layer(
-            Array::random((10, 256), Normal::new(0.0, 1.0 / 256.0).unwrap()),
+            Array::random((10, 32), Normal::new(0.0, 2.0 / 32.0).unwrap()),
             Array::zeros(10),
         )
         .unwrap()
@@ -68,12 +68,12 @@ fn main() {
     let training_options = TrainingOptions {
         cost_function: HalfSSECostFunction,
         batch_size: 64,
-        learning_rate: 0.0001,
+        learning_rate: 0.01,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
     };
 
-    let activation = SigmoidFunc::default();
+    let activation = ReluFunc::default();
 
     train(
         &mut network,
