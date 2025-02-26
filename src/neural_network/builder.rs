@@ -1,3 +1,5 @@
+use crate::activation_functions;
+use crate::activation_functions::*;
 use crate::common::*;
 use crate::neural_network::NeuralNetwork;
 
@@ -5,6 +7,7 @@ pub struct NeuralNetworkBuilder {
     input_size: usize,
     weight_matrices: Vec<Array2<f64>>,
     bias_vectors: Vec<Array1<f64>>,
+    activation_functions: Vec<ActivationFunction>,
 }
 
 impl NeuralNetworkBuilder {
@@ -15,6 +18,8 @@ impl NeuralNetworkBuilder {
             weight_matrices: vec![Array2::zeros((0, 0))],
             // sacrificial zeroth layer to make indexing easier
             bias_vectors: vec![Array1::zeros(0)],
+            // sacrificial zeroth layer to make indexing easier
+            activation_functions: vec![ActivationFunction::IdFunc],
         }
     }
 
@@ -31,22 +36,31 @@ impl NeuralNetworkBuilder {
         mut self,
         weight_matrix: Array2<f64>,
         bias_vector: Array1<f64>,
+        activation_function: ActivationFunction,
     ) -> Option<Self> {
         if !self.new_layer_valid(&weight_matrix, &bias_vector) {
             return None;
         }
         self.weight_matrices.push(weight_matrix);
         self.bias_vectors.push(bias_vector);
+        self.activation_functions.push(activation_function);
         Some(self)
     }
 
-    pub fn add_layer_random(mut self, neuron_count: usize) -> Self {
+    pub fn add_layer_random(
+        mut self,
+        neuron_count: usize,
+        activation_function: ActivationFunction,
+    ) -> Option<Self> {
         let weight_matrix = Array2::random(
             (neuron_count, self.last_layer_neuron_count()),
-            Normal::new(0.0, 1.0).unwrap(),
+            self.activation_functions
+                .last()
+                .unwrap()
+                .suggested_distribution(self.last_layer_neuron_count()),
         );
-        let bias_vector = Array1::random(neuron_count, Normal::new(0.0, 1.0).unwrap());
-        self.add_layer(weight_matrix, bias_vector).unwrap()
+        let bias_vector = Array1::zeros(neuron_count);
+        self.add_layer(weight_matrix, bias_vector, activation_function)
     }
 
     fn new_layer_valid(&self, weight_matrix: &Array2<f64>, bias_vector: &Array1<f64>) -> bool {
@@ -60,6 +74,7 @@ impl NeuralNetworkBuilder {
         NeuralNetwork {
             weight_matrices: self.weight_matrices,
             bias_vectors: self.bias_vectors,
+            activation_functions: self.activation_functions,
         }
     }
 }

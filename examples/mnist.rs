@@ -50,16 +50,19 @@ fn main() {
                 Normal::new(0.0, 2.0 / (image_size as f64)).unwrap(),
             ),
             Array::zeros(32),
+            ActivationFunction::ReluFunc,
         )
         .unwrap()
         .add_layer(
             Array::random((32, 32), Normal::new(0.0, 2.0 / 32.0).unwrap()),
             Array::zeros(32),
+            ActivationFunction::ReluFunc,
         )
         .unwrap()
         .add_layer(
             Array::random((10, 32), Normal::new(0.0, 2.0 / 32.0).unwrap()),
             Array::zeros(10),
+            ActivationFunction::ReluFunc,
         )
         .unwrap()
         .build();

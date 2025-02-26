@@ -127,19 +127,26 @@ fn test_training() {
         .add_layer(
             arr2(&[[0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]),
             arr1(&[0.5, 0.5, 0.5]),
+            ActivationFunction::SigmoidFunc,
         )
         .unwrap()
         .add_layer(
             arr2(&[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]),
             arr1(&[0.5, 0.5, 0.5]),
+            ActivationFunction::SigmoidFunc,
         )
         .unwrap()
         .add_layer(
             arr2(&[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]),
             arr1(&[0.5, 0.5, 0.5]),
+            ActivationFunction::SigmoidFunc,
         )
         .unwrap()
-        .add_layer(arr2(&[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]), arr1(&[0.5, 0.5]))
+        .add_layer(
+            arr2(&[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]),
+            arr1(&[0.5, 0.5]),
+            ActivationFunction::SigmoidFunc,
+        )
         .unwrap()
         .build();
     let inputs = arr2(&[[2.0, 2.0], [3.0, 3.0]]);

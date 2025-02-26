@@ -105,11 +105,13 @@ mod tests {
             .add_layer(
                 arr2(&[[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]),
                 arr1(&[1.0, 2.0, 3.0]),
+                ActivationFunction::IdFunc,
             )
             .unwrap()
             .add_layer(
                 arr2(&[[6.0, 4.0, 2.0], [5.0, 3.0, 1.0]]),
                 arr1(&[10.0, 20.0]),
+                ActivationFunction::IdFunc,
             )
             .unwrap()
             .build();

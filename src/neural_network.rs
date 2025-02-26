@@ -1,20 +1,37 @@
-use crate::{common::*, feed_forward::*};
+use crate::{activation_functions::ActivationFunction, common::*, feed_forward::*};
 
 pub mod builder;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NeuralNetwork {
-    pub weight_matrices: Vec<Array2<f64>>,
-    pub bias_vectors: Vec<Array1<f64>>,
+    weight_matrices: Vec<Array2<f64>>,
+    bias_vectors: Vec<Array1<f64>>,
+    activation_functions: Vec<ActivationFunction>,
 }
 
 impl NeuralNetwork {
+    pub fn weight_matrices_mut(&mut self) -> &mut [Array2<f64>] {
+        &mut self.weight_matrices[1..]
+    }
+
+    pub fn bias_vectors_mut(&mut self) -> &mut [Array1<f64>] {
+        &mut self.bias_vectors[1..]
+    }
+
     pub fn weights(&self, layer: NonZeroUsize) -> &Array2<f64> {
         &self.weight_matrices[layer.get()]
     }
 
     pub fn biases(&self, layer: NonZeroUsize) -> &Array1<f64> {
         &self.bias_vectors[layer.get()]
+    }
+
+    pub fn activation_function(&self, layer: NonZeroUsize) -> ActivationFunction {
+        self.activation_functions[layer.get()]
+    }
+
+    pub fn last_activation(&self) -> ActivationFunction {
+        *self.activation_functions.last().unwrap()
     }
 
     pub fn layer_count(&self) -> NonZeroUsize {
