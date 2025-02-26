@@ -44,9 +44,12 @@ fn main() {
     let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f64);
 
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
-        .add_layer_random(32, ActivationFunction::ReluFunc).unwrap()
-        .add_layer_random(32, ActivationFunction::ReluFunc).unwrap()
-        .add_layer_random(10, ActivationFunction::ReluFunc).unwrap()
+        .add_layer_random(32, ActivationFunction::Relu)
+        .unwrap()
+        .add_layer_random(32, ActivationFunction::Relu)
+        .unwrap()
+        .add_layer_random(10, ActivationFunction::Relu)
+        .unwrap()
         .build();
 
     let training_options = TrainingOptions {

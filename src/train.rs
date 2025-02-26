@@ -125,25 +125,25 @@ fn test_training() {
         .add_layer(
             arr2(&[[0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]),
             arr1(&[0.5, 0.5, 0.5]),
-            ActivationFunction::SigmoidFunc,
+            ActivationFunction::Sigmoid,
         )
         .unwrap()
         .add_layer(
             arr2(&[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]),
             arr1(&[0.5, 0.5, 0.5]),
-            ActivationFunction::SigmoidFunc,
+            ActivationFunction::Sigmoid,
         )
         .unwrap()
         .add_layer(
             arr2(&[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]),
             arr1(&[0.5, 0.5, 0.5]),
-            ActivationFunction::SigmoidFunc,
+            ActivationFunction::Sigmoid,
         )
         .unwrap()
         .add_layer(
             arr2(&[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]),
             arr1(&[0.5, 0.5]),
-            ActivationFunction::SigmoidFunc,
+            ActivationFunction::Sigmoid,
         )
         .unwrap()
         .build();
@@ -157,7 +157,7 @@ fn test_training() {
         cost_difference_stopping_criterion: 0.000001,
         epoch_limit: 1000,
     };
-    let activation = ActivationFunction::SigmoidFunc;
+    let activation = ActivationFunction::Sigmoid;
     train(&mut network, &inputs, &targets, &training_options);
     let feed_forward = feed_forward(
         &network,

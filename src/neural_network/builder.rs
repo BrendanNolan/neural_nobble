@@ -19,7 +19,7 @@ impl NeuralNetworkBuilder {
             // sacrificial zeroth layer to make indexing easier
             bias_vectors: vec![Array1::zeros(0)],
             // sacrificial zeroth layer to make indexing easier
-            activation_functions: vec![ActivationFunction::IdFunc],
+            activation_functions: vec![ActivationFunction::Id],
         }
     }
 

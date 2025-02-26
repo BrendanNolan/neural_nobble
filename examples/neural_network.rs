@@ -8,10 +8,10 @@ fn main() {
         .add_layer(
             array![[0.1, 0.2], [0.3, 0.4]],
             array![0.5, 0.6],
-            ActivationFunction::IdFunc,
+            ActivationFunction::Id,
         )
         .unwrap()
-        .add_layer(array![[0.7, 0.8]], array![0.9], ActivationFunction::IdFunc)
+        .add_layer(array![[0.7, 0.8]], array![0.9], ActivationFunction::Id)
         .unwrap()
         .build();
     println!("{:?}", network);
