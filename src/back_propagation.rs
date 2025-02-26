@@ -41,7 +41,8 @@ pub fn compute_errors_by_layer(
         cost_function,
         mini_batch,
     ));
-    for layer in (1..network.layer_count().get()).rev() {
+    let last_layer_from_which_to_propagare_back = 2; // No such thing as error in 0th layer
+    for layer in (last_layer_from_which_to_propagare_back..network.layer_count().get()).rev() {
         errors.push(propagate_error_back(
             network,
             feedforward_result,
@@ -50,6 +51,8 @@ pub fn compute_errors_by_layer(
             errors.last().unwrap(),
         ));
     }
+    // Dummy error for 0th layer, to make returned array indexable by layer
+    errors.push(Array2::<f64>::zeros((0, 0)));
     errors.reverse();
     errors
 }
