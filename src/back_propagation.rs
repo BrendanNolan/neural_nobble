@@ -64,10 +64,8 @@ fn propagate_error_back(
     known_layer: NonZeroUsize,
     known_error: &Array2<f64>,
 ) -> Array2<f64> {
-    let activation_derivatives_at_weighted_inputs = compute_derivative_elementwise(
-        &feedforward_result.activations[known_layer.get() - 1],
-        activation_function,
-    );
+    let activation_derivatives_at_weighted_inputs =
+        activation_function.derivative(&feedforward_result.activations[known_layer.get() - 1]);
     network.weights(known_layer).t().dot(known_error) * activation_derivatives_at_weighted_inputs
 }
 
@@ -77,22 +75,13 @@ fn compute_error_at_last_layer(
     cost_function: &impl CostFunction,
     mini_batch: &MiniBatch,
 ) -> Array2<f64> {
-    let activation_derivatives_at_weighted_inputs = compute_derivative_elementwise(
-        feedforward_result.weighted_inputs.last().unwrap(),
-        activation_function,
-    );
+    let activation_derivatives_at_weighted_inputs =
+        activation_function.derivative(feedforward_result.weighted_inputs.last().unwrap());
     let mut cost_gradients = cost_function.partial_derivative(
         feedforward_result.activations.last().unwrap(),
         &mini_batch.targets,
     );
     cost_gradients * activation_derivatives_at_weighted_inputs
-}
-
-fn compute_derivative_elementwise(
-    weighted_inputs: &Array2<f64>,
-    activation_function: impl ActivationFunction,
-) -> Array2<f64> {
-    weighted_inputs.map(|x| activation_function.derivative(*x))
 }
 
 #[cfg(test)]

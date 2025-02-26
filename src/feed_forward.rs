@@ -40,11 +40,7 @@ pub fn feed_forward(
                 .add_assign(network.biases(NonZeroUsize::new(layer).unwrap()));
         }
         weighted_inputs.push(weighted_input.clone());
-        activations.push(weighted_inputs.last().unwrap().clone());
-        activations
-            .last_mut()
-            .unwrap()
-            .map_inplace(|x| *x = activation_function.apply(*x));
+        activations.push(activation_function.apply(&weighted_input));
     }
     FeedForwardResult {
         activations,
