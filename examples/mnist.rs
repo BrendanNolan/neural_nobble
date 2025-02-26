@@ -58,7 +58,7 @@ fn main() {
         learning_rate: 0.01,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
-        epoch_limit: 2000,
+        epoch_limit: 1000,
     };
 
     train(
