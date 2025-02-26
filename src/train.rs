@@ -19,6 +19,7 @@ pub struct TrainingOptions<C: CostFunction> {
     pub learning_rate: f64,
     pub gradient_magnitude_stopping_criterion: f64,
     pub cost_difference_stopping_criterion: f64,
+    pub epoch_limit: usize,
 }
 
 pub fn train<C: CostFunction, D: ActivationFunction>(
@@ -30,8 +31,12 @@ pub fn train<C: CostFunction, D: ActivationFunction>(
 ) {
     let mut previous_cost: Option<f64> = None;
     println!("Training begins __________");
+    let mut epoch_counter = 0;
     loop {
-        println!("Weight and bias sum: {}", network.weight_and_bias_sum());
+        println!(
+            "Epoch: {epoch_counter}. Weight and bias sum: {}",
+            network.weight_and_bias_sum()
+        );
         let mini_batch = create_minibatch(inputs, targets, training_options.batch_size);
         let feed_forward_result = feed_forward(network, activation_function, &mini_batch);
         let errors_by_layer = back_propagation::compute_errors_by_layer(
@@ -68,7 +73,7 @@ pub fn train<C: CostFunction, D: ActivationFunction>(
             .rev()
             .collect::<Vec<_>>();
         let pre_descent_gradient_magnitude = gradient_magnitude(&weight_gradients, &bias_gradients);
-        print!("Cost: {cost}. Gradient magnitude: {pre_descent_gradient_magnitude}");
+        print!("Cost: {cost}. Gradient magnitude: {pre_descent_gradient_magnitude} ");
         if let Some(prev_cost) = previous_cost {
             let cost_reduction = prev_cost - cost;
             println!(" Cost reduction: {cost_reduction}");
@@ -87,6 +92,10 @@ pub fn train<C: CostFunction, D: ActivationFunction>(
             network,
             training_options.learning_rate,
         );
+        epoch_counter += 1;
+        if epoch_counter >= training_options.epoch_limit {
+            break;
+        }
     }
     println!("__________ training ends.")
 }
@@ -142,6 +151,7 @@ fn test_training() {
         learning_rate: 0.001,
         gradient_magnitude_stopping_criterion: 0.000001,
         cost_difference_stopping_criterion: 0.000001,
+        epoch_limit: 1000,
     };
     let activation = SigmoidFunc::default();
     train(
