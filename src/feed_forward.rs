@@ -60,7 +60,7 @@ pub fn print_details(feed_forward: &FeedForwardResult, targets: &Array2<f64>, co
             .iter()
             .map(|x| format!("{:.3}", x))
             .collect();
-        println!("\nPred   {:?}\nActual: {:?}\n", column_pred, column_actual);
+        println!("\nPred:   {:?}\nActual: {:?}\n", column_pred, column_actual);
     }
 }
 
