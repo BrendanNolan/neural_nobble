@@ -21,10 +21,6 @@ impl NeuralNetwork {
         NonZeroUsize::new(self.weight_matrices.len()).unwrap()
     }
 
-    pub fn final_layer(&self) -> NonZeroUsize {
-        NonZeroUsize::new(self.weight_matrices.len()).unwrap()
-    }
-
     pub fn neuron_count(&self, layer: usize) -> usize {
         if layer == 0 {
             column_count(&self.weight_matrices[1])

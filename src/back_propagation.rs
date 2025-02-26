@@ -35,16 +35,13 @@ pub fn compute_errors_by_layer(
     cost_function: &impl CostFunction,
 ) -> Vec<Array2<f64>> {
     let mut errors = vec![];
-    for layer in (1..=network.final_layer().get()).rev() {
-        if layer == network.final_layer().get() {
-            errors.push(compute_error_at_last_layer(
-                feedforward_result,
-                activation_function,
-                cost_function,
-                mini_batch,
-            ));
-            continue;
-        }
+    errors.push(compute_error_at_last_layer(
+        feedforward_result,
+        activation_function,
+        cost_function,
+        mini_batch,
+    ));
+    for layer in (1..network.layer_count().get()).rev() {
         errors.push(propagate_error_back(
             network,
             feedforward_result,
