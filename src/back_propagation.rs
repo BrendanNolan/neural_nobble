@@ -1,5 +1,5 @@
 use crate::{
-    activation_functions::*, common::*, cost_functions::CostFunction, derivative::*,
+    activation_functions::*, common::*, cost_functions::CostFunction,
     feed_forward::FeedForwardResult, mini_batch::MiniBatch, neural_network::NeuralNetwork,
 };
 
@@ -31,7 +31,7 @@ pub fn compute_errors_by_layer(
     network: &NeuralNetwork,
     mini_batch: &MiniBatch,
     feedforward_result: &FeedForwardResult,
-    activation_function: impl ActivationFunction,
+    activation_function: ActivationFunction,
     cost_function: &impl CostFunction,
 ) -> Vec<Array2<f64>> {
     let mut errors = vec![];
@@ -60,7 +60,7 @@ pub fn compute_errors_by_layer(
 fn propagate_error_back(
     network: &NeuralNetwork,
     feedforward_result: &FeedForwardResult,
-    activation_function: impl ActivationFunction,
+    activation_function: ActivationFunction,
     known_layer: NonZeroUsize,
     known_error: &Array2<f64>,
 ) -> Array2<f64> {
@@ -71,7 +71,7 @@ fn propagate_error_back(
 
 fn compute_error_at_last_layer(
     feedforward_result: &FeedForwardResult,
-    activation_function: impl ActivationFunction,
+    activation_function: ActivationFunction,
     cost_function: &impl CostFunction,
     mini_batch: &MiniBatch,
 ) -> Array2<f64> {
@@ -117,7 +117,7 @@ mod tests {
             inputs: arr2(&[[2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]]),
             targets: arr2(&[[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0]]),
         };
-        let activation_function = IdFunc::default();
+        let activation_function = ActivationFunction::IdFunc;
         let feedforward_result = feed_forward(&network, activation_function, &mini_batch);
         let cost_function = HalfSSECostFunction;
         let errors_by_layer = compute_errors_by_layer(

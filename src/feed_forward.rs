@@ -1,5 +1,5 @@
 use crate::{
-    common::*, derivative::ActivationFunction, mini_batch::MiniBatch, neural_network::NeuralNetwork,
+    activation_functions::*, common::*, mini_batch::MiniBatch, neural_network::NeuralNetwork,
 };
 use std::ops::AddAssign;
 
@@ -22,7 +22,7 @@ pub enum FeedForwardError {
 
 pub fn feed_forward(
     network: &NeuralNetwork,
-    activation_function: impl ActivationFunction,
+    activation_function: ActivationFunction,
     mini_batch: &MiniBatch,
 ) -> FeedForwardResult {
     let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
@@ -91,7 +91,7 @@ mod tests {
             inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
             targets: arr2(&[[1.0, 1.0], [0.0, 0.0]]),
         };
-        let result = feed_forward(&network, IdFunc::default(), &mini_batch);
+        let result = feed_forward(&network, ActivationFunction::IdFunc, &mini_batch);
         assert_eq!(result.weighted_inputs.len(), 3);
         assert_eq!(result.activations.len(), 3);
         assert_eq!(result.weighted_inputs[0], Array2::zeros((0, 0)));

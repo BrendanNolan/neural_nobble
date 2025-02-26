@@ -4,10 +4,9 @@ use ndarray::prelude::*;
 use ndarray::Array;
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
-use neural_nobble::activation_functions::ReluFunc;
-use neural_nobble::activation_functions::SigmoidFunc;
 use neural_nobble::{
-    cost_functions::*, feed_forward::*, mini_batch::*, neural_network::*, one_hot::*, train::*,
+    activation_functions::*, cost_functions::*, feed_forward::*, mini_batch::*, neural_network::*,
+    one_hot::*, train::*,
 };
 
 fn main() {
@@ -74,7 +73,7 @@ fn main() {
         epoch_limit: 1000,
     };
 
-    let activation = ReluFunc::default();
+    let activation = ActivationFunction::ReluFunc;
 
     train(
         &mut network,

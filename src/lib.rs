@@ -7,7 +7,6 @@ mod array_utils;
 mod back_propagation;
 mod common;
 pub mod cost_functions;
-mod derivative;
 pub mod feed_forward;
 mod gradient_descent;
 pub mod mini_batch;

@@ -1,11 +1,10 @@
 use rand::Rng;
 
 use crate::{
-    activation_functions::{self, SigmoidFunc},
+    activation_functions::*,
     back_propagation,
     common::*,
     cost_functions::{self, CostFunction},
-    derivative::ActivationFunction,
     feed_forward::{feed_forward, print_details},
     gradient_descent::{descend, gradient_magnitude},
     mini_batch::MiniBatch,
@@ -22,9 +21,9 @@ pub struct TrainingOptions<C: CostFunction> {
     pub epoch_limit: usize,
 }
 
-pub fn train<C: CostFunction, D: ActivationFunction>(
+pub fn train<C: CostFunction>(
     network: &mut NeuralNetwork,
-    activation_function: D,
+    activation_function: ActivationFunction,
     inputs: &Array2<f64>,
     targets: &Array2<f64>,
     training_options: &TrainingOptions<C>,
@@ -153,7 +152,7 @@ fn test_training() {
         cost_difference_stopping_criterion: 0.000001,
         epoch_limit: 1000,
     };
-    let activation = SigmoidFunc::default();
+    let activation = ActivationFunction::SigmoidFunc;
     train(
         &mut network,
         activation,
