@@ -71,10 +71,10 @@ impl ActivationFunction {
                 Normal::new(0.0, (1.0 / prev_layer_neuron_count as f64)).unwrap()
             }
             ActivationFunction::Relu => {
-                Normal::new(0.0, (2.0 / prev_layer_neuron_count as f64)).unwrap()
+                Normal::new(0.0, (2.0 / prev_layer_neuron_count as f64).sqrt()).unwrap()
             }
             ActivationFunction::SoftMax => {
-                Normal::new(0.0, (2.0 / prev_layer_neuron_count as f64)).unwrap()
+                Normal::new(0.0, (2.0 / prev_layer_neuron_count as f64).sqrt()).unwrap()
             }
         }
     }

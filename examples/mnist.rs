@@ -28,7 +28,7 @@ fn main() {
     let train_data = Array2::from_shape_vec((50_000, image_size), trn_img)
         .expect("Error converting traininig images")
         .t()
-        .map(|x| *x as f64 / 32.0);
+        .map(|x| *x as f64 / 256.0);
 
     let train_labels =
         Array1::from_shape_vec(50_000, trn_lbl.clone()).expect("Error converting training labels");
@@ -37,7 +37,7 @@ fn main() {
     let test_data = Array2::from_shape_vec((10_000, image_size), tst_img)
         .expect("Error converting test images")
         .t()
-        .map(|x| *x as f64 / 32.0);
+        .map(|x| *x as f64 / 256.0);
 
     let test_labels =
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
