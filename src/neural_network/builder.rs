@@ -54,10 +54,7 @@ impl NeuralNetworkBuilder {
     ) -> Option<Self> {
         let weight_matrix = Array2::random(
             (neuron_count, self.last_layer_neuron_count()),
-            self.activation_functions
-                .last()
-                .unwrap()
-                .suggested_distribution(self.last_layer_neuron_count()),
+            activation_function.suggested_distribution(self.last_layer_neuron_count()),
         );
         let bias_vector = Array1::zeros(neuron_count);
         self.add_layer(weight_matrix, bias_vector, activation_function)

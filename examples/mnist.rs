@@ -44,27 +44,9 @@ fn main() {
     let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f64);
 
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
-        .add_layer(
-            Array::random(
-                (32, image_size),
-                Normal::new(0.0, 2.0 / (image_size as f64)).unwrap(),
-            ),
-            Array::zeros(32),
-            ActivationFunction::ReluFunc,
-        )
-        .unwrap()
-        .add_layer(
-            Array::random((32, 32), Normal::new(0.0, 2.0 / 32.0).unwrap()),
-            Array::zeros(32),
-            ActivationFunction::ReluFunc,
-        )
-        .unwrap()
-        .add_layer(
-            Array::random((10, 32), Normal::new(0.0, 2.0 / 32.0).unwrap()),
-            Array::zeros(10),
-            ActivationFunction::ReluFunc,
-        )
-        .unwrap()
+        .add_layer_random(32, ActivationFunction::ReluFunc).unwrap()
+        .add_layer_random(32, ActivationFunction::ReluFunc).unwrap()
+        .add_layer_random(10, ActivationFunction::ReluFunc).unwrap()
         .build();
 
     let training_options = TrainingOptions {
@@ -73,7 +55,7 @@ fn main() {
         learning_rate: 0.01,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
-        epoch_limit: 1000,
+        epoch_limit: 2000,
     };
 
     train(
