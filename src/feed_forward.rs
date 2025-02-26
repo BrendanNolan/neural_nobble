@@ -20,27 +20,26 @@ pub enum FeedForwardError {
     InappropriateMiniBatchTargetSize,
 }
 
-pub fn feed_forward(
-    network: &NeuralNetwork,
-    activation_function: ActivationFunction,
-    mini_batch: &MiniBatch,
-) -> FeedForwardResult {
+pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForwardResult {
     let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
     activations.push(mini_batch.inputs.clone());
     let mut weighted_inputs: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
     weighted_inputs.push(Array2::zeros((0, 0))); // sacrificial empty matrix to make indexing easier
     for layer in 1..network.layer_count().get() {
         let prev_activations = &activations[layer - 1];
-        let mut weighted_input = network
-            .weights(NonZeroUsize::new(layer).unwrap())
-            .dot(prev_activations);
+        let layer_nonzero = NonZeroUsize::new(layer).unwrap();
+        let mut weighted_input = network.weights(layer_nonzero).dot(prev_activations);
         for column in 0..weighted_input.ncols() {
             weighted_input
                 .column_mut(column)
                 .add_assign(network.biases(NonZeroUsize::new(layer).unwrap()));
         }
         weighted_inputs.push(weighted_input.clone());
-        activations.push(activation_function.apply(&weighted_input));
+        activations.push(
+            network
+                .activation_function(layer_nonzero)
+                .apply(&weighted_input),
+        );
     }
     FeedForwardResult {
         activations,
@@ -93,7 +92,7 @@ mod tests {
             inputs: arr2(&[[2.0, 2.0], [3.0, 3.0]]),
             targets: arr2(&[[1.0, 1.0], [0.0, 0.0]]),
         };
-        let result = feed_forward(&network, ActivationFunction::IdFunc, &mini_batch);
+        let result = feed_forward(&network, &mini_batch);
         assert_eq!(result.weighted_inputs.len(), 3);
         assert_eq!(result.activations.len(), 3);
         assert_eq!(result.weighted_inputs[0], Array2::zeros((0, 0)));

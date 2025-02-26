@@ -23,7 +23,6 @@ pub struct TrainingOptions<C: CostFunction> {
 
 pub fn train<C: CostFunction>(
     network: &mut NeuralNetwork,
-    activation_function: ActivationFunction,
     inputs: &Array2<f64>,
     targets: &Array2<f64>,
     training_options: &TrainingOptions<C>,
@@ -37,12 +36,11 @@ pub fn train<C: CostFunction>(
             network.weight_and_bias_sum()
         );
         let mini_batch = create_minibatch(inputs, targets, training_options.batch_size);
-        let feed_forward_result = feed_forward(network, activation_function, &mini_batch);
+        let feed_forward_result = feed_forward(network, &mini_batch);
         let errors_by_layer = back_propagation::compute_errors_by_layer(
             network,
             &mini_batch,
             &feed_forward_result,
-            activation_function,
             &training_options.cost_function,
         );
         let cost = training_options.cost_function.cost(
@@ -160,16 +158,9 @@ fn test_training() {
         epoch_limit: 1000,
     };
     let activation = ActivationFunction::SigmoidFunc;
-    train(
-        &mut network,
-        activation,
-        &inputs,
-        &targets,
-        &training_options,
-    );
+    train(&mut network, &inputs, &targets, &training_options);
     let feed_forward = feed_forward(
         &network,
-        activation,
         &MiniBatch {
             inputs: inputs.clone(),
             targets: targets.clone(),

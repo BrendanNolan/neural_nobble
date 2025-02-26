@@ -76,11 +76,8 @@ fn main() {
         epoch_limit: 1000,
     };
 
-    let activation = ActivationFunction::ReluFunc;
-
     train(
         &mut network,
-        activation,
         &train_data,
         &train_labels_one_hot_encoded,
         &training_options,
@@ -90,7 +87,7 @@ fn main() {
         inputs: test_data.clone(),
         targets: test_labels_one_hot_encoded.clone(),
     };
-    let feed_forward_result = feed_forward(&network, activation, &inputs);
+    let feed_forward_result = feed_forward(&network, &inputs);
     print_details(&feed_forward_result, &inputs.targets, 20);
     let prediction_matrix = feed_forward_result.activations.last().unwrap();
     let mut predictions = vec![];
@@ -124,7 +121,7 @@ fn main() {
     print!("Hits: {hit_count}, Misses: {miss_count}");
 }
 
-fn print_first_image(image_array: &Array2<f64>, image_size: usize, image_file_name: &str) {
+fn _print_first_image(image_array: &Array2<f64>, image_size: usize, image_file_name: &str) {
     println!("Rows: {}", image_array.dim().0);
     println!("Columns: {}", image_array.dim().1);
     let mut data = Vec::new();

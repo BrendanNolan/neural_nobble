@@ -31,13 +31,12 @@ pub fn compute_errors_by_layer(
     network: &NeuralNetwork,
     mini_batch: &MiniBatch,
     feedforward_result: &FeedForwardResult,
-    activation_function: ActivationFunction,
     cost_function: &impl CostFunction,
 ) -> Vec<Array2<f64>> {
     let mut errors = vec![];
     errors.push(compute_error_at_last_layer(
         feedforward_result,
-        activation_function,
+        network.activation_function(NonZeroUsize::new(network.layer_count().get() - 1).unwrap()),
         cost_function,
         mini_batch,
     ));
@@ -46,7 +45,6 @@ pub fn compute_errors_by_layer(
         errors.push(propagate_error_back(
             network,
             feedforward_result,
-            activation_function,
             NonZeroUsize::new(layer).unwrap(),
             errors.last().unwrap(),
         ));
@@ -60,12 +58,14 @@ pub fn compute_errors_by_layer(
 fn propagate_error_back(
     network: &NeuralNetwork,
     feedforward_result: &FeedForwardResult,
-    activation_function: ActivationFunction,
     known_layer: NonZeroUsize,
     known_error: &Array2<f64>,
 ) -> Array2<f64> {
-    let activation_derivatives_at_weighted_inputs =
-        activation_function.derivative(&feedforward_result.activations[known_layer.get() - 1]);
+    let needed_layer = known_layer.get() - 1;
+    let needed_layer_nonzero = NonZeroUsize::new(known_layer.get() - 1).unwrap();
+    let activation_derivatives_at_weighted_inputs = network
+        .activation_function(needed_layer_nonzero)
+        .derivative(&feedforward_result.activations[needed_layer]);
     network.weights(known_layer).t().dot(known_error) * activation_derivatives_at_weighted_inputs
 }
 
@@ -119,16 +119,10 @@ mod tests {
             inputs: arr2(&[[2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]]),
             targets: arr2(&[[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0]]),
         };
-        let activation_function = ActivationFunction::IdFunc;
-        let feedforward_result = feed_forward(&network, activation_function, &mini_batch);
+        let feedforward_result = feed_forward(&network, &mini_batch);
         let cost_function = HalfSSECostFunction;
-        let errors_by_layer = compute_errors_by_layer(
-            &network,
-            &mini_batch,
-            &feedforward_result,
-            activation_function,
-            &cost_function,
-        );
+        let errors_by_layer =
+            compute_errors_by_layer(&network, &mini_batch, &feedforward_result, &cost_function);
         assert_eq!(
             errors_by_layer[2],
             arr2(&[[237.0, 237.0, 237.0, 237.0], [183.0, 183.0, 183.0, 183.0]])
