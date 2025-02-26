@@ -1,6 +1,5 @@
 use crate::{
-    common::*, derivative::DifferentiableFunction, mini_batch::MiniBatch,
-    neural_network::NeuralNetwork,
+    common::*, derivative::ActivationFunction, mini_batch::MiniBatch, neural_network::NeuralNetwork,
 };
 use std::ops::AddAssign;
 
@@ -23,7 +22,7 @@ pub enum FeedForwardError {
 
 pub fn feed_forward(
     network: &NeuralNetwork,
-    activation_function: impl DifferentiableFunction,
+    activation_function: impl ActivationFunction,
     mini_batch: &MiniBatch,
 ) -> FeedForwardResult {
     let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());

@@ -31,7 +31,7 @@ pub fn compute_errors_by_layer(
     network: &NeuralNetwork,
     mini_batch: &MiniBatch,
     feedforward_result: &FeedForwardResult,
-    activation_function: impl DifferentiableFunction,
+    activation_function: impl ActivationFunction,
     cost_function: &impl CostFunction,
 ) -> Vec<Array2<f64>> {
     let mut errors = vec![];
@@ -60,7 +60,7 @@ pub fn compute_errors_by_layer(
 fn propagate_error_back(
     network: &NeuralNetwork,
     feedforward_result: &FeedForwardResult,
-    activation_function: impl DifferentiableFunction,
+    activation_function: impl ActivationFunction,
     known_layer: NonZeroUsize,
     known_error: &Array2<f64>,
 ) -> Array2<f64> {
@@ -73,7 +73,7 @@ fn propagate_error_back(
 
 fn compute_error_at_last_layer(
     feedforward_result: &FeedForwardResult,
-    activation_function: impl DifferentiableFunction,
+    activation_function: impl ActivationFunction,
     cost_function: &impl CostFunction,
     mini_batch: &MiniBatch,
 ) -> Array2<f64> {
@@ -90,7 +90,7 @@ fn compute_error_at_last_layer(
 
 fn compute_derivative_elementwise(
     weighted_inputs: &Array2<f64>,
-    activation_function: impl DifferentiableFunction,
+    activation_function: impl ActivationFunction,
 ) -> Array2<f64> {
     weighted_inputs.map(|x| activation_function.derivative(*x))
 }

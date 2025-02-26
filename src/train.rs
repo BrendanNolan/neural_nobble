@@ -5,7 +5,7 @@ use crate::{
     back_propagation,
     common::*,
     cost_functions::{self, CostFunction},
-    derivative::DifferentiableFunction,
+    derivative::ActivationFunction,
     feed_forward::{feed_forward, print_details},
     gradient_descent::{descend, gradient_magnitude},
     mini_batch::MiniBatch,
@@ -21,7 +21,7 @@ pub struct TrainingOptions<C: CostFunction> {
     pub cost_difference_stopping_criterion: f64,
 }
 
-pub fn train<C: CostFunction, D: DifferentiableFunction>(
+pub fn train<C: CostFunction, D: ActivationFunction>(
     network: &mut NeuralNetwork,
     activation_function: D,
     inputs: &Array2<f64>,

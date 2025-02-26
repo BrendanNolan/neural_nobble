@@ -1,9 +1,9 @@
-use crate::derivative::DifferentiableFunction;
+use crate::derivative::ActivationFunction;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct IdFunc {}
 
-impl DifferentiableFunction for IdFunc {
+impl ActivationFunction for IdFunc {
     fn apply(&self, input: f64) -> f64 {
         input
     }
@@ -15,7 +15,7 @@ impl DifferentiableFunction for IdFunc {
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SigmoidFunc {}
 
-impl DifferentiableFunction for SigmoidFunc {
+impl ActivationFunction for SigmoidFunc {
     fn apply(&self, input: f64) -> f64 {
         1.0 / (1.0 + (-input).exp())
     }
@@ -28,7 +28,7 @@ impl DifferentiableFunction for SigmoidFunc {
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ReluFunc {}
 
-impl DifferentiableFunction for ReluFunc {
+impl ActivationFunction for ReluFunc {
     fn apply(&self, input: f64) -> f64 {
         input.max(0.0)
     }
