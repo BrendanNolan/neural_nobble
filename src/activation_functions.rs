@@ -1,10 +1,4 @@
-pub use ndarray_rand::{
-    rand_distr::{Distribution, Normal},
-    RandomExt,
-};
-use std::result;
-
-use crate::common::*;
+use crate::{common::*, distribution};
 
 #[derive(Copy, Clone, Debug)]
 pub enum ActivationFunction {
@@ -64,18 +58,28 @@ impl ActivationFunction {
         }
     }
 
-    pub fn suggested_distribution(&self, prev_layer_neuron_count: usize) -> Normal<f64> {
+    pub fn suggested_distribution(
+        &self,
+        prev_layer_neuron_count: usize,
+        neuron_count: usize,
+    ) -> distribution::Distribution {
         match *self {
-            ActivationFunction::Id => Normal::new(0.0, 1.0).unwrap(),
-            ActivationFunction::Sigmoid => {
-                Normal::new(0.0, (1.0 / prev_layer_neuron_count as f64)).unwrap()
-            }
-            ActivationFunction::Relu => {
-                Normal::new(0.0, (2.0 / prev_layer_neuron_count as f64).sqrt()).unwrap()
-            }
-            ActivationFunction::SoftMax => {
-                Normal::new(0.0, (2.0 / prev_layer_neuron_count as f64).sqrt()).unwrap()
-            }
+            ActivationFunction::Id => distribution::Distribution::Normal {
+                mean: 0.0,
+                standard_deviation: 1.0,
+            },
+            ActivationFunction::Sigmoid => distribution::Distribution::Normal {
+                mean: 0.0,
+                standard_deviation: (1.0 / prev_layer_neuron_count as f64).sqrt(),
+            },
+            ActivationFunction::Relu => distribution::Distribution::Normal {
+                mean: 0.0,
+                standard_deviation: (2.0 / prev_layer_neuron_count as f64).sqrt(),
+            },
+            ActivationFunction::SoftMax => distribution::Distribution::Uniform {
+                lower_bound: prev_layer_neuron_count as f64,
+                upper_bound: neuron_count as f64,
+            },
         }
     }
 }
