@@ -55,10 +55,10 @@ fn main() {
     let training_options = TrainingOptions {
         cost_function: CrossEntropyCost,
         batch_size: 64,
-        learning_rate: 0.05,
+        learning_rate: 0.02,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
-        epoch_limit: 2000,
+        epoch_limit: 10000,
     };
 
     train(
