@@ -101,22 +101,30 @@ fn main() {
     let mut hit_count = 0;
     let mut miss_count = 0;
     assert!(predictions.len() == tst_lbl.len());
-    for image in 0..tst_lbl.len() {
-        if predictions[image] == tst_lbl[image] {
+    for image_index in 0..tst_lbl.len() {
+        if predictions[image_index] == tst_lbl[image_index] {
             hit_count += 1;
         } else {
             miss_count += 1;
+            _print_image(
+                &test_data,
+                image_index,
+                &format!(
+                    "misidentified_images/{image_index}_thought_it_was_a{}.png",
+                    predictions[image_index]
+                ),
+            );
         }
     }
     print!("Hits: {hit_count}, Misses: {miss_count}");
 }
 
-fn _print_first_image(image_array: &Array2<f64>, image_size: usize, image_file_name: &str) {
+fn _print_image(image_array: &Array2<f64>, image_col: usize, image_file_name: &str) {
     println!("Rows: {}", image_array.dim().0);
     println!("Columns: {}", image_array.dim().1);
     let mut data = Vec::new();
-    for i in 0..image_size {
-        data.push(image_array[(i, 0)]);
+    for i in 0..28 * 28 {
+        data.push(image_array[(i, image_col)]);
     }
 
     let width = 28;
@@ -126,7 +134,7 @@ fn _print_first_image(image_array: &Array2<f64>, image_size: usize, image_file_n
     for (i, &value) in data.iter().enumerate() {
         let x = (i % width as usize) as u32;
         let y = (i / width as usize) as u32;
-        img.put_pixel(x, y, Luma([value as u8]));
+        img.put_pixel(x, y, Luma([(value * 256.0) as u8]));
     }
 
     img.save(image_file_name).expect("Failed to save image");
