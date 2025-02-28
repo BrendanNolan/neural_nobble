@@ -76,10 +76,14 @@ impl ActivationFunction {
                 mean: 0.0,
                 standard_deviation: (2.0 / prev_layer_neuron_count as f64).sqrt(),
             },
-            ActivationFunction::SoftMax => distribution::Distribution::Uniform {
-                lower_bound: prev_layer_neuron_count as f64,
-                upper_bound: neuron_count as f64,
-            },
+            ActivationFunction::SoftMax => {
+                let neurons_in_and_out = prev_layer_neuron_count + neuron_count;
+                let range_arond_zero = (6_f64 / neurons_in_and_out as f64).sqrt();
+                distribution::Distribution::Uniform {
+                    lower_bound: -range_arond_zero,
+                    upper_bound: range_arond_zero,
+                }
+            }
         }
     }
 }
