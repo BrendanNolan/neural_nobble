@@ -73,7 +73,6 @@ fn main() {
         targets: test_labels_one_hot_encoded.clone(),
     };
     let feed_forward_result = feed_forward(&network, &inputs);
-    print_details(&feed_forward_result, &inputs.targets, 20);
     let prediction_matrix = feed_forward_result.activations.last().unwrap();
     let mut predictions = vec![];
     for example in 0..prediction_matrix.dim().1 {
