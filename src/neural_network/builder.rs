@@ -2,12 +2,16 @@ use crate::activation_functions;
 use crate::activation_functions::*;
 use crate::common::*;
 use crate::neural_network::NeuralNetwork;
+use ndarray_rand::rand::rngs::StdRng;
+use ndarray_rand::rand::SeedableRng;
+use ndarray_rand::RandomExt;
 
 pub struct NeuralNetworkBuilder {
     input_size: usize,
     weight_matrices: Vec<Array2<f64>>,
     bias_vectors: Vec<Array1<f64>>,
     activation_functions: Vec<ActivationFunction>,
+    random_number_generator: StdRng,
 }
 
 impl NeuralNetworkBuilder {
@@ -20,6 +24,7 @@ impl NeuralNetworkBuilder {
             bias_vectors: vec![Array1::zeros(0)],
             // sacrificial zeroth layer to make indexing easier
             activation_functions: vec![ActivationFunction::Id],
+            random_number_generator: StdRng::seed_from_u64(147),
         }
     }
 
@@ -52,9 +57,10 @@ impl NeuralNetworkBuilder {
         neuron_count: usize,
         activation_function: ActivationFunction,
     ) -> Option<Self> {
-        let weight_matrix = Array2::random(
+        let weight_matrix = Array2::random_using(
             (neuron_count, self.last_layer_neuron_count()),
             activation_function.suggested_distribution(self.last_layer_neuron_count()),
+            &mut self.random_number_generator,
         );
         let bias_vector = Array1::zeros(neuron_count);
         self.add_layer(weight_matrix, bias_vector, activation_function)

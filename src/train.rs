@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::{
     activation_functions::*,
@@ -98,7 +98,7 @@ pub fn train<C: CostFunction>(
 }
 
 fn create_minibatch(inputs: &Array2<f64>, targets: &Array2<f64>, size: usize) -> MiniBatch {
-    let mut random_number_generator = rand::rng();
+    let mut random_number_generator = StdRng::seed_from_u64(155);
     let mut indices = HashSet::new();
     while indices.len() < size {
         indices.insert(random_number_generator.random_range(0..column_count(inputs)));
