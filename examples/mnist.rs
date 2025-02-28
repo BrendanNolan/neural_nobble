@@ -68,13 +68,18 @@ fn main() {
         &training_options,
     );
 
-    let inputs = MiniBatch {
+    let whole_test_data = MiniBatch {
         inputs: test_data.clone(),
         targets: test_labels_one_hot_encoded.clone(),
     };
-    let feed_forward_result = feed_forward(&network, &inputs);
+    let feed_forward_result = feed_forward(&network, &whole_test_data);
     let prediction_matrix = feed_forward_result.activations.last().unwrap();
-    print_details(&feed_forward_result, &inputs.targets, 20);
+    // print_details(&feed_forward_result, &whole_test_data.targets, 20);
+    let cost = training_options.cost_function.cost(
+        feed_forward_result.activations.last().unwrap(),
+        &whole_test_data.targets,
+    );
+    println!("Cost on the test data: {}", cost);
     let mut predictions = vec![];
     for example in 0..prediction_matrix.dim().1 {
         let mut max = None;
