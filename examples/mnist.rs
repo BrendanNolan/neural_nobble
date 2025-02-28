@@ -48,17 +48,17 @@ fn main() {
         .unwrap()
         .add_layer_random(32, ActivationFunction::Relu)
         .unwrap()
-        .add_layer_random(10, ActivationFunction::Relu)
+        .add_layer_random(10, ActivationFunction::SoftMax)
         .unwrap()
         .build();
 
     let training_options = TrainingOptions {
-        cost_function: HalfSSECostFunction,
+        cost_function: CrossEntropyCost,
         batch_size: 64,
-        learning_rate: 0.01,
+        learning_rate: 0.05,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
-        epoch_limit: 1000,
+        epoch_limit: 2000,
     };
 
     train(
@@ -74,6 +74,7 @@ fn main() {
     };
     let feed_forward_result = feed_forward(&network, &inputs);
     let prediction_matrix = feed_forward_result.activations.last().unwrap();
+    print_details(&feed_forward_result, &inputs.targets, 20);
     let mut predictions = vec![];
     for example in 0..prediction_matrix.dim().1 {
         let mut max = None;
