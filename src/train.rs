@@ -30,12 +30,18 @@ pub fn train<C: CostFunction>(
     let mut previous_cost: Option<f64> = None;
     println!("Training begins __________");
     let mut epoch_counter = 0;
+    let mut random_number_generator = StdRng::seed_from_u64(155);
     loop {
         println!(
             "Epoch: {epoch_counter}. Weight and bias sum: {}",
             network.weight_and_bias_sum()
         );
-        let mini_batch = create_minibatch(inputs, targets, training_options.batch_size);
+        let mini_batch = create_minibatch(
+            inputs,
+            targets,
+            training_options.batch_size,
+            &mut random_number_generator,
+        );
         let feed_forward_result = feed_forward(network, &mini_batch);
         let errors_by_layer = back_propagation::compute_errors_by_layer(
             network,
@@ -97,11 +103,15 @@ pub fn train<C: CostFunction>(
     println!("__________ training ends.")
 }
 
-fn create_minibatch(inputs: &Array2<f64>, targets: &Array2<f64>, size: usize) -> MiniBatch {
-    let mut random_number_generator = StdRng::seed_from_u64(155);
+fn create_minibatch(
+    inputs: &Array2<f64>,
+    targets: &Array2<f64>,
+    size: usize,
+    rng: &mut StdRng,
+) -> MiniBatch {
     let mut indices = HashSet::new();
     while indices.len() < size {
-        indices.insert(random_number_generator.random_range(0..column_count(inputs)));
+        indices.insert(rng.random_range(0..column_count(inputs)));
     }
     let mut batch_inputs = Array2::<f64>::zeros((row_count(inputs), size));
     let mut batch_targets = Array2::<f64>::zeros((row_count(targets), size));
