@@ -120,8 +120,6 @@ fn main() {
 }
 
 fn _print_image(image_array: &Array2<f64>, image_col: usize, image_file_name: &str) {
-    println!("Rows: {}", image_array.dim().0);
-    println!("Columns: {}", image_array.dim().1);
     let mut data = Vec::new();
     for i in 0..28 * 28 {
         data.push(image_array[(i, image_col)]);
