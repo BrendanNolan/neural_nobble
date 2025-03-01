@@ -68,22 +68,38 @@ impl ActivationFunction {
                 mean: 0.0,
                 standard_deviation: 1.0,
             },
-            ActivationFunction::Sigmoid => distribution::Distribution::Normal {
-                mean: 0.0,
-                standard_deviation: (1.0 / prev_layer_neuron_count as f64).sqrt(),
-            },
-            ActivationFunction::Relu => distribution::Distribution::Normal {
-                mean: 0.0,
-                standard_deviation: (2.0 / prev_layer_neuron_count as f64).sqrt(),
-            },
+            ActivationFunction::Sigmoid => {
+                xavier_glorot_normal(1.0, prev_layer_neuron_count, neuron_count)
+            }
+            ActivationFunction::Relu => {
+                xavier_glorot_normal(2.0, prev_layer_neuron_count, neuron_count)
+            }
             ActivationFunction::SoftMax => {
-                let neurons_in_and_out = prev_layer_neuron_count + neuron_count;
-                let range_arond_zero = (6_f64 / neurons_in_and_out as f64).sqrt();
-                distribution::Distribution::Uniform {
-                    lower_bound: -range_arond_zero,
-                    upper_bound: range_arond_zero,
-                }
+                xavier_glorot_uniform(prev_layer_neuron_count, neuron_count)
             }
         }
+    }
+}
+
+fn xavier_glorot_normal(
+    denominator: f64,
+    prev_layer_neuron_count: usize,
+    neuron_count: usize,
+) -> distribution::Distribution {
+    distribution::Distribution::Normal {
+        mean: 0.0,
+        standard_deviation: (denominator / prev_layer_neuron_count as f64).sqrt(),
+    }
+}
+
+fn xavier_glorot_uniform(
+    prev_layer_neuron_count: usize,
+    neuron_count: usize,
+) -> distribution::Distribution {
+    let neurons_in_and_out = prev_layer_neuron_count + neuron_count;
+    let range_arond_zero = (6_f64 / neurons_in_and_out as f64).sqrt();
+    distribution::Distribution::Uniform {
+        lower_bound: -range_arond_zero,
+        upper_bound: range_arond_zero,
     }
 }
