@@ -48,12 +48,12 @@ fn main() {
         .unwrap()
         .add_layer_random(32, ActivationFunction::Relu)
         .unwrap()
-        .add_layer_random(10, ActivationFunction::Relu)
+        .add_layer_random(10, ActivationFunction::SoftMax)
         .unwrap()
         .build();
 
     let training_options = TrainingOptions {
-        cost_function: HalfSSECostFunction,
+        cost_function: CrossEntropyCost,
         batch_size: 64,
         learning_rate: 0.02,
         gradient_magnitude_stopping_criterion: 0.0001,
