@@ -25,7 +25,8 @@ impl CostFunction for HalfSSECostFunction {
             * expected_activation
                 .iter()
                 .zip(final_layer_activation.iter())
-                .map(|(x, y)| (x - y).powi(2))
+                .enumerate()
+                .map(|(i, (x, y))| ((i % 2) as f64) * (x - y).powi(2))
                 .sum::<f64>()
     }
 
