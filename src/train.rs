@@ -30,10 +30,11 @@ pub fn train<C: CostFunction>(
     let mut previous_cost: Option<f64> = None;
     println!("Training begins __________");
     let mut epoch_counter = 0;
+    let mut descent_counter = 0;
     let mut random_number_generator = StdRng::seed_from_u64(155);
     loop {
         println!(
-            "Epoch: {epoch_counter}. Weight and bias sum: {}",
+            "Epoch: {epoch_counter}. Descent: {descent_counter}. Weight and bias sum: {}",
             network.weight_and_bias_sum()
         );
         let mini_batch = create_minibatch(
@@ -95,7 +96,8 @@ pub fn train<C: CostFunction>(
             network,
             training_options.learning_rate,
         );
-        epoch_counter += 1;
+        descent_counter += 1;
+        epoch_counter = descent_counter / training_options.batch_size;
         if epoch_counter >= training_options.epoch_limit {
             break;
         }
