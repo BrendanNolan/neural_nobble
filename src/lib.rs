@@ -14,3 +14,4 @@ pub mod mini_batch;
 pub mod neural_network;
 pub mod one_hot;
 pub mod train;
+pub mod convolution;
