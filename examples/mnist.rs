@@ -100,6 +100,7 @@ fn main() {
     }
     let mut hit_count = 0;
     let mut miss_count = 0;
+    let mut terminal_print_count = 0;
     assert!(predictions.len() == tst_lbl.len());
     for image_index in 0..tst_lbl.len() {
         if predictions[image_index] == tst_lbl[image_index] {
@@ -114,9 +115,32 @@ fn main() {
                     predictions[image_index]
                 ),
             );
+            if terminal_print_count < 1 {
+                print_grayscale_image_to_terminal(
+                    test_data
+                        .column(image_index)
+                        .into_iter()
+                        .map(|x| (x * 256.0) as u8),
+                    28,
+                );
+                terminal_print_count += 1;
+            }
         }
     }
     print!("Hits: {hit_count}, Misses: {miss_count}");
+}
+
+pub fn print_grayscale_image_to_terminal<I>(image: I, column_count: usize)
+where
+    I: IntoIterator<Item = u8>,
+{
+    for (index, pixel) in image.into_iter().enumerate() {
+        let x_coordinate = index % column_count;
+        if x_coordinate == column_count {
+            println!();
+        }
+        print!("\x1b[48;2;{0};{0};{0};m  ", pixel);
+    }
 }
 
 fn _print_image(image_array: &Array2<f64>, image_col: usize, image_file_name: &str) {
