@@ -3,7 +3,7 @@
   "configurations": [
     {
       "program": "${workspaceRoot}/target/debug/${workspaceRootFolderName}",
-      "name": "Cargo Test Specific",
+      "name": "training_test",
       "type": "lldb",
       "request": "launch",
       "cwd": "${workspaceFolder}",
