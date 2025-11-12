@@ -32,6 +32,8 @@ pub fn train<C: CostFunction>(
     let mut epoch_counter = 0;
     let mut descent_counter = 0;
     let mut random_number_generator = StdRng::seed_from_u64(155);
+    // Can we reuse the vectors/matrices etc. from one loop iteration to the next? This would cut
+    // down a lot on allocations, which are showing up in profiling.
     loop {
         println!(
             "Epoch: {epoch_counter}. Descent: {descent_counter}. Weight and bias sum: {}",
