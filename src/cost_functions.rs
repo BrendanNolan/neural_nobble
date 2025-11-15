@@ -90,5 +90,8 @@ fn test_half_sse_cost() {
     .unwrap();
     let cost_func = HalfSSECostFunction;
     let cost = cost_func.cost(&final_layer_activation, &expected_activation);
-    println!("Cost: {cost}");
+    #[cfg(feature = "neural_nobble_log")]
+    {
+        println!("Cost: {cost}");
+    }
 }
