@@ -16,3 +16,6 @@ rand = "0.9.0"
 
 [features]
 neural_nobble_log = []
+
+[profile.release]
+debug = true
