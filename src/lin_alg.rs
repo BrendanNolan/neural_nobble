@@ -4,14 +4,14 @@ pub mod host;
 use device::DeviceMatrix;
 use host::HostMatrix;
 
-impl HostMatrix {
-    pub fn into_device(self) -> DeviceMatrix {
+impl From<DeviceMatrix> for HostMatrix {
+    fn from(value: DeviceMatrix) -> Self {
         todo!()
     }
 }
 
-impl DeviceMatrix {
-    pub fn into_host(self) -> HostMatrix {
+impl From<HostMatrix> for DeviceMatrix {
+    fn from(value: HostMatrix) -> Self {
         todo!()
     }
 }
