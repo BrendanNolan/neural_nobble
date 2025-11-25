@@ -62,7 +62,7 @@ impl CostFunction for CrossEntropyCost {
         result
             .iter_mut()
             .zip(expected_activation.iter())
-            .for_each(|(a, y)| *a = -(y * (1.0 / *a) + (1.0 - y) * -1.0 / (1.0 - *a)));
+            .for_each(|(a, y)| *a = -(y * (1.0 / *a) + (y - 1.0) * 1.0 / (1.0 - *a)));
         result
     }
 }
