@@ -1,5 +1,6 @@
 use crate::{
-    activation_functions::*, common::*, mini_batch::MiniBatch, neural_network::NeuralNetwork,
+    activation_functions::*, common::*, logging, mini_batch::MiniBatch,
+    neural_network::NeuralNetwork,
 };
 use std::ops::AddAssign;
 
@@ -60,10 +61,10 @@ pub fn print_details(feed_forward: &FeedForwardResult, targets: &Array2<f64>, co
             .iter()
             .map(|x| format!("{:.3}", x))
             .collect();
-        #[cfg(feature = "neural_nobble_log")]
-        {
-            println!("\nPred:   {:?}\nActual: {:?}\n", column_pred, column_actual);
-        }
+        logging::log(&format!(
+            "\nPred:   {:?}\nActual: {:?}\n",
+            column_pred, column_actual
+        ));
     }
 }
 

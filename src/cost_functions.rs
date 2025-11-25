@@ -1,4 +1,4 @@
-use crate::common::*;
+use crate::{common::*, logging};
 
 // TODO: Have this take a feedforward result; the FeedForwardResult type contains
 // final layer activation and final layer weighted input - SSE uses the former,
@@ -90,8 +90,5 @@ fn test_half_sse_cost() {
     .unwrap();
     let cost_func = HalfSSECostFunction;
     let cost = cost_func.cost(&final_layer_activation, &expected_activation);
-    #[cfg(feature = "neural_nobble_log")]
-    {
-        println!("Cost: {cost}");
-    }
+    logging::log(&format!("Cost: {cost}"));
 }

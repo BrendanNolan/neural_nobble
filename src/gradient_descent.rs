@@ -1,4 +1,4 @@
-use crate::{common::*, neural_network::NeuralNetwork};
+use crate::{common::*, logging, neural_network::NeuralNetwork};
 
 pub fn descend(
     weight_gradients: &[Array2<f64>],
@@ -8,10 +8,7 @@ pub fn descend(
 ) {
     let gradient_magnitude = gradient_magnitude(weight_gradients, bias_gradients);
     let adjustment_factor = -(learning_rate * gradient_magnitude);
-    #[cfg(feature = "neural_nobble_log")]
-    {
-        println!("Adjustment factor: {adjustment_factor}");
-    }
+    logging::log(&format!("Adjustment factor: {adjustment_factor}"));
     for (weight_gradient, weight) in weight_gradients
         .iter()
         .zip(network.weight_matrices_mut().iter_mut())

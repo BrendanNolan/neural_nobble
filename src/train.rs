@@ -7,6 +7,7 @@ use crate::{
     cost_functions::{self, CostFunction},
     feed_forward::{feed_forward, print_details},
     gradient_descent::{descend, gradient_magnitude},
+    logging,
     mini_batch::MiniBatch,
     neural_network::NeuralNetwork,
 };
@@ -28,23 +29,15 @@ pub fn train<C: CostFunction>(
     training_options: &TrainingOptions<C>,
 ) {
     let mut previous_cost: Option<f64> = None;
-    #[cfg(feature = "neural_nobble_log")]
-    {
-        println!("Training begins __________");
-    }
+    logging::log("Training begins __________");
     let mut epoch_counter = 0;
     let mut descent_counter = 0;
     let mut random_number_generator = StdRng::seed_from_u64(155);
     // TODO: Can we reuse the vectors/matrices etc. from one loop iteration to the next? This would
     // cut down a lot on allocations, which are showing up in profiling.
     loop {
-        #[cfg(feature = "neural_nobble_log")]
-        {
-            println!(
-                "Epoch: {epoch_counter}. Descent: {descent_counter}. Weight and bias sum: {}",
-                network.weight_and_bias_sum()
-            );
-        }
+        logging::log(&format!("{}", network.weight_and_bias_sum()));
+
         let mini_batch = create_minibatch(
             inputs,
             targets,
@@ -85,16 +78,12 @@ pub fn train<C: CostFunction>(
             .rev()
             .collect::<Vec<_>>();
         let pre_descent_gradient_magnitude = gradient_magnitude(&weight_gradients, &bias_gradients);
-        #[cfg(feature = "neural_nobble_log")]
-        {
-            print!("Cost: {cost}. Gradient magnitude: {pre_descent_gradient_magnitude} ");
-        }
+        logging::log(&format!(
+            "Cost: {cost}. Gradient magnitude: {pre_descent_gradient_magnitude} "
+        ));
         if let Some(prev_cost) = previous_cost {
             let cost_reduction = prev_cost - cost;
-            #[cfg(feature = "neural_nobble_log")]
-            {
-                println!(" Cost reduction: {cost_reduction}");
-            }
+            logging::log(&format!(" Cost reduction: {cost_reduction}"));
             if cost_reduction > 0.0
                 && cost_reduction < training_options.cost_difference_stopping_criterion
                 && pre_descent_gradient_magnitude
@@ -116,10 +105,7 @@ pub fn train<C: CostFunction>(
             break;
         }
     }
-    #[cfg(feature = "neural_nobble_log")]
-    {
-        println!("__________ training ends.")
-    }
+    logging::log("__________ training ends.");
 }
 
 fn create_minibatch(
