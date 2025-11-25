@@ -11,6 +11,7 @@ pub mod cost_functions;
 mod distribution;
 pub mod feed_forward;
 mod gradient_descent;
+pub mod lin_alg;
 pub mod mini_batch;
 pub mod neural_network;
 pub mod one_hot;
