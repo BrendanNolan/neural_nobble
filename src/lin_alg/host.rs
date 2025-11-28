@@ -1,5 +1,7 @@
 use crate::lin_alg::Dim;
-use std::ops::{Index, IndexMut, Mul};
+use std::ops::{Index, IndexMut};
+
+type HostVector = Vec<f64>;
 
 pub struct HostMatrix {
     raw: Vec<f64>,
