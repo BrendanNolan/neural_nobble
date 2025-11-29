@@ -37,7 +37,6 @@ pub fn train<C: CostFunction>(
     // cut down a lot on allocations, which are showing up in profiling.
     loop {
         logging::log(&format!("{}", network.weight_and_bias_sum()));
-
         let mini_batch = create_minibatch(
             inputs,
             targets,
