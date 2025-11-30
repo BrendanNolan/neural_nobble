@@ -16,11 +16,6 @@ impl FeedForwardResult {
     }
 }
 
-pub enum FeedForwardError {
-    InappropriateMiniBatchInputSize,
-    InappropriateMiniBatchTargetSize,
-}
-
 pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForwardResult {
     let mut activations: Vec<Array2<f32>> = Vec::with_capacity(network.layer_count().get());
     activations.push(mini_batch.inputs.clone());
