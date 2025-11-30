@@ -1,8 +1,8 @@
 pub mod device;
 pub mod host;
 
-use device::{DeviceMatrix, DeviceVector};
-use host::{HostMatrix, HostVector};
+pub use device::{DeviceMatrix, DeviceVector};
+pub use host::{HostMatrix, HostVector};
 
 impl From<DeviceVector> for HostVector {
     fn from(value: DeviceVector) -> Self {

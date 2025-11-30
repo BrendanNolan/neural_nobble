@@ -1,3 +1,5 @@
+use crate::lin_alg::{DeviceMatrix, DeviceVector};
+
 #[repr(C)]
 struct Dim3 {
     x: u32,
@@ -23,10 +25,42 @@ mod inner {
     }
 }
 
+pub struct LaunchConfig {
+    grid: Dim3,
+    block: Dim3,
+    shared_mem_size: u32,
+}
+
 pub fn transfer_to_cuda(elements: &[f32]) -> *mut f32 {
     unsafe { inner::transfer_to_cuda(elements.as_ptr(), elements.len()) }
 }
 
 pub fn transfer_from_cuda(device_array: *const f32, count: usize) -> Vec<f32> {
     unsafe { Vec::from_raw_parts(inner::transfer_from_cuda(device_array, count), count, count) }
+}
+
+pub fn launch_tiled_multiply(
+    a: &DeviceMatrix,
+    b: &DeviceMatrix,
+    c: &mut DeviceMatrix,
+    launch_config: LaunchConfig,
+) {
+    let LaunchConfig {
+        grid,
+        block,
+        shared_mem_size,
+    } = launch_config;
+    unsafe {
+        inner::launch_tiled_multiply(
+            a.device,
+            a.dim.rows as u32,
+            a.dim.cols as u32,
+            b.device,
+            b.dim.cols as u32,
+            c.device,
+            grid,
+            block,
+            shared_mem_size,
+        );
+    }
 }
