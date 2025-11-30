@@ -26,7 +26,7 @@ impl NeuralNetworkBuilder {
             bias_vectors: vec![Array1::zeros(0)],
             // sacrificial zeroth layer to make indexing easier
             activation_functions: vec![ActivationFunction::Id],
-            random_number_generator: StdRng::seed_from_u64(147),
+            random_number_generator: StdRng::seed_from_u64(8),
         }
     }
 
