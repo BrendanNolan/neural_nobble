@@ -10,6 +10,7 @@ pub mod convolution;
 pub mod cost_functions;
 mod distribution;
 pub mod feed_forward;
+mod ffi;
 mod gradient_descent;
 mod lin_alg;
 mod logging;
