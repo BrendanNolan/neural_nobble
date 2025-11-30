@@ -2,8 +2,8 @@ use crate::{common::*, neural_network::NeuralNetwork};
 
 #[derive(Debug)]
 pub struct MiniBatch {
-    pub inputs: Array2<f64>,
-    pub targets: Array2<f64>,
+    pub inputs: Array2<f32>,
+    pub targets: Array2<f32>,
 }
 
 pub enum MiniBatchSizeError {
@@ -14,8 +14,8 @@ pub enum MiniBatchSizeError {
 
 impl MiniBatch {
     pub fn new(
-        inputs: Vec<Array1<f64>>,
-        targets: Vec<Array1<f64>>,
+        inputs: Vec<Array1<f32>>,
+        targets: Vec<Array1<f32>>,
     ) -> Result<Self, MiniBatchSizeError> {
         let batch_size = inputs.len();
         let mut mini_batch = MiniBatch::new_zeroed(inputs[0].len(), targets[0].len(), batch_size);
@@ -23,7 +23,7 @@ impl MiniBatch {
         Ok(mini_batch)
     }
 
-    pub fn create(inputs: Array2<f64>, targets: Array2<f64>) -> Self {
+    pub fn create(inputs: Array2<f32>, targets: Array2<f32>) -> Self {
         Self { inputs, targets }
     }
 
@@ -44,8 +44,8 @@ impl MiniBatch {
 
     fn populate(
         &mut self,
-        inputs: Vec<Array1<f64>>,
-        targets: Vec<Array1<f64>>,
+        inputs: Vec<Array1<f32>>,
+        targets: Vec<Array1<f32>>,
     ) -> Result<(), MiniBatchSizeError> {
         if inputs.len() != targets.len() {
             return Err(MiniBatchSizeError::InputTargetCountMismatch);
@@ -66,7 +66,7 @@ impl MiniBatch {
         Ok(())
     }
 
-    fn add_data_point(&mut self, input: &Array1<f64>, target: &Array1<f64>, batch_index: usize) {
+    fn add_data_point(&mut self, input: &Array1<f32>, target: &Array1<f32>, batch_index: usize) {
         self.inputs.column_mut(batch_index).assign(input);
         self.targets.column_mut(batch_index).assign(target);
     }

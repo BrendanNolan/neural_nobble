@@ -6,8 +6,8 @@ use std::ops::AddAssign;
 
 #[derive(Debug, Default)]
 pub struct FeedForwardResult {
-    pub activations: Vec<Array2<f64>>,
-    pub weighted_inputs: Vec<Array2<f64>>,
+    pub activations: Vec<Array2<f32>>,
+    pub weighted_inputs: Vec<Array2<f32>>,
 }
 
 impl FeedForwardResult {
@@ -22,9 +22,9 @@ pub enum FeedForwardError {
 }
 
 pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForwardResult {
-    let mut activations: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
+    let mut activations: Vec<Array2<f32>> = Vec::with_capacity(network.layer_count().get());
     activations.push(mini_batch.inputs.clone());
-    let mut weighted_inputs: Vec<Array2<f64>> = Vec::with_capacity(network.layer_count().get());
+    let mut weighted_inputs: Vec<Array2<f32>> = Vec::with_capacity(network.layer_count().get());
     weighted_inputs.push(Array2::zeros((0, 0))); // sacrificial empty matrix to make indexing easier
     for layer in 1..network.layer_count().get() {
         let prev_activations = &activations[layer - 1];
@@ -48,7 +48,7 @@ pub fn feed_forward(network: &NeuralNetwork, mini_batch: &MiniBatch) -> FeedForw
     }
 }
 
-pub fn print_details(feed_forward: &FeedForwardResult, targets: &Array2<f64>, count: usize) {
+pub fn print_details(feed_forward: &FeedForwardResult, targets: &Array2<f32>, count: usize) {
     let prediction_matrix = feed_forward.activations.last().unwrap();
     for col in 0..count {
         let column_pred: Vec<String> = prediction_matrix

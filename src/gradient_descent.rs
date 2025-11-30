@@ -1,10 +1,10 @@
 use crate::{common::*, logging, neural_network::NeuralNetwork};
 
 pub fn descend(
-    weight_gradients: &[Array2<f64>],
-    bias_gradients: &[Array1<f64>],
+    weight_gradients: &[Array2<f32>],
+    bias_gradients: &[Array1<f32>],
     network: &mut NeuralNetwork,
-    learning_rate: f64,
+    learning_rate: f32,
 ) {
     let gradient_magnitude = gradient_magnitude(weight_gradients, bias_gradients);
     let adjustment_factor = -(learning_rate * gradient_magnitude);
@@ -29,13 +29,13 @@ pub fn descend(
     }
 }
 
-pub fn gradient_magnitude(weight_gradients: &[Array2<f64>], bias_gradients: &[Array1<f64>]) -> f64 {
-    (weight_gradients.iter().map(sum_of_squares).sum::<f64>()
-        + bias_gradients.iter().map(sum_of_squares).sum::<f64>())
+pub fn gradient_magnitude(weight_gradients: &[Array2<f32>], bias_gradients: &[Array1<f32>]) -> f32 {
+    (weight_gradients.iter().map(sum_of_squares).sum::<f32>()
+        + bias_gradients.iter().map(sum_of_squares).sum::<f32>())
     .sqrt()
 }
 
-fn assert_dimensions(weight_gradients: &[&Array2<f64>], bias_gradients: &[&Array1<f64>]) {
+fn assert_dimensions(weight_gradients: &[&Array2<f32>], bias_gradients: &[&Array1<f32>]) {
     assert!(weight_gradients.len() == bias_gradients.len());
     for (w, b) in weight_gradients.iter().zip(bias_gradients.iter()) {
         assert!(row_count(w) == b.len());

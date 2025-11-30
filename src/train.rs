@@ -16,19 +16,19 @@ use std::collections::hash_set::HashSet;
 pub struct TrainingOptions<C: CostFunction> {
     pub cost_function: C,
     pub batch_size: usize,
-    pub learning_rate: f64,
-    pub gradient_magnitude_stopping_criterion: f64,
-    pub cost_difference_stopping_criterion: f64,
+    pub learning_rate: f32,
+    pub gradient_magnitude_stopping_criterion: f32,
+    pub cost_difference_stopping_criterion: f32,
     pub epoch_limit: usize,
 }
 
 pub fn train<C: CostFunction>(
     network: &mut NeuralNetwork,
-    inputs: &Array2<f64>,
-    targets: &Array2<f64>,
+    inputs: &Array2<f32>,
+    targets: &Array2<f32>,
     training_options: &TrainingOptions<C>,
 ) {
-    let mut previous_cost: Option<f64> = None;
+    let mut previous_cost: Option<f32> = None;
     logging::log("Training begins __________");
     let mut epoch_counter = 0;
     let mut descent_counter = 0;
@@ -108,8 +108,8 @@ pub fn train<C: CostFunction>(
 }
 
 fn create_minibatch(
-    inputs: &Array2<f64>,
-    targets: &Array2<f64>,
+    inputs: &Array2<f32>,
+    targets: &Array2<f32>,
     size: usize,
     rng: &mut StdRng,
 ) -> MiniBatch {
@@ -117,8 +117,8 @@ fn create_minibatch(
     while indices.len() < size {
         indices.insert(rng.random_range(0..column_count(inputs)));
     }
-    let mut batch_inputs = Array2::<f64>::zeros((row_count(inputs), size));
-    let mut batch_targets = Array2::<f64>::zeros((row_count(targets), size));
+    let mut batch_inputs = Array2::<f32>::zeros((row_count(inputs), size));
+    let mut batch_targets = Array2::<f32>::zeros((row_count(targets), size));
     for (batch_index, global_index) in indices.iter().enumerate() {
         batch_inputs
             .slice_mut(s![.., batch_index])

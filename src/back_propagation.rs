@@ -8,19 +8,19 @@ pub fn compute_gradient_of_cost_wrt_weights(
     network: &NeuralNetwork,
     feedforward_result: &FeedForwardResult,
     layer: NonZeroUsize,
-    errors_by_layer: &[Array2<f64>],
-) -> Array2<f64> {
+    errors_by_layer: &[Array2<f32>],
+) -> Array2<f32> {
     let layer = layer.get();
     let gradient = errors_by_layer[layer].dot(&feedforward_result.activations[layer - 1].t());
     // effectively averaging over the gradients of the batch members
-    (1.0 / feedforward_result.number_of_training_examples() as f64) * gradient
+    (1.0 / feedforward_result.number_of_training_examples() as f32) * gradient
 }
 
 // takes the average of the gradients over all training examples
 pub fn compute_gradient_of_cost_wrt_biases(
     layer: NonZeroUsize,
-    errors_by_layer: &[Array2<f64>],
-) -> Array1<f64> {
+    errors_by_layer: &[Array2<f32>],
+) -> Array1<f32> {
     errors_by_layer[layer.get()]
         .mean_axis(Axis(1))
         .unwrap()
@@ -32,7 +32,7 @@ pub fn compute_errors_by_layer(
     mini_batch: &MiniBatch,
     feedforward_result: &FeedForwardResult,
     cost_function: &impl CostFunction,
-) -> Vec<Array2<f64>> {
+) -> Vec<Array2<f32>> {
     let mut errors = vec![];
     errors.push(compute_error_at_last_layer(
         feedforward_result,
@@ -50,7 +50,7 @@ pub fn compute_errors_by_layer(
         ));
     }
     // Dummy error for 0th layer, to make returned array indexable by layer
-    errors.push(Array2::<f64>::zeros((0, 0)));
+    errors.push(Array2::<f32>::zeros((0, 0)));
     errors.reverse();
     errors
 }
@@ -59,8 +59,8 @@ fn propagate_error_back(
     network: &NeuralNetwork,
     feedforward_result: &FeedForwardResult,
     known_layer: NonZeroUsize,
-    known_error: &Array2<f64>,
-) -> Array2<f64> {
+    known_error: &Array2<f32>,
+) -> Array2<f32> {
     let needed_layer = known_layer.get() - 1;
     let needed_layer_nonzero = NonZeroUsize::new(known_layer.get() - 1).unwrap();
     let activation_derivatives_at_weighted_inputs = network
@@ -74,7 +74,7 @@ fn compute_error_at_last_layer(
     activation_function: ActivationFunction,
     cost_function: &impl CostFunction,
     mini_batch: &MiniBatch,
-) -> Array2<f64> {
+) -> Array2<f32> {
     let activation_derivatives_at_weighted_inputs =
         activation_function.derivative(feedforward_result.weighted_inputs.last().unwrap());
     let mut cost_gradients = cost_function.partial_derivative(

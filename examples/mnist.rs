@@ -25,20 +25,20 @@ fn main() {
     let train_data = Array2::from_shape_vec((50_000, image_size), trn_img)
         .expect("Error converting traininig images")
         .t()
-        .map(|x| *x as f64 / 256.0);
+        .map(|x| *x as f32 / 256.0);
 
     let train_labels =
         Array1::from_shape_vec(50_000, trn_lbl.clone()).expect("Error converting training labels");
-    let train_labels_one_hot_encoded = one_hot_encode(&train_labels, 10).map(|x| *x as f64);
+    let train_labels_one_hot_encoded = one_hot_encode(&train_labels, 10).map(|x| *x as f32);
 
     let test_data = Array2::from_shape_vec((10_000, image_size), tst_img)
         .expect("Error converting test images")
         .t()
-        .map(|x| *x as f64 / 256.0);
+        .map(|x| *x as f32 / 256.0);
 
     let test_labels =
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
-    let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f64);
+    let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f32);
 
     let mut network = builder::NeuralNetworkBuilder::new(image_size)
         .add_layer_random(32, ActivationFunction::Relu)
@@ -140,7 +140,7 @@ where
     }
 }
 
-fn _print_image(image_array: &Array2<f64>, image_col: usize, image_file_name: &str) {
+fn _print_image(image_array: &Array2<f32>, image_col: usize, image_file_name: &str) {
     let mut data = Vec::new();
     for i in 0..28 * 28 {
         data.push(image_array[(i, image_col)]);

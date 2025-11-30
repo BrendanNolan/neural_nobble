@@ -4,25 +4,25 @@ pub mod builder;
 
 #[derive(Debug)]
 pub struct NeuralNetwork {
-    weight_matrices: Vec<Array2<f64>>,
-    bias_vectors: Vec<Array1<f64>>,
+    weight_matrices: Vec<Array2<f32>>,
+    bias_vectors: Vec<Array1<f32>>,
     activation_functions: Vec<ActivationFunction>,
 }
 
 impl NeuralNetwork {
-    pub fn weight_matrices_mut(&mut self) -> &mut [Array2<f64>] {
+    pub fn weight_matrices_mut(&mut self) -> &mut [Array2<f32>] {
         &mut self.weight_matrices[1..]
     }
 
-    pub fn bias_vectors_mut(&mut self) -> &mut [Array1<f64>] {
+    pub fn bias_vectors_mut(&mut self) -> &mut [Array1<f32>] {
         &mut self.bias_vectors[1..]
     }
 
-    pub fn weights(&self, layer: NonZeroUsize) -> &Array2<f64> {
+    pub fn weights(&self, layer: NonZeroUsize) -> &Array2<f32> {
         &self.weight_matrices[layer.get()]
     }
 
-    pub fn biases(&self, layer: NonZeroUsize) -> &Array1<f64> {
+    pub fn biases(&self, layer: NonZeroUsize) -> &Array1<f32> {
         &self.bias_vectors[layer.get()]
     }
 
@@ -46,8 +46,8 @@ impl NeuralNetwork {
         }
     }
 
-    pub fn weight_and_bias_sum(&self) -> f64 {
-        self.weight_matrices.iter().flatten().sum::<f64>()
-            + self.bias_vectors.iter().flatten().sum::<f64>()
+    pub fn weight_and_bias_sum(&self) -> f32 {
+        self.weight_matrices.iter().flatten().sum::<f32>()
+            + self.bias_vectors.iter().flatten().sum::<f32>()
     }
 }

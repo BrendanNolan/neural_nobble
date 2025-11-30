@@ -10,8 +10,8 @@ use ndarray_rand::RandomExt;
 
 pub struct NeuralNetworkBuilder {
     input_size: usize,
-    weight_matrices: Vec<Array2<f64>>,
-    bias_vectors: Vec<Array1<f64>>,
+    weight_matrices: Vec<Array2<f32>>,
+    bias_vectors: Vec<Array1<f32>>,
     activation_functions: Vec<ActivationFunction>,
     random_number_generator: StdRng,
 }
@@ -41,8 +41,8 @@ impl NeuralNetworkBuilder {
 
     pub fn add_layer(
         mut self,
-        weight_matrix: Array2<f64>,
-        bias_vector: Array1<f64>,
+        weight_matrix: Array2<f32>,
+        bias_vector: Array1<f32>,
         activation_function: ActivationFunction,
     ) -> Option<Self> {
         if !self.new_layer_valid(&weight_matrix, &bias_vector) {
@@ -83,7 +83,7 @@ impl NeuralNetworkBuilder {
         self.add_layer(weight_matrix, bias_vector, activation_function)
     }
 
-    fn new_layer_valid(&self, weight_matrix: &Array2<f64>, bias_vector: &Array1<f64>) -> bool {
+    fn new_layer_valid(&self, weight_matrix: &Array2<f32>, bias_vector: &Array1<f32>) -> bool {
         if row_count(weight_matrix) != bias_vector.len() {
             return false;
         }
