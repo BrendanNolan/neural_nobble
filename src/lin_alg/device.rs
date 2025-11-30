@@ -1,5 +1,10 @@
 use crate::lin_alg::Dim;
 
+pub struct DeviceVector {
+    cuda: *mut f64,
+    len: usize,
+}
+
 pub struct DeviceMatrix {
     cuda: *mut f64,
     dim: Dim,
