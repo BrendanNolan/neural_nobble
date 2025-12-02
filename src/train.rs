@@ -2,7 +2,7 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::{
     activation_functions::*,
-    back_propagation,
+    back_propagation::{compute_gradient_of_cost_wrt_biases, BackPropagationMachine},
     common::*,
     cost_functions::{self, CostFunction},
     feed_forward::{feed_forward, print_details},
@@ -34,7 +34,10 @@ pub fn train<C: CostFunction>(
     let mut descent_counter = 0;
     let mut random_number_generator = StdRng::seed_from_u64(155);
     // TODO: Can we reuse the vectors/matrices etc. from one loop iteration to the next? This would
-    // cut down a lot on allocations, which are showing up in profiling.
+    // cut down a lot on allocations, which are showing up in profiling. We should almost certainly
+    // have these preallocated, reusable matrices as members of the BackPropagationMachine type.
+    // E.g. the feedforward result can perhaps be preallocated and stored in the
+    // BackPropagationMachine.
     loop {
         logging::log(&format!("{}", network.weight_and_bias_sum()));
         let mini_batch = create_minibatch(
@@ -43,23 +46,19 @@ pub fn train<C: CostFunction>(
             training_options.batch_size,
             &mut random_number_generator,
         );
-        let feed_forward_result = feed_forward(network, &mini_batch);
-        let errors_by_layer = back_propagation::compute_errors_by_layer(
-            network,
-            &mini_batch,
-            &feed_forward_result,
-            &training_options.cost_function,
-        );
+        let feedforward_result = feed_forward(network, &mini_batch);
+        let back_propagation_machine =
+            BackPropagationMachine::new(network, &feedforward_result, training_options.batch_size);
+        let errors_by_layer = back_propagation_machine
+            .compute_errors_by_layer(&mini_batch, &training_options.cost_function);
         let cost = training_options.cost_function.cost(
-            feed_forward_result.activations.last().unwrap(),
+            feedforward_result.activations.last().unwrap(),
             &mini_batch.targets,
         );
         let weight_gradients = (1..network.layer_count().get())
             .rev()
             .map(|layer| {
-                back_propagation::compute_gradient_of_cost_wrt_weights(
-                    network,
-                    &feed_forward_result,
+                back_propagation_machine.compute_gradient_of_cost_wrt_weights(
                     NonZeroUsize::new(layer).unwrap(),
                     &errors_by_layer,
                 )
@@ -69,7 +68,7 @@ pub fn train<C: CostFunction>(
         let bias_gradients = (1..network.layer_count().get())
             .rev()
             .map(|layer| {
-                back_propagation::compute_gradient_of_cost_wrt_biases(
+                compute_gradient_of_cost_wrt_biases(
                     NonZeroUsize::new(layer).unwrap(),
                     &errors_by_layer,
                 )
