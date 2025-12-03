@@ -5,6 +5,7 @@
 pub mod activation_functions;
 mod array_utils;
 mod back_propagation;
+mod buffer_calculation;
 mod common;
 pub mod convolution;
 pub mod cost_functions;
