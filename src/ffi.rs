@@ -9,7 +9,7 @@ struct Dim3 {
 
 mod inner {
     extern "C" {
-        pub fn transfer_to_cuda(host_array: *const f32, count: usize) -> *mut f32;
+        pub fn allocate_on_cuda(host_array: *const f32, count: usize) -> *mut f32;
         pub fn transfer_from_cuda(device_array: *const f32, count: usize) -> *mut f32;
         pub fn launch_tiled_multiply(
             A: *const f32,
@@ -31,8 +31,8 @@ pub struct LaunchConfig {
     shared_mem_size: u32,
 }
 
-pub fn transfer_to_cuda(elements: &[f32]) -> *mut f32 {
-    unsafe { inner::transfer_to_cuda(elements.as_ptr(), elements.len()) }
+pub fn allocate_on_cuda(elements: &[f32]) -> *mut f32 {
+    unsafe { inner::allocate_on_cuda(elements.as_ptr(), elements.len()) }
 }
 
 pub fn transfer_from_cuda(device_array: *const f32, count: usize) -> Vec<f32> {
