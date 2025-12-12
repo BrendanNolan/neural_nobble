@@ -9,3 +9,5 @@
   only, storing the pointers in an array, then just reuse them on all subsequent iterations; the
   training loop has no branches and is single threaded, so you just grab the next pointer from the
   array every time you need to do a matrix multiplication. Then just cudaFree them all in the end.
+- In the ffi module, decide where we want void* and float* and decide whether `count`s are counting
+  floats or bytes. Probably all counts should represent floats and there should be no void pointers.
