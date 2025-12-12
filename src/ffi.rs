@@ -9,8 +9,9 @@ struct Dim3 {
 
 mod inner {
     extern "C" {
-        pub fn allocate_on_cuda(host_array: *const f32, count: usize) -> *mut f32;
-        pub fn transfer_from_cuda(device_array: *const f32, count: usize) -> *mut f32;
+        pub fn allocate_on_device(count: usize) -> *mut f32;
+        pub fn copy_to_device(host_array: *const f32, count: usize, device_memory: *mut f32);
+        pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32);
         pub fn launch_tiled_multiply(
             A: *const f32,
             ai: u32,
@@ -31,12 +32,20 @@ pub struct LaunchConfig {
     shared_mem_size: u32,
 }
 
-pub fn allocate_on_cuda(elements: &[f32]) -> *mut f32 {
-    unsafe { inner::allocate_on_cuda(elements.as_ptr(), elements.len()) }
+pub fn allocate_on_device(count: usize) -> *mut f32 {
+    unsafe { inner::allocate_on_device(count) }
 }
 
-pub fn transfer_from_cuda(device_array: *const f32, count: usize) -> Vec<f32> {
-    unsafe { Vec::from_raw_parts(inner::transfer_from_cuda(device_array, count), count, count) }
+pub fn copy_to_device(elements: &[f32], device_memory: *mut f32) {
+    unsafe {
+        inner::copy_to_device(elements.as_ptr(), elements.len(), device_memory);
+    }
+}
+
+pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32) {
+    unsafe {
+        inner::copy_from_device(device_array, count, host_array);
+    }
 }
 
 pub fn launch_tiled_multiply(
@@ -62,5 +71,25 @@ pub fn launch_tiled_multiply(
             block,
             shared_mem_size,
         );
+    }
+}
+
+struct DeviceMemoryPool {
+    slots: Vec<(*mut f32, usize)>,
+    index: usize,
+}
+
+impl DeviceMemoryPool {
+    pub fn next(&mut self) -> Option<(*mut f32, usize)> {
+        if self.index >= self.slots.len() {
+            return None;
+        }
+        let prev_index = self.index;
+        self.index += 1;
+        Some(self.slots[prev_index])
+    }
+
+    pub fn reset(&mut self) {
+        self.index = 0;
     }
 }
