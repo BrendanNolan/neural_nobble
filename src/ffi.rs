@@ -74,7 +74,27 @@ pub fn launch_tiled_multiply(
     }
 }
 
-struct DeviceMemoryPool {
+#[derive(Default)]
+pub struct DeviceMemoryPoolBuilder {
+    slots: Vec<(*mut f32, usize)>,
+}
+
+impl DeviceMemoryPoolBuilder {
+    pub fn create_slot(&mut self, count: usize) -> *mut f32 {
+        let device_memory = allocate_on_device(count);
+        self.slots.push((device_memory, count));
+        device_memory
+    }
+
+    pub fn build(self) -> DeviceMemoryPool {
+        DeviceMemoryPool {
+            slots: self.slots,
+            index: 0,
+        }
+    }
+}
+
+pub struct DeviceMemoryPool {
     slots: Vec<(*mut f32, usize)>,
     index: usize,
 }
