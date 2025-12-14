@@ -5,11 +5,14 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage: everything --build-type <Release|Debug> --cpus <number_of_cpus>"
+	echo "Usage: build_everything [--build-type <Release|Debug>] [--cpus <number_of_cpus>]"
 }
 
 build_type=Release
 cpus=1
+if command -v nproc; then
+	cpus="$(nproc)"
+fi
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -45,4 +48,4 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install conan
 ./configure_build "${build_type}"
-./run_build "${cpus}"
+./compile "${cpus}"

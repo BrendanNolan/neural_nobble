@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage run_build [cpu_count]"
+	echo "Usage compile [cpu_count]"
 }
 
 if [[ $# -ge 2 ]]; then
