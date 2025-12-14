@@ -40,12 +40,7 @@ if [[ ! "${build_type}" =~ ^(Debug|Release)$ ]]; then
 	exit 1
 fi
 
-if [[ -v VIRTUAL_ENV ]]; then
-	deactivate || true
-fi
-git clean -fdx
-python3 -m venv .venv
-source .venv/bin/activate
-pip install conan
+source clean_sourceme
+source sourceme_bash
 ./configure_build "${build_type}"
 ./compile "${cpus}"

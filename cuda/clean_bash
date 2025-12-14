@@ -1,4 +1,0 @@
-if [[ -v VIRTUAL_ENV ]]; then
-    deactivate
-fi
-git clean -fdx

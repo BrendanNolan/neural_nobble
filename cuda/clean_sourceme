@@ -1,0 +1,2 @@
+deactivate >/dev/null 2>/dev/null || true
+git clean -fdx
