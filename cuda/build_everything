@@ -10,7 +10,7 @@ usage() {
 
 build_type=Release
 cpus=1
-if command -v nproc; then
+if command -v nproc &>/dev/null; then
 	cpus="$(nproc)"
 fi
 

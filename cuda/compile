@@ -12,7 +12,7 @@ if [[ $# -ge 2 ]]; then
 fi
 
 num_cpus=1
-if command -v nproc; then
+if command -v nproc &>/dev/null; then
 	num_cpus="$(nproc)"
 fi
 if [[ $# -eq 1 ]]; then
