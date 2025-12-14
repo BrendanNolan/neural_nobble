@@ -2,3 +2,8 @@
 misidentified_images/*
 Session.vim
 perf.data
+build/
+compile_commands.json
+.venv/
+CMakeUserPresets.json
+test.log

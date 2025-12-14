@@ -1,0 +1,4 @@
+if set -q VIRTUAL_ENV
+    deactivate
+end
+git clean -fdx
