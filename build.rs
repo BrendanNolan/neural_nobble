@@ -1,31 +1,39 @@
 use std::{fs, path::PathBuf, process::Command};
 
 fn main() {
-    let cuda_dir = PathBuf::from("cuda");
+    let cuda_dir = fs::canonicalize("./cuda").unwrap();
+    let cuda_so = create_cuda_so(&cuda_dir);
+    let so_dir = cuda_so.parent().unwrap();
+    println!("cargo:rustc-link-search=native={}", so_dir.display());
+    println!("cargo:rustc-link-lib=dylib=cuda_lin_alg");
+    println!("cargo:rustc-link-arg=-Wl,-rpath,{}", so_dir.display());
+    println!("cargo:rerun-if-changed={}", cuda_dir.display());
+}
+
+fn create_cuda_so(cuda_dir: &PathBuf) -> PathBuf {
     Command::new("./build_everything")
-        .current_dir(&cuda_dir)
+        .current_dir(cuda_dir)
         .status()
         .unwrap();
     let cuda_so_base_name = "cuda_lin_alg";
     let cuda_so_name = format!("lib{cuda_so_base_name}.so");
-    let lib_path = fs::read_dir(&cuda_dir)
+    let std_out_from_find = Command::new("find")
+        .arg(cuda_dir)
+        .arg("-name")
+        .arg(&cuda_so_name)
+        .output()
+        .unwrap();
+    let path = String::from_utf8(std_out_from_find.stdout)
         .unwrap()
-        .filter_map(|entry| {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            if path.file_name() == Some(cuda_so_name.as_ref()) {
-                Some(path)
-            } else {
-                None
-            }
-        })
+        .lines()
         .next()
-        .expect("\ncuda shared lib not found\n");
-    let so_dir = lib_path.parent().unwrap();
-    // Link the cuda shared lib
-    println!("cargo:rustc-link-search=native={}", so_dir.display());
-    println!("cargo:rustc-link-lib=dylib=cuda_lin_alg");
-    println!("cargo:rustc-link-arg=-Wl,-rpath,{}", so_dir.display());
-    // Rerun if the cuda directory changes
-    println!("cargo:rerun-if-changed={}", cuda_dir.display());
+        .map(|s| s.to_owned())
+        .unwrap_or_else(|| {
+            panic!(
+                "\n{} not found in {}\n",
+                cuda_so_name,
+                cuda_dir.to_string_lossy()
+            )
+        });
+    PathBuf::from(path)
 }
