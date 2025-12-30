@@ -8,6 +8,7 @@ struct Dim3 {
 }
 
 mod inner {
+    #[link(name = "cuda_lin_alg")]
     extern "C" {
         pub fn allocate_floats_on_device(count: usize) -> *mut f32;
         pub fn copy_to_device(host_array: *const f32, count: usize, device_memory: *mut f32);
