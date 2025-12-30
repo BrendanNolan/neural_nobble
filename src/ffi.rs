@@ -114,3 +114,12 @@ impl DeviceMemoryPool {
         self.index = 0;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_ffi_matrix_multiplication() {
+        allocate_floats_on_device(147);
+    }
+}
