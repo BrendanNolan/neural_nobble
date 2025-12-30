@@ -10,7 +10,7 @@ struct Dim3 {
 mod inner {
     #[link(name = "cuda_lin_alg")]
     extern "C" {
-        pub fn allocate_floats_on_device(count: usize) -> *mut f32;
+        pub fn allocate_on_device(count: usize) -> *mut f32;
         pub fn copy_to_device(host_array: *const f32, count: usize, device_memory: *mut f32);
         pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32);
         pub fn launch_tiled_multiply(
@@ -33,8 +33,8 @@ pub struct LaunchConfig {
     shared_mem_size: u32,
 }
 
-pub fn allocate_floats_on_device(count: usize) -> *mut f32 {
-    unsafe { inner::allocate_floats_on_device(count) }
+pub fn allocate_on_device(count: usize) -> *mut f32 {
+    unsafe { inner::allocate_on_device(count) }
 }
 
 pub fn copy_to_device(elements: &[f32], device_memory: *mut f32) {
@@ -82,7 +82,7 @@ pub struct DeviceMemoryPoolBuilder {
 
 impl DeviceMemoryPoolBuilder {
     pub fn create_slot(&mut self, count: usize) -> *mut f32 {
-        let device_memory = allocate_floats_on_device(count);
+        let device_memory = allocate_on_device(count);
         self.slots.push((device_memory, count));
         device_memory
     }
@@ -120,6 +120,6 @@ mod tests {
     use super::*;
     #[test]
     fn test_ffi_matrix_multiplication() {
-        allocate_floats_on_device(147);
+        allocate_on_device(147);
     }
 }
