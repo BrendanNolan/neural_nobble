@@ -36,7 +36,7 @@ class Matrix {
 unsigned int raw_size(const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
 bool admits_tile(const Matrix& matrix, unsigned int tile_size);
-Matrix naive_multiply(const Matrix& a, const Matrix& b);
+Matrix naive_multiply(const Matrix& a, const Matrix& b, float alpha, float beta);
 Matrix tiled_multiply(const Matrix& a, const Matrix& b, unsigned int tile_size);
 
 }// namespace lin_alg
