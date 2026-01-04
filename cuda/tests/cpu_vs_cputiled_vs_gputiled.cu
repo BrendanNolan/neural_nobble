@@ -233,6 +233,7 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
 
     for (const auto& config : generate_launch_configs(range_hint)) {
+        std::cout << "Running speed test with launch config: " << to_string(config) << std::endl;
         const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
         std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
         EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
