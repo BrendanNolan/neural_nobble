@@ -24,5 +24,6 @@ target_include_directories(cuda_lin_alg
 )
 target_link_libraries(cuda_lin_alg
     PRIVATE lin_alg
-    PRIVATE CUDA::cudart)
-
+    PRIVATE CUDA::cudart
+    PUBLIC utils
+)

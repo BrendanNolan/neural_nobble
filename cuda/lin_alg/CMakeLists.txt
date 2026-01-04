@@ -10,4 +10,3 @@ target_include_directories(lin_alg
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-

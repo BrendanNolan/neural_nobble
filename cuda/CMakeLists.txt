@@ -12,8 +12,8 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 
 enable_testing()
 
-add_subdirectory(lin_alg)
-add_subdirectory(cuda_lin_alg)
 add_subdirectory(app)
 add_subdirectory(tests)
-
+add_subdirectory(cuda_lin_alg)
+add_subdirectory(lin_alg)
+add_subdirectory(utils)
