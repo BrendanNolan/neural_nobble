@@ -12,6 +12,7 @@ target_link_libraries(lin_alg_tests
         lin_alg
         cuda_lin_alg
         GTest::gtest
+        utils
 )
 
 target_include_directories(lin_alg_tests

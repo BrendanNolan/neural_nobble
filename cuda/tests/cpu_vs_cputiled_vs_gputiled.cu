@@ -1,6 +1,7 @@
 #include "gpu_matrix.h"
 #include "matrix.hpp"
 #include "test_config.hpp"
+#include "utils.h"
 
 #include <algorithm>
 #include <cassert>
@@ -93,11 +94,15 @@ struct CudaInput {
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
     launch_tiled_multiply(input.A,
+            Op::identity,
+            1.0f,
             input.ai,
             input.aj,
             input.B,
+            Op::identity,
             input.bj,
             input.C,
+            0.0f,
             input.config.grid_dim(),
             input.config.block_dim(),
             input.config.shared_mem_per_block());
@@ -247,6 +252,13 @@ TEST(SpeedTest, OneThousandElements) {
 
 TEST(SpeedTest, OneMillionElements) {
     speed_test(1U << 10U);
+}
+
+TEST(CorrectnessTest, Tiny) {
+    const auto rows_left = (1U << 2) + 1U;
+    const auto common = (1U << 2) + 3U;
+    const auto columns_right = (1U << 2) + 1U;
+    correctness_test(rows_left, common, columns_right);
 }
 
 TEST(CorrectnessTest, Small) {
