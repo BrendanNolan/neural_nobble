@@ -24,7 +24,8 @@ __global__ void tiled_multiply(const float* A,
             const auto g_j = y + blockIdx.y * blockDim.y + threadIdx.y;
             const auto l_c_cell = threadIdx.x * T + threadIdx.y;
             const auto c_global_index = g_i * bj + g_j;
-            c_tile[l_c_cell] = beta * C[c_global_index];
+            const auto c_global_index_valid = g_i < ai && g_j < bj;
+            c_tile[l_c_cell] = c_global_index_valid ? beta * C[c_global_index] : 0U;
             for (auto k = 0U; k < aj; k += T) {
                 const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
                 const auto in_scope_for_b = (k + threadIdx.x < aj && g_j < bj);
@@ -37,7 +38,7 @@ __global__ void tiled_multiply(const float* A,
                 }
                 __syncthreads();
             }
-            if (g_i < ai && g_j < bj)
+            if (c_global_index_valid)
                 C[c_global_index] = c_tile[l_c_cell];
         }
     }
