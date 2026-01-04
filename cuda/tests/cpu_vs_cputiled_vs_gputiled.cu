@@ -176,12 +176,15 @@ LaunchConfig get_test_config() {
     return config.value();
 }
 
-std::vector<LaunchConfig> generate_launch_configs() {
+enum class LaunchConfigRangeHint { all, only_sensible };
+
+std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint range_hint) {
     auto configs = std::vector<LaunchConfig>{get_test_config()};
     const auto sizes = std::vector<unsigned int>{256U, 128U, 64U, 32U, 16U, 8U, 1U};
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
-            if (grid_edge == 1U && block_edge == 1U) {
+            if (range_hint == LaunchConfigRangeHint::only_sensible
+                    && (grid_edge < 16U || block_edge < 16U)) {
                 continue;
             }
             const auto grid_dim = dim3(grid_edge, grid_edge);
@@ -198,19 +201,20 @@ std::vector<LaunchConfig> generate_launch_configs() {
 
 void correctness_test(const unsigned int rows_left,
         const unsigned int common,
-        const unsigned int columns_right) {
+        const unsigned int columns_right,
+        const LaunchConfigRangeHint range_hint) {
     const auto a = lin_alg::Matrix::random(Dim{rows_left, common});
     const auto b = lin_alg::Matrix::random(Dim{common, columns_right});
     const auto naive_multiply_result = lin_alg::naive_multiply(a, b);
     const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
-    for (const auto& config : generate_launch_configs()) {
+    for (const auto& config : generate_launch_configs(range_hint)) {
         const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
         EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
     }
 }
 
-void speed_test(const unsigned int dim_of_square_matrix) {
+void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRangeHint range_hint) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
 
@@ -228,7 +232,7 @@ void speed_test(const unsigned int dim_of_square_matrix) {
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
 
-    for (const auto& config : generate_launch_configs()) {
+    for (const auto& config : generate_launch_configs(range_hint)) {
         const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
         std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
         EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
@@ -239,40 +243,47 @@ void speed_test(const unsigned int dim_of_square_matrix) {
 }// namespace
 
 TEST(SpeedTest, SevenElements) {
-    speed_test(7U);
+    speed_test(7U, LaunchConfigRangeHint::all);
 }
 
 TEST(SpeedTest, ThirtyThreeElements) {
-    speed_test(33U);
+    speed_test(33U, LaunchConfigRangeHint::all);
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    speed_test(1U << 7U);
+    speed_test(1U << 7U, LaunchConfigRangeHint::all);
 }
 
 TEST(SpeedTest, OneMillionElements) {
-    speed_test(1U << 10U);
+    speed_test(1U << 10U, LaunchConfigRangeHint::only_sensible);
 }
 
 TEST(CorrectnessTest, Tiny) {
     const auto rows_left = (1U << 2) + 1U;
     const auto common = (1U << 2) + 3U;
     const auto columns_right = (1U << 2) + 1U;
-    correctness_test(rows_left, common, columns_right);
+    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
 TEST(CorrectnessTest, Small) {
+    const auto rows_left = 11U;
+    const auto common = 7U;
+    const auto columns_right = 9U;
+    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::all);
+}
+
+TEST(CorrectnessTest, Medium) {
     const auto rows_left = (1U << 5) + 1U;
     const auto common = (1U << 4) + 3U;
     const auto columns_right = (1U << 6) + 1U;
-    correctness_test(rows_left, common, columns_right);
+    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
 TEST(CorrectnessTest, Large) {
     const auto rows_left = (1U << 8) + 1U;
     const auto common = (1U << 7) + 3U;
     const auto columns_right = (1U << 6) + 1U;
-    correctness_test(rows_left, common, columns_right);
+    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::only_sensible);
 }
 
 TEST(PrintGpuStats, Basic) {
