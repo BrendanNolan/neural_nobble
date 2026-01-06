@@ -184,7 +184,7 @@ std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint ra
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
             if (range_hint == LaunchConfigRangeHint::only_sensible
-                    && (grid_edge < 16U || block_edge < 16U)) {
+                    && (grid_edge < 8U || block_edge < 8U)) {
                 continue;
             }
             const auto grid_dim = dim3(grid_edge, grid_edge);
