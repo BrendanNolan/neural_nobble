@@ -189,11 +189,9 @@ std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint ra
             }
             const auto grid_dim = dim3(grid_edge, grid_edge);
             const auto block_dim = dim3(block_edge, block_edge);
-            const auto config = LaunchConfig::create(grid_dim, block_dim);
-            if (!config) {
-                continue;
+            if (const auto config = LaunchConfig::create(grid_dim, block_dim)) {
+                configs.push_back(config.value());
             }
-            configs.push_back(config.value());
         }
     }
     return configs;
