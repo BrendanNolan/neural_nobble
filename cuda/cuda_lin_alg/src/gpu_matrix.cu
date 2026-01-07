@@ -1,4 +1,5 @@
 #include <cassert>
+#include <utility>
 
 #include "utils.h"
 #include "gpu_matrix.h"
@@ -6,12 +7,12 @@
 __global__ void tiled_multiply(const float* A,
         const Op op_A,
         const float alpha,
-        const unsigned int ai,
-        const unsigned int aj,
+        unsigned int ai,
+        unsigned int aj,
         const float* B,
         const Op op_B,
-        const unsigned int bi,
-        const unsigned int bj,
+        unsigned int bi,
+        unsigned int bj,
         float* C,
         const float beta) {
     assert(blockDim.x == blockDim.y);
@@ -20,6 +21,12 @@ __global__ void tiled_multiply(const float* A,
     float* a_tile = shared;
     float* b_tile = a_tile + T * T;
     float* c_tile = b_tile + T * T;
+    if (op_A == Op::transpose) {
+        std::swap(ai, aj);
+    }
+    if (op_B == Op::transpose) {
+        std::swap(bi, bj);
+    }
     for (auto x = 0U; x < ai; x += gridDim.x * blockDim.x) {
         for (auto y = 0U; y < bj; y += gridDim.y * blockDim.y) {
             const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
