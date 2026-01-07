@@ -1,5 +1,6 @@
 #include <cassert>
 
+#include "utils.h"
 #include "gpu_matrix.h"
 
 __global__ void tiled_multiply(const float* A,
@@ -9,6 +10,7 @@ __global__ void tiled_multiply(const float* A,
         const unsigned int aj,
         const float* B,
         const Op op_B,
+        const unsigned int bi,
         const unsigned int bj,
         float* C,
         const float beta) {
@@ -51,11 +53,13 @@ void launch_tiled_multiply(const float* A,
         const unsigned int aj,
         const float* B,
         const Op op_B,
+        const unsigned int bi,
         const unsigned int bj,
         float* C,
         const float beta,
         const dim3 grid,
         const dim3 block,
         const unsigned int shared_mem_size) {
-    tiled_multiply<<<grid, block, shared_mem_size>>>(A, op_A, alpha, ai, aj, B, op_B, bj, C, beta);
+    tiled_multiply<<<grid, block, shared_mem_size>>>(
+            A, op_A, alpha, ai, aj, B, op_B, bi, bj, C, beta);
 }

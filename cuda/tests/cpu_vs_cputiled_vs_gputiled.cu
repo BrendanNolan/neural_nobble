@@ -83,10 +83,11 @@ using Dim = lin_alg::Dimension;
 
 struct CudaInput {
     const float* A = nullptr;
-    const unsigned int ai = 0U;
-    const unsigned int aj = 0U;
+    unsigned int ai = 0U;
+    unsigned int aj = 0U;
     const float* B = nullptr;
-    const unsigned int bj = 0U;
+    unsigned int bi = 0U;
+    unsigned int bj = 0U;
     float* C = nullptr;
     LaunchConfig config;
 };
@@ -100,6 +101,7 @@ std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
             input.aj,
             input.B,
             Op::identity,
+            input.bi,
             input.bj,
             input.C,
             0.0f,
@@ -137,6 +139,7 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
             .ai = a.dim().i,
             .aj = a.dim().j,
             .B = B,
+            .bi = b.dim().i,
             .bj = b.dim().j,
             .C = C,
             .config = optional_config.value_or(default_launch_config)};
