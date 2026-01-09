@@ -1,8 +1,21 @@
 #include <cassert>
 #include <utility>
 
-#include "utils.h"
 #include "gpu_matrix.h"
+#include "utils.h"
+
+__device__ float element(const float* matrix,
+        const Op op,
+        unsigned int columns,
+        unsigned int i,
+        unsigned int j) {
+    switch (op) {
+    case Op::identity:
+        return matrix[i * columns + j];
+    case Op::transpose:
+        return matrix[j * columns + i];
+    }
+}
 
 __global__ void tiled_multiply(const float* A,
         const Op op_A,
@@ -21,6 +34,10 @@ __global__ void tiled_multiply(const float* A,
     float* a_tile = shared;
     float* b_tile = a_tile + T * T;
     float* c_tile = b_tile + T * T;
+    auto a_at = [op_A, A, aj](
+                        unsigned int i, unsigned int j) { return element(A, op_A, aj, i, j); };
+    auto b_at = [op_B, B, bj](
+                        unsigned int i, unsigned int j) { return element(B, op_B, bj, i, j); };
     if (op_A == Op::transpose) {
         std::swap(ai, aj);
     }
@@ -38,8 +55,8 @@ __global__ void tiled_multiply(const float* A,
             for (auto k = 0U; k < aj; k += T) {
                 const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
                 const auto in_scope_for_b = (k + threadIdx.x < aj && g_j < bj);
-                a_tile[l_c_cell] = in_scope_for_a ? A[g_i * aj + (k + threadIdx.y)] : 0U;
-                b_tile[l_c_cell] = in_scope_for_b ? B[(k + threadIdx.x) * bj + g_j] : 0U;
+                a_tile[l_c_cell] = in_scope_for_a ? a_at(g_i, k + threadIdx.y) : 0U;
+                b_tile[l_c_cell] = in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0U;
                 __syncthreads();
                 for (auto kk = 0U; kk < T; ++kk) {
                     c_tile[l_c_cell] +=
