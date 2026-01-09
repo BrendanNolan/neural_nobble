@@ -85,6 +85,22 @@ const float* Matrix::raw() const {
     return data_;
 }
 
+unsigned int Matrix::element_count() const {
+    return dim().i * dim().j;
+}
+
+void Matrix::scale(const float scalar) {
+    for (auto index = 0U; index < element_count(); ++index)
+        data_[index] *= scalar;
+}
+
+Matrix& Matrix::operator+=(const Matrix& other) {
+    const auto* other_raw = other.raw();
+    for (auto index = 0U; index < element_count(); ++index)
+        data_[index] += other_raw[inde];
+    return *this;
+}
+
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
     os << std::endl;
     if (matrix.dim().i == 0U || matrix.dim().j == 0U) {
@@ -108,42 +124,24 @@ bool admits_tile(const Matrix& matrix, unsigned int tile_size) {
     return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;
 }
 
-Matrix naive_multiply(const Matrix& a, const Matrix& b) {
+Matrix naive_multiply(const Matrix& a,
+        const Op op_a,
+        const float alpha,
+        const Matrix& b,
+        const Op op_b) {
     assert(a.dim().j == b.dim().i);
     auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
+    auto element = (const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
+        return op == Op::transpose ? matrix(j, i) : matrix(i, j);
+    }
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {
             for (auto k = 0U; k < a.dim().j; ++k) {
-                c(i, j) += a(i, k) * b(k, j);
+                c(i, j) += alpha * element(a, op_a, i, k) * element(b, op_b, k, j);
             }
         }
     }
     return c;
-}
-
-Matrix tiled_multiply(const Matrix& a, const Matrix& b, const unsigned int tile_size) {
-    assert(a.dim().j == b.dim().i);
-    assert(admits_tile(a, tile_size) && admits_tile(b, tile_size) && tile_size > 0U);
-    const auto M = a.dim().i;
-    const auto N = b.dim().j;
-    const auto K = a.dim().j;
-    const auto T = tile_size;
-    auto C = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
-    for (auto i = 0U; i < M; i += T) {
-        for (auto j = 0U; j < N; j += T) {
-            // top left of current C block is at (i,j)
-            for (auto k = 0U; k < K; k += T) {
-                for (auto ii = i; ii < std::min(i + T, M); ++ii) {
-                    for (auto kk = k; kk < std::min(k + T, K); ++kk) {
-                        for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                            C(ii, jj) += a(ii, kk) * b(kk, jj);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return C;
 }
 
 }// namespace lin_alg
