@@ -14,7 +14,17 @@ __device__ float element(const float* matrix,
         return matrix[i * columns + j];
     case Op::transpose:
         return matrix[j * columns + i];
+    default:
+        assert(false && "Unhandled Op case");
+        return 0.0f;
     }
+}
+
+template <typename T>
+__device__ void swap(T& a, T& b) {
+    const auto tmp = b;
+    b = a;
+    a = tmp;
 }
 
 __global__ void tiled_multiply(const float* A,
@@ -39,10 +49,10 @@ __global__ void tiled_multiply(const float* A,
     auto b_at = [op_B, B, bj](
                         unsigned int i, unsigned int j) { return element(B, op_B, bj, i, j); };
     if (op_A == Op::transpose) {
-        std::swap(ai, aj);
+        swap(ai, aj);
     }
     if (op_B == Op::transpose) {
-        std::swap(bi, bj);
+        swap(bi, bj);
     }
     for (auto x = 0U; x < ai; x += gridDim.x * blockDim.x) {
         for (auto y = 0U; y < bj; y += gridDim.y * blockDim.y) {
