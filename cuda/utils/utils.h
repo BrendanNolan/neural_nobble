@@ -1,5 +1,6 @@
 #pragma once
 
 extern "C" {
-enum Op { identity, transpose };
+typedef uint8_t Op;
+enum { Identity, Transpose };
 }

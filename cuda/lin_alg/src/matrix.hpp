@@ -54,11 +54,11 @@ Matrix tiled_multiply(const Matrix& a, const float alpha, const Matrix& b) {
     auto M = a.dim().i;
     auto N = b.dim().j;
     auto K = a.dim().j;
-    if constexpr (op_a == Op::transpose) {
+    if constexpr (op_a == Op::Transpose) {
         M = a.dim().j;
         K = a.dim().i;
     }
-    if constexpr (op_b == Op::transpose) {
+    if constexpr (op_b == Op::Transpose) {
         N = b.dim().i;
     }
     const auto T = tile_size;
@@ -71,13 +71,13 @@ Matrix tiled_multiply(const Matrix& a, const float alpha, const Matrix& b) {
                     for (auto kk = k; kk < std::min(k + T, K); ++kk) {
                         for (auto jj = j; jj < std::min(j + T, N); ++jj) {
                             auto a_term = 0.0f;
-                            if constexpr (op_a == Op::transpose) {
+                            if constexpr (op_a == Op::Transpose) {
                                 a_term == a(kk, ii);
                             } else {
                                 a_term = a(ii, kk);
                             }
                             auto b_term = 0.0f;
-                            if constexpr (op_b == Op::transpose) {
+                            if constexpr (op_b == Op::Transpose) {
                                 b_term = b(jj, kk);
                             } else {
                                 b_term = b(kk, jj);

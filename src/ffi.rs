@@ -7,6 +7,13 @@ struct Dim3 {
     z: u32,
 }
 
+#[repr(u8)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Op {
+    Identity = 0,
+    Transpose = 1,
+}
+
 mod inner {
     #[link(name = "cuda_lin_alg")]
     extern "C" {
@@ -15,9 +22,13 @@ mod inner {
         pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32);
         pub fn launch_tiled_multiply(
             A: *const f32,
+            op_A: super::Op,
+            alpha: f32,
             ai: u32,
             aj: u32,
             B: *const f32,
+            op_B: super::Op,
+            beta: f32,
             bi: u32,
             bj: u32,
             C: *const f32,

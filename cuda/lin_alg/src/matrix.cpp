@@ -132,7 +132,7 @@ Matrix naive_multiply(const Matrix& a,
     assert(a.dim().j == b.dim().i);
     auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
     auto element = (const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
-        return op == Op::transpose ? matrix(j, i) : matrix(i, j);
+        return op == Op::Transpose ? matrix(j, i) : matrix(i, j);
     }
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {

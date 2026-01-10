@@ -83,9 +83,13 @@ using Dim = lin_alg::Dimension;
 
 struct CudaInput {
     const float* A = nullptr;
+    Op op_A;
+    float alpha;
     unsigned int ai = 0U;
     unsigned int aj = 0U;
     const float* B = nullptr;
+    Op op_B;
+    float beta;
     unsigned int bi = 0U;
     unsigned int bj = 0U;
     float* C = nullptr;
@@ -95,16 +99,16 @@ struct CudaInput {
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
     launch_tiled_multiply(input.A,
-            Op::identity,
-            1.0f,
+            input.op_A,
+            input.alpha,
             input.ai,
             input.aj,
             input.B,
-            Op::identity,
+            input.op_B,
+            input.beta,
             input.bi,
             input.bj,
             input.C,
-            0.0f,
             input.config.grid_dim(),
             input.config.block_dim(),
             input.config.shared_mem_per_block());
@@ -114,7 +118,11 @@ std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
 }
 
 CudaInput ExtractInput(const lin_alg::Matrix& a,
+        const Op op_a,
+        const float alpha,
         const lin_alg::Matrix& b,
+        const Op op_b,
+        const float beta,
         const std::optional<LaunchConfig>& optional_config) {
     const auto a_bytes = raw_size(a) * sizeof(float);
     float* A;
@@ -136,9 +144,13 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
             dim3{default_block_edge_size, default_block_edge_size})
                                                .value();
     return CudaInput{.A = A,
+            .op_A = op_a,
+            .alpha = alpha,
             .ai = a.dim().i,
             .aj = a.dim().j,
             .B = B,
+            .op_B = op_b,
+            .beta = beta,
             .bi = b.dim().i,
             .bj = b.dim().j,
             .C = C,
@@ -156,9 +168,13 @@ std::string to_string(const MultiplyResult& result) {
 }
 
 MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
+        const Op op_a,
+        const float alpha,
         const lin_alg::Matrix& b,
+        const Op op_b,
+        const float beta,
         const std::optional<LaunchConfig>& optional_config = std::nullopt) {
-    const auto input = ExtractInput(a, b, optional_config);
+    const auto input = ExtractInput(a, op_a, alpha, b, op_b, beta, optional_config);
     const auto duration_ms = raw_cuda_multiply(input);
     const auto c_bytes = input.ai * input.bj * sizeof(float);
     float* h_C = static_cast<float*>(malloc(c_bytes));

@@ -10,9 +10,9 @@ __device__ float element(const float* matrix,
         unsigned int i,
         unsigned int j) {
     switch (op) {
-    case Op::identity:
+    case Op::Identity:
         return matrix[i * columns + j];
-    case Op::transpose:
+    case Op::Transpose:
         return matrix[j * columns + i];
     default:
         assert(false && "Unhandled Op case");
@@ -34,10 +34,10 @@ __global__ void tiled_multiply(const float* A,
         unsigned int aj,
         const float* B,
         const Op op_B,
+        const float beta,
         unsigned int bi,
         unsigned int bj,
-        float* C,
-        const float beta) {
+        float* C) {
     assert(blockDim.x == blockDim.y);
     const auto T = blockDim.x;
     extern __shared__ float shared[];
@@ -48,10 +48,10 @@ __global__ void tiled_multiply(const float* A,
                         unsigned int i, unsigned int j) { return element(A, op_A, aj, i, j); };
     auto b_at = [op_B, B, bj](
                         unsigned int i, unsigned int j) { return element(B, op_B, bj, i, j); };
-    if (op_A == Op::transpose) {
+    if (op_A == Op::Transpose) {
         swap(ai, aj);
     }
-    if (op_B == Op::transpose) {
+    if (op_B == Op::Transpose) {
         swap(bi, bj);
     }
     for (auto x = 0U; x < ai; x += gridDim.x * blockDim.x) {
@@ -87,13 +87,13 @@ void launch_tiled_multiply(const float* A,
         const unsigned int aj,
         const float* B,
         const Op op_B,
+        const float beta,
         const unsigned int bi,
         const unsigned int bj,
         float* C,
-        const float beta,
         const dim3 grid,
         const dim3 block,
         const unsigned int shared_mem_size) {
     tiled_multiply<<<grid, block, shared_mem_size>>>(
-            A, op_A, alpha, ai, aj, B, op_B, bi, bj, C, beta);
+            A, op_A, alpha, ai, aj, B, op_B, beta, bi, bj, C);
 }
