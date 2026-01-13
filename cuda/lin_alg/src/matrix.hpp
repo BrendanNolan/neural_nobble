@@ -48,17 +48,20 @@ Matrix naive_multiply(const Matrix& a,
         const Op op_b);
 
 template <Op op_a, Op op_b>
-Matrix tiled_multiply(const Matrix& a, const float alpha, const Matrix& b) {
+Matrix tiled_multiply(const Matrix& a,
+        const float alpha,
+        const Matrix& b,
+        const unsigned int tile_size) {
     assert(a.dim().j == b.dim().i);
     assert(admits_tile(a, tile_size) && admits_tile(b, tile_size) && tile_size > 0U);
     auto M = a.dim().i;
     auto N = b.dim().j;
     auto K = a.dim().j;
-    if constexpr (op_a == Op::Transpose) {
+    if constexpr (op_a == Transpose) {
         M = a.dim().j;
         K = a.dim().i;
     }
-    if constexpr (op_b == Op::Transpose) {
+    if constexpr (op_b == Transpose) {
         N = b.dim().i;
     }
     const auto T = tile_size;
@@ -71,13 +74,13 @@ Matrix tiled_multiply(const Matrix& a, const float alpha, const Matrix& b) {
                     for (auto kk = k; kk < std::min(k + T, K); ++kk) {
                         for (auto jj = j; jj < std::min(j + T, N); ++jj) {
                             auto a_term = 0.0f;
-                            if constexpr (op_a == Op::Transpose) {
+                            if constexpr (op_a == Transpose) {
                                 a_term == a(kk, ii);
                             } else {
                                 a_term = a(ii, kk);
                             }
                             auto b_term = 0.0f;
-                            if constexpr (op_b == Op::Transpose) {
+                            if constexpr (op_b == Transpose) {
                                 b_term = b(jj, kk);
                             } else {
                                 b_term = b(kk, jj);

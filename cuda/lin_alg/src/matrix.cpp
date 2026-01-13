@@ -97,7 +97,7 @@ void Matrix::scale(const float scalar) {
 Matrix& Matrix::operator+=(const Matrix& other) {
     const auto* other_raw = other.raw();
     for (auto index = 0U; index < element_count(); ++index)
-        data_[index] += other_raw[inde];
+        data_[index] += other_raw[index];
     return *this;
 }
 
@@ -131,9 +131,10 @@ Matrix naive_multiply(const Matrix& a,
         const Op op_b) {
     assert(a.dim().j == b.dim().i);
     auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
-    auto element = (const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
-        return op == Op::Transpose ? matrix(j, i) : matrix(i, j);
-    }
+    auto element =
+            [](const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
+                return op == Transpose ? matrix(j, i) : matrix(i, j);
+            };
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {
             for (auto k = 0U; k < a.dim().j; ++k) {

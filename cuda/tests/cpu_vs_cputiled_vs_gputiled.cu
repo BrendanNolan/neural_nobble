@@ -82,33 +82,13 @@ std::string to_string(const LaunchConfig& config) {
 using Dim = lin_alg::Dimension;
 
 struct CudaInput {
-    const float* A = nullptr;
-    Op op_A;
-    float alpha;
-    unsigned int ai = 0U;
-    unsigned int aj = 0U;
-    const float* B = nullptr;
-    Op op_B;
-    float beta;
-    unsigned int bi = 0U;
-    unsigned int bj = 0U;
-    float* C = nullptr;
+    GemmParams params;
     LaunchConfig config;
 };
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
-    launch_tiled_multiply(input.A,
-            input.op_A,
-            input.alpha,
-            input.ai,
-            input.aj,
-            input.B,
-            input.op_B,
-            input.beta,
-            input.bi,
-            input.bj,
-            input.C,
+    launch_tiled_multiply(input.params,
             input.config.grid_dim(),
             input.config.block_dim(),
             input.config.shared_mem_per_block());
@@ -143,17 +123,16 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
                             (b.dim().j + default_block_edge_size - 1) / default_block_edge_size)},
             dim3{default_block_edge_size, default_block_edge_size})
                                                .value();
-    return CudaInput{.A = A,
-            .op_A = op_a,
-            .alpha = alpha,
-            .ai = a.dim().i,
-            .aj = a.dim().j,
-            .B = B,
-            .op_B = op_b,
-            .beta = beta,
-            .bi = b.dim().i,
-            .bj = b.dim().j,
-            .C = C,
+    return CudaInput{
+            .params = GemmParams{.A = ConstMatrixDetails{.data = A,
+                                         .rows = a.dim().i,
+                                         .columns = a.dim().j},
+                    .op_A = op_a,
+                    .alpha = alpha,
+                    .B = ConstMatrixDetails{.data = B, .rows = b.dim().i, .columns = b.dim().j},
+                    .op_B = op_b,
+                    .beta = beta,
+                    .C = C},
             .config = optional_config.value_or(default_launch_config)};
 }
 
@@ -176,9 +155,9 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
         const std::optional<LaunchConfig>& optional_config = std::nullopt) {
     const auto input = ExtractInput(a, op_a, alpha, b, op_b, beta, optional_config);
     const auto duration_ms = raw_cuda_multiply(input);
-    const auto c_bytes = input.ai * input.bj * sizeof(float);
+    const auto c_bytes = input.params.A.rows * input.params.B.columns * sizeof(float);
     float* h_C = static_cast<float*>(malloc(c_bytes));
-    cudaMemcpy(h_C, input.C, c_bytes, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C, input.params.C, c_bytes, cudaMemcpyDeviceToHost);
     return MultiplyResult{.result_matrix = lin_alg::Matrix::from_raw(
                                   h_C, lin_alg::Dimension{a.dim().i, b.dim().j}),
             .duration = duration_ms,
@@ -222,11 +201,12 @@ void correctness_test(const unsigned int rows_left,
         const LaunchConfigRangeHint range_hint) {
     const auto a = lin_alg::Matrix::random(Dim{rows_left, common});
     const auto b = lin_alg::Matrix::random(Dim{common, columns_right});
-    const auto naive_multiply_result = lin_alg::naive_multiply(a, b);
-    const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
+    const auto naive_multiply_result = lin_alg::naive_multiply(a, Identity, 1.0, b, Identity);
+    const auto cuda_multiply_result = cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0);
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
     for (const auto& config : generate_launch_configs(range_hint)) {
-        const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
+        const auto cuda_multiply_result =
+                cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
         EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
     }
 }
@@ -236,21 +216,22 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
 
     auto start = std::chrono::high_resolution_clock::now();
-    const auto naive_multiply_result = lin_alg::naive_multiply(a, b);
+    const auto naive_multiply_result = lin_alg::naive_multiply(a, Identity, 1.0, b, Identity);
     auto end = std::chrono::high_resolution_clock::now();
     const auto naive_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Naive CPU execution time: " << naive_time << " ms" << std::endl;
 
     start = std::chrono::high_resolution_clock::now();
-    auto tiled_multiply_result = lin_alg::tiled_multiply(a, b, 4U);
+    auto tiled_multiply_result = lin_alg::tiled_multiply<Identity, Identity>(a, 1.0, b, 4U);
     end = std::chrono::high_resolution_clock::now();
     const auto optimised_cpu_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
 
     for (const auto& config : generate_launch_configs(range_hint)) {
-        const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
+        const auto cuda_multiply_result =
+                cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
         std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
         EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
         EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);

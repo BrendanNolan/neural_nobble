@@ -1,6 +1,7 @@
 use crate::lin_alg::{DeviceMatrix, DeviceVector};
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 struct Dim3 {
     x: u32,
     y: u32,
@@ -14,6 +15,34 @@ pub enum Op {
     Transpose = 1,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+struct GemmParams {
+    a: ConstMatrixDetails,
+    op_a: super::Op,
+    alpha: f32,
+    b: ConstMatrixDetails,
+    op_b: super::Op,
+    beta: f32,
+    c: *mut f32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+struct ConstMatrixDetails {
+    data: *const f32,
+    rows: u32,
+    columns: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+struct MutableMatrixDetails {
+    data: *mut f32,
+    rows: u32,
+    columns: u32,
+}
+
 mod inner {
     #[link(name = "cuda_lin_alg")]
     extern "C" {
@@ -21,17 +50,7 @@ mod inner {
         pub fn copy_to_device(host_array: *const f32, count: usize, device_memory: *mut f32);
         pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32);
         pub fn launch_tiled_multiply(
-            A: *const f32,
-            op_A: super::Op,
-            alpha: f32,
-            ai: u32,
-            aj: u32,
-            B: *const f32,
-            op_B: super::Op,
-            beta: f32,
-            bi: u32,
-            bj: u32,
-            C: *const f32,
+            params: GemmParams,
             grid: super::Dim3,
             block: super::Dim3,
             shared_mem_size: u32,
