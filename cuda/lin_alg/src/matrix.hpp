@@ -75,7 +75,7 @@ Matrix tiled_multiply(const Matrix& a,
                         for (auto jj = j; jj < std::min(j + T, N); ++jj) {
                             auto a_term = 0.0f;
                             if constexpr (op_a == Transpose) {
-                                a_term == a(kk, ii);
+                                a_term = a(kk, ii);
                             } else {
                                 a_term = a(ii, kk);
                             }
