@@ -47,52 +47,11 @@ Matrix naive_multiply(const Matrix& a,
         const Matrix& b,
         const Op op_b);
 
-template <Op op_a, Op op_b>
 Matrix tiled_multiply(const Matrix& a,
+        Op op_a,
         const float alpha,
         const Matrix& b,
-        const unsigned int tile_size) {
-    assert(a.dim().j == b.dim().i);
-    assert(admits_tile(a, tile_size) && admits_tile(b, tile_size) && tile_size > 0U);
-    auto M = a.dim().i;
-    auto N = b.dim().j;
-    auto K = a.dim().j;
-    if constexpr (op_a == Transpose) {
-        M = a.dim().j;
-        K = a.dim().i;
-    }
-    if constexpr (op_b == Transpose) {
-        N = b.dim().i;
-    }
-    const auto T = tile_size;
-    auto C = Matrix::zeroes(Dimension{M, N});
-    for (auto i = 0U; i < M; i += T) {
-        for (auto j = 0U; j < N; j += T) {
-            // top left of current C block is at (i,j)
-            for (auto k = 0U; k < K; k += T) {
-                for (auto ii = i; ii < std::min(i + T, M); ++ii) {
-                    for (auto kk = k; kk < std::min(k + T, K); ++kk) {
-                        for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                            auto a_term = 0.0f;
-                            if constexpr (op_a == Transpose) {
-                                a_term = a(kk, ii);
-                            } else {
-                                a_term = a(ii, kk);
-                            }
-                            auto b_term = 0.0f;
-                            if constexpr (op_b == Transpose) {
-                                b_term = b(jj, kk);
-                            } else {
-                                b_term = b(kk, jj);
-                            }
-                            C(ii, jj) += alpha * a_term * b_term;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return C;
-}
+        Op op_b,
+        const unsigned int tile_size);
 
 }// namespace lin_alg
