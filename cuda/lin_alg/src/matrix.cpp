@@ -145,22 +145,6 @@ Matrix naive_multiply(const Matrix& a,
     return c;
 }
 
-namespace {
-enum class TransposeStrategy { neither, a_only, b_only, both };
-
-TransposeStrategy get_transpose_strategy(const Op op_a, const Op op_b) {
-    if (op_a == Transpose && op_b == Transpose) {
-        return TransposeStrategy::both;
-    } else if (op_a == Transpose && op_b == Identity) {
-        return TransposeStrategy::a_only;
-    } else if (op_a == Identity && op_b == Transpose) {
-        return TransposeStrategy::b_only;
-    } else {
-        return TransposeStrategy::neither;
-    }
-}
-}// namespace
-
 Matrix tiled_multiply(const Matrix& a,
         Op op_a,
         const float alpha,
@@ -179,28 +163,16 @@ Matrix tiled_multiply(const Matrix& a,
     }
     const auto T = tile_size;
     auto C = Matrix::zeroes(Dimension{M, N});
-    const auto transpose_strategy = get_transpose_strategy(op_a, op_b);
     for (auto i = 0U; i < M; i += T) {
         for (auto j = 0U; j < N; j += T) {
             // top left of current C block is at (i,j)
             for (auto k = 0U; k < K; k += T) {
                 for (auto ii = i; ii < std::min(i + T, M); ++ii) {
                     for (auto kk = k; kk < std::min(k + T, K); ++kk) {
+                        const auto alpha_times_a_term = alpha * (op_a == Transpose ? a(kk, ii) : a(ii, kk));
                         for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                            switch (transpose_strategy) {
-                            case TransposeStrategy::neither:
-                                C(ii, jj) += alpha * a(ii, kk) * b(kk, jj);
-                                break;
-                            case TransposeStrategy::a_only:
-                                C(ii, jj) += alpha * a(kk, ii) * b(kk, jj);
-                                break;
-                            case TransposeStrategy::b_only:
-                                C(ii, jj) += alpha * a(ii, kk) * b(jj, kk);
-                                break;
-                            case TransposeStrategy::both:
-                                C(ii, jj) += alpha * a(kk, ii) * b(jj, kk);
-                                break;
-                            }
+                            C(ii, jj) +=
+                                    alpha_times_a_term * (op_b == Transpose ? b(jj, kk) : b(kk, jj));
                         }
                     }
                 }
