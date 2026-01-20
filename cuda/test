@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-if [[ ! "${PWD}" =~ .*build ]]; then
-	cd build || exit 1
-fi
-ctest -V
+set -euo pipefail
+
+script_dir="$(dirname "${BASH_SOURCE[0]}")"
+script_dir="$(realpath "${script_dir}")"
+pushd "${script_dir}"
+./build/tests/lin_alg_tests --block-edge 8
+popd
