@@ -11,3 +11,6 @@
   array every time you need to do a matrix multiplication. Then just cudaFree them all in the end.
 - In the ffi module, decide where we want void* and float* and decide whether `count`s are counting
   floats or bytes. Probably all counts should represent floats and there should be no void pointers.
+- The best way to allocate memory in the training loop is probably just to track how much memory the
+  first loop iteration allocates and then preallocate that amount of memory (or perhaps 2X that or
+  whatever) to be used for all following loop iterations.
