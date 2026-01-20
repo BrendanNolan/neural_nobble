@@ -223,7 +223,7 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
     std::cout << "Naive CPU execution time: " << naive_time << " ms" << std::endl;
 
     start = std::chrono::high_resolution_clock::now();
-    auto tiled_multiply_result = lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 4U);
+    auto tiled_multiply_result = lin_alg::tiled_multiply<Identity, Identity>(a, 1.0, b, 4U);
     end = std::chrono::high_resolution_clock::now();
     const auto optimised_cpu_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
