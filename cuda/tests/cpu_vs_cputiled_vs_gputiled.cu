@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <stdlib.h>
+
 #include <cuda_runtime.h>
 
 #include <gtest/gtest.h>
@@ -178,7 +180,7 @@ enum class LaunchConfigRangeHint { all, only_sensible };
 
 std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint range_hint) {
     auto configs = std::vector<LaunchConfig>{get_test_config()};
-    const auto sizes = std::vector<unsigned int>{256U, 128U, 64U, 32U, 16U, 8U, 1U};
+    const auto sizes = std::vector<unsigned int>{256U, 128U, 64U, 32U, 16U, 8U, 4U, 2U, 1U};
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
             if (range_hint == LaunchConfigRangeHint::only_sensible
@@ -195,20 +197,34 @@ std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint ra
     return configs;
 }
 
-void correctness_test(const unsigned int rows_left,
+void check_multiplication_results(const lin_alg::Matrix& a,
+        const lin_alg::Matrix& b,
+        const LaunchConfigRangeHint range_hint) {
+    const auto naive_multiply_result = lin_alg::naive_multiply(a, Identity, 1.0, b, Identity);
+    const auto cuda_multiply_result = cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0);
+    EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
+    for (const auto& config : generate_launch_configs(range_hint)) {
+        std::cout << "Checking for correctness with launch config: " << to_string(config)
+                  << std::endl;
+        const auto cuda_multiply_result =
+                cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
+        EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
+    }
+}
+
+void correctness_test(const lin_alg::Matrix& a,
+        const lin_alg::Matrix& b,
+        const LaunchConfigRangeHint range_hint) {
+    check_multiplication_results(a, b, range_hint);
+}
+
+void correctness_test_random(const unsigned int rows_left,
         const unsigned int common,
         const unsigned int columns_right,
         const LaunchConfigRangeHint range_hint) {
     const auto a = lin_alg::Matrix::random(Dim{rows_left, common});
     const auto b = lin_alg::Matrix::random(Dim{common, columns_right});
-    const auto naive_multiply_result = lin_alg::naive_multiply(a, Identity, 1.0, b, Identity);
-    const auto cuda_multiply_result = cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0);
-    EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
-    for (const auto& config : generate_launch_configs(range_hint)) {
-        const auto cuda_multiply_result =
-                cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
-        EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
-    }
+    check_multiplication_results(a, b, range_hint);
 }
 
 void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRangeHint range_hint) {
@@ -257,31 +273,57 @@ TEST(SpeedTest, OneMillionElements) {
 }
 
 TEST(CorrectnessTest, Tiny) {
+    auto* a_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
+    auto* b_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
+    a_raw[0] = 1.0f;
+    a_raw[1] = 2.0f;
+    a_raw[2] = 3.0f;
+    a_raw[3] = 4.0f;
+    a_raw[4] = 5.0f;
+    a_raw[5] = 6.0f;
+    a_raw[6] = 7.0f;
+    a_raw[7] = 8.0f;
+    a_raw[8] = 9.0f;
+    b_raw[0] = 9.0f;
+    b_raw[1] = 8.0f;
+    b_raw[2] = 7.0f;
+    b_raw[3] = 6.0f;
+    b_raw[4] = 5.0f;
+    b_raw[5] = 4.0f;
+    b_raw[6] = 3.0f;
+    b_raw[7] = 2.0f;
+    b_raw[8] = 1.0f;
+    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{2U, 2U});
+    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{2U, 2U});
+    correctness_test(a, b, LaunchConfigRangeHint::all);
+}
+
+TEST(RandomCorrectnessTest, Tiny) {
     const auto rows_left = (1U << 2) + 1U;
     const auto common = (1U << 2) + 3U;
     const auto columns_right = (1U << 2) + 1U;
-    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::all);
+    correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
-TEST(CorrectnessTest, Small) {
+TEST(RandomCorrectnessTest, Small) {
     const auto rows_left = 11U;
     const auto common = 7U;
     const auto columns_right = 9U;
-    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::all);
+    correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
-TEST(CorrectnessTest, Medium) {
+TEST(RandomCorrectnessTest, Medium) {
     const auto rows_left = (1U << 5) + 1U;
     const auto common = (1U << 4) + 3U;
     const auto columns_right = (1U << 6) + 1U;
-    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::all);
+    correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
-TEST(CorrectnessTest, Large) {
+TEST(RandomCorrectnessTest, Large) {
     const auto rows_left = (1U << 8) + 1U;
     const auto common = (1U << 7) + 3U;
     const auto columns_right = (1U << 6) + 1U;
-    correctness_test(rows_left, common, columns_right, LaunchConfigRangeHint::only_sensible);
+    correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::only_sensible);
 }
 
 TEST(PrintGpuStats, Basic) {
