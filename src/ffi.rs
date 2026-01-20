@@ -17,18 +17,6 @@ pub enum Op {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-struct GemmParams {
-    a: ConstMatrixDetails,
-    op_a: super::Op,
-    alpha: f32,
-    b: ConstMatrixDetails,
-    op_b: super::Op,
-    beta: f32,
-    c: *mut f32,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
 struct ConstMatrixDetails {
     data: *const f32,
     rows: u32,
@@ -43,6 +31,18 @@ struct MutableMatrixDetails {
     columns: u32,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+struct GemmParams {
+    a: ConstMatrixDetails,
+    op_a: Op,
+    alpha: f32,
+    b: ConstMatrixDetails,
+    op_b: Op,
+    beta: f32,
+    c: *mut f32,
+}
+
 mod inner {
     #[link(name = "cuda_lin_alg")]
     extern "C" {
@@ -50,7 +50,7 @@ mod inner {
         pub fn copy_to_device(host_array: *const f32, count: usize, device_memory: *mut f32);
         pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32);
         pub fn launch_tiled_multiply(
-            params: GemmParams,
+            params: super::GemmParams,
             grid: super::Dim3,
             block: super::Dim3,
             shared_mem_size: u32,
@@ -80,30 +80,44 @@ pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut
     }
 }
 
-pub fn launch_tiled_multiply(
-    a: &DeviceMatrix,
-    b: &DeviceMatrix,
-    c: &mut DeviceMatrix,
+pub struct DeviceGemmParams<'a> {
+    a: &'a DeviceMatrix,
+    op_a: Op,
+    alpha: f32,
+    b: &'a DeviceMatrix,
+    op_b: Op,
+    beta: f32,
+    c: &'a mut DeviceMatrix,
     launch_config: LaunchConfig,
-) {
+}
+
+pub fn launch_gpu_gemm(params: DeviceGemmParams) {
     let LaunchConfig {
         grid,
         block,
         shared_mem_size,
-    } = launch_config;
+    } = params.launch_config;
+    let a = ConstMatrixDetails {
+        data: params.a.device,
+        rows: params.a.dim.rows as u32,
+        columns: params.a.dim.columns as u32,
+    };
+    let b = ConstMatrixDetails {
+        data: params.b.device,
+        rows: params.b.dim.rows as u32,
+        columns: params.b.dim.columns as u32,
+    };
+    let params = GemmParams {
+        a,
+        op_a: params.op_a,
+        alpha: params.alpha,
+        b,
+        op_b: params.op_b,
+        beta: params.beta,
+        c: params.c.device,
+    };
     unsafe {
-        inner::launch_tiled_multiply(
-            a.device,
-            a.dim.rows as u32,
-            a.dim.cols as u32,
-            b.device,
-            b.dim.rows as u32,
-            b.dim.cols as u32,
-            c.device,
-            grid,
-            block,
-            shared_mem_size,
-        );
+        inner::launch_tiled_multiply(params, grid, block, shared_mem_size);
     }
 }
 

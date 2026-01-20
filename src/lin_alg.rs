@@ -2,7 +2,7 @@ pub mod device;
 pub mod host;
 
 pub use device::{DeviceMatrix, DeviceVector};
-pub use host::{HostMatrix, HostVector};
+use host::{HostMatrix, HostVector};
 
 impl From<DeviceVector> for HostVector {
     fn from(value: DeviceVector) -> Self {
@@ -18,7 +18,7 @@ impl From<HostVector> for DeviceVector {
 
 pub struct Dim {
     pub rows: usize,
-    pub cols: usize,
+    pub columns: usize,
 }
 
 impl From<DeviceMatrix> for HostMatrix {
