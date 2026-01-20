@@ -169,10 +169,11 @@ Matrix tiled_multiply(const Matrix& a,
             for (auto k = 0U; k < K; k += T) {
                 for (auto ii = i; ii < std::min(i + T, M); ++ii) {
                     for (auto kk = k; kk < std::min(k + T, K); ++kk) {
-                        const auto alpha_times_a_term = alpha * (op_a == Transpose ? a(kk, ii) : a(ii, kk));
+                        const auto alpha_times_a_term =
+                                alpha * (op_a == Transpose ? a(kk, ii) : a(ii, kk));
                         for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                            C(ii, jj) +=
-                                    alpha_times_a_term * (op_b == Transpose ? b(jj, kk) : b(kk, jj));
+                            C(ii, jj) += alpha_times_a_term
+                                    * (op_b == Transpose ? b(jj, kk) : b(kk, jj));
                         }
                     }
                 }
