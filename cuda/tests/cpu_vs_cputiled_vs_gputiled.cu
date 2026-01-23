@@ -256,20 +256,18 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
 
 }// namespace
 
-TEST(SpeedTest, SevenElements) {
-    speed_test(7U, LaunchConfigRangeHint::all);
-}
-
-TEST(SpeedTest, ThirtyThreeElements) {
-    speed_test(33U, LaunchConfigRangeHint::all);
-}
-
-TEST(SpeedTest, OneThousandElements) {
-    speed_test(1U << 7U, LaunchConfigRangeHint::all);
-}
-
-TEST(SpeedTest, OneMillionElements) {
-    speed_test(1U << 10U, LaunchConfigRangeHint::only_sensible);
+TEST(PrintGpuStats, Basic) {
+    auto prop = cudaDeviceProp{};
+    cudaGetDeviceProperties(&prop, 0);
+    const auto threads_per_block = prop.maxThreadsPerBlock;
+    const auto threads_per_sm = prop.maxThreadsPerMultiProcessor;
+    const auto total_sms = prop.multiProcessorCount;
+    const auto max_concurrent_threads = threads_per_sm * total_sms;
+    printf("GPU: %s\n", prop.name);
+    printf("SM Count: %d\n", total_sms);
+    printf("Max Threads Per SM: %d\n", threads_per_sm);
+    printf("Max Threads Per Block: %d\n", threads_per_block);
+    printf("Maximum Concurrent Threads: %d\n", max_concurrent_threads);
 }
 
 TEST(CorrectnessTest, Tiny) {
@@ -326,16 +324,18 @@ TEST(RandomCorrectnessTest, Large) {
     correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::only_sensible);
 }
 
-TEST(PrintGpuStats, Basic) {
-    auto prop = cudaDeviceProp{};
-    cudaGetDeviceProperties(&prop, 0);
-    const auto threads_per_block = prop.maxThreadsPerBlock;
-    const auto threads_per_sm = prop.maxThreadsPerMultiProcessor;
-    const auto total_sms = prop.multiProcessorCount;
-    const auto max_concurrent_threads = threads_per_sm * total_sms;
-    printf("GPU: %s\n", prop.name);
-    printf("SM Count: %d\n", total_sms);
-    printf("Max Threads Per SM: %d\n", threads_per_sm);
-    printf("Max Threads Per Block: %d\n", threads_per_block);
-    printf("Maximum Concurrent Threads: %d\n", max_concurrent_threads);
+TEST(SpeedTest, SevenElements) {
+    speed_test(7U, LaunchConfigRangeHint::all);
+}
+
+TEST(SpeedTest, ThirtyThreeElements) {
+    speed_test(33U, LaunchConfigRangeHint::all);
+}
+
+TEST(SpeedTest, OneThousandElements) {
+    speed_test(1U << 7U, LaunchConfigRangeHint::all);
+}
+
+TEST(SpeedTest, OneMillionElements) {
+    speed_test(1U << 10U, LaunchConfigRangeHint::only_sensible);
 }
