@@ -3,6 +3,5 @@
 #include <cstdint>
 
 extern "C" {
-typedef uint8_t Op;
-enum { Identity, Transpose };
+enum class Op : uint8_t { Identity, Transpose };
 }
