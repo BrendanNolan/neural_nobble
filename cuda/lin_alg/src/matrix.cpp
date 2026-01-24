@@ -43,14 +43,6 @@ Matrix Matrix::all_same(float entry, const Dimension& dim) {
     return Matrix{entries, dim};
 }
 
-float Matrix::operator()(const unsigned int i, const unsigned int j) const {
-    return data_[i * dim_.j + j];
-}
-
-float& Matrix::operator()(const unsigned int i, const unsigned int j) {
-    return data_[i * dim_.j + j];
-}
-
 Matrix Matrix::random(const Dimension& dim) {
     std::mt19937 gen(147);
     std::uniform_int_distribution<> dist(0, 100);

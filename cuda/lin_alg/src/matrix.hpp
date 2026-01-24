@@ -24,8 +24,12 @@ class Matrix {
     static Matrix from_raw(float* entries, const Dimension& dim);
     ~Matrix();
     Dimension dim() const;
-    float operator()(unsigned int i, unsigned int j) const;
-    float& operator()(unsigned int i, unsigned int j);
+    float operator()(unsigned int i, unsigned int j) const {
+        return data_[i * dim_.j + j];
+    }
+    float& operator()(unsigned int i, unsigned int j) {
+        return data_[i * dim_.j + j];
+    }
     bool operator==(const Matrix& other) const;
     const float* raw() const;
     void scale(float scalar);
