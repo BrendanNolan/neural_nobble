@@ -133,7 +133,7 @@ Matrix naive_multiply(const Matrix& a,
     auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
     auto element =
             [](const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
-                return op == Op::Transpose ? matrix(j, i) : matrix(i, j);
+                return op == Transpose ? matrix(j, i) : matrix(i, j);
             };
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {
@@ -154,11 +154,11 @@ Matrix tiled_multiply(const Matrix& a,
     auto M = a.dim().i;
     auto N = b.dim().j;
     auto K = a.dim().j;
-    if (op_a == Op::Transpose) {
+    if (op_a == Transpose) {
         M = a.dim().j;
         K = a.dim().i;
     }
-    if (op_b == Op::Transpose) {
+    if (op_b == Transpose) {
         N = b.dim().i;
     }
     const auto T = tile_size;
@@ -170,10 +170,10 @@ Matrix tiled_multiply(const Matrix& a,
                 for (auto ii = i; ii < std::min(i + T, M); ++ii) {
                     for (auto kk = k; kk < std::min(k + T, K); ++kk) {
                         const auto alpha_times_a_term =
-                                alpha * (op_a == Op::Transpose ? a(kk, ii) : a(ii, kk));
+                                alpha * (op_a == Transpose ? a(kk, ii) : a(ii, kk));
                         for (auto jj = j; jj < std::min(j + T, N); ++jj) {
                             C(ii, jj) += alpha_times_a_term
-                                    * (op_b == Op::Transpose ? b(jj, kk) : b(kk, jj));
+                                    * (op_b == Transpose ? b(jj, kk) : b(kk, jj));
                         }
                     }
                 }

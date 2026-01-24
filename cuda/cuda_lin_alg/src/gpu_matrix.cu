@@ -10,9 +10,9 @@ __device__ float element(const float* matrix,
         unsigned int i,
         unsigned int j) {
     switch (op) {
-    case Op::Identity:
+    case Identity:
         return matrix[i * columns + j];
-    case Op::Transpose:
+    case Transpose:
         return matrix[j * columns + i];
     default:
         assert(false && "Unhandled Op case");
@@ -40,10 +40,10 @@ __global__ void tiled_multiply(GemmParams params) {
     auto b_at = [params](unsigned int i, unsigned int j) {
         return element(params.B.data, params.op_B, params.B.columns, i, j);
     };
-    if (params.op_A == Op::Transpose) {
+    if (params.op_A == Transpose) {
         swap(params.A.rows, params.A.columns);
     }
-    if (params.op_B == Op::Transpose) {
+    if (params.op_B == Transpose) {
         swap(params.B.rows, params.B.columns);
     }
     const auto ai = params.A.rows;
