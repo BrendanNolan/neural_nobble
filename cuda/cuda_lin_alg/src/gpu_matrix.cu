@@ -76,9 +76,17 @@ __global__ void tiled_multiply(GemmParams params) {
     }
 }
 
+namespace {
+dim3 dim3pod_to_cuda_dim3(const Dim3POD& pod) {
+    return dim3{pod.x, pod.y, pod.z};
+}
+}// namespace
+
 void launch_tiled_multiply(GemmParams params,
-        const dim3 grid,
-        const dim3 block,
+        const Dim3POD grid,
+        const Dim3POD block,
         const unsigned int shared_mem_size) {
-    tiled_multiply<<<grid, block, shared_mem_size>>>(params);
+    const auto cuda_grid = dim3pod_to_cuda_dim3(grid);
+    const auto cuda_block = dim3pod_to_cuda_dim3(block);
+    tiled_multiply<<<cuda_grid, cuda_block, shared_mem_size>>>(params);
 }

@@ -88,11 +88,17 @@ struct CudaInput {
     LaunchConfig config;
 };
 
+namespace {
+Dim3POD cuda_dim3_to_dim3pod(const dim3& dim) {
+    return Dim3POD{.x = dim.x, .y = dim.y, .z = dim.z};
+}
+}// namespace
+
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
     launch_tiled_multiply(input.params,
-            input.config.grid_dim(),
-            input.config.block_dim(),
+            cuda_dim3_to_dim3pod(input.config.grid_dim()),
+            cuda_dim3_to_dim3pod(input.config.block_dim()),
             input.config.shared_mem_per_block());
     cudaDeviceSynchronize();
     const auto end = std::chrono::high_resolution_clock::now();
