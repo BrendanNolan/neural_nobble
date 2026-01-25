@@ -9,6 +9,7 @@ mod buffer_calculation;
 mod common;
 pub mod convolution;
 pub mod cost_functions;
+mod device_block_allocation;
 mod distribution;
 pub mod feed_forward;
 mod ffi;
