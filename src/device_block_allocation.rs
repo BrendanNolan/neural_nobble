@@ -41,8 +41,13 @@ impl DeviceBlockAllocator {
     }
 
     pub fn finalise(&mut self) {
+        self.finalise_padded(1.0);
+    }
+
+    pub fn finalise_padded(&mut self, padding_factor: f32) {
         self.mode = Mode::Built;
-        self.next_spot = ffi::allocate_on_device(self.block_size);
+        let allocation_size = (self.block_size as f32 * padding_factor) as usize;
+        self.next_spot = ffi::allocate_on_device(allocation_size);
         self.original_spot = self.next_spot;
     }
 
