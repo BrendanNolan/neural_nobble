@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage: configure_build <build_type(Release or Debug)>"
+	echo "Usage: configure_build <build_type(Release|Debug|RelWithDebInfo)>"
 }
 
 if [[ $# -ge 2 ]]; then
@@ -19,7 +19,7 @@ if [[ $# -eq 1 ]]; then
 		usage
 		exit 0
 	fi
-	if [[ ! "${1}" =~ ^(Debug|Release)$ ]]; then
+	if [[ ! "${1}" =~ ^(Debug|Release|RelWithDebInfo)$ ]]; then
 		usage >&2
 		exit 1
 	fi
