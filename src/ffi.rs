@@ -168,4 +168,9 @@ mod tests {
     fn test_ffi_matrix_multiplication() {
         allocate_on_device(147);
     }
+
+    #[test]
+    fn test_gemm() {
+        todo!();
+    }
 }
