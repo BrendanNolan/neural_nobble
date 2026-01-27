@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <future>
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "utils.h"
 
@@ -68,30 +70,42 @@ Matrix tiled_multiply(const Matrix& a,
     }
     const auto T = tile_size;
     auto C = Matrix::zeroes(Dimension{M, N});
-    for (auto i = 0U; i < M; i += T) {
-        for (auto j = 0U; j < N; j += T) {
-            // top left of current C block is at (i,j)
-            for (auto k = 0U; k < K; k += T) {
-                for (auto ii = i; ii < std::min(i + T, M); ++ii) {
-                    for (auto kk = k; kk < std::min(k + T, K); ++kk) {
-                        const auto alpha_times_a_term = [&]() {
-                            if constexpr (op_a == Transpose) {
-                                return alpha * a(kk, ii);
-                            } else {
-                                return alpha * a(ii, kk);
-                            }
-                        }();
-                        for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                            if constexpr (op_b == Transpose) {
-                                C(ii, jj) += alpha_times_a_term * b(jj, kk);
-                            } else {
-                                C(ii, jj) += alpha_times_a_term * b(kk, jj);
+    constexpr auto cpus = 4U;
+    const auto tiles_per_cpu = static_cast<unsigned int>(static_cast<unsigned int>((M / T)) / cpus);
+    auto futures = std::vector<std::future<void>>{};
+    for (auto cpu = 0U; cpu < cpus; ++cpu) {
+        const auto first_tile = cpu * tiles_per_cpu;
+        futures.emplace_back(std::async([&, first_tile]() {
+            for (auto i = first_tile * T; i < std::min(M, (first_tile + tiles_per_cpu) * T);
+                    i += T) {
+                for (auto j = 0U; j < N; j += T) {
+                    // top left of current C block is at (i,j)
+                    for (auto k = 0U; k < K; k += T) {
+                        for (auto ii = i; ii < std::min(i + T, M); ++ii) {
+                            for (auto kk = k; kk < std::min(k + T, K); ++kk) {
+                                const auto alpha_times_a_term = [&]() {
+                                    if constexpr (op_a == Transpose) {
+                                        return alpha * a(kk, ii);
+                                    } else {
+                                        return alpha * a(ii, kk);
+                                    }
+                                }();
+                                for (auto jj = j; jj < std::min(j + T, N); ++jj) {
+                                    if constexpr (op_b == Transpose) {
+                                        C(ii, jj) += alpha_times_a_term * b(jj, kk);
+                                    } else {
+                                        C(ii, jj) += alpha_times_a_term * b(kk, jj);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-        }
+        }));
+    }
+    for (auto& future : futures) {
+        future.get();
     }
     return C;
 }
