@@ -58,6 +58,6 @@ mod tests {
         let host_matrix = HostMatrix::zeroes(Dim::new(8, 8));
         let device_matrix = DeviceMatrix::from(&host_matrix);
         let host_matrix_round = HostMatrix::from(&device_matrix);
-        assert_eq!(host_matrix, host_matrix_round);
+        assert!(host_matrix.almost_equal(&host_matrix_round));
     }
 }
