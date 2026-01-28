@@ -1,7 +1,7 @@
 pub mod device;
 pub mod host;
 
-use crate::ffi::{allocate_on_device, copy_to_device};
+use crate::ffi::{allocate_on_device, copy_from_device, copy_to_device};
 pub use device::{DeviceMatrix, DeviceVector};
 use host::{HostMatrix, HostVector};
 
@@ -35,7 +35,12 @@ impl Dim {
 
 impl From<&DeviceMatrix> for HostMatrix {
     fn from(value: &DeviceMatrix) -> Self {
-        todo!()
+        let mut host_matrix = Self {
+            data: vec![0.0; value.dim.size()],
+            dim: value.dim,
+        };
+        copy_from_device(value.data, value.dim.size(), &mut host_matrix.data);
+        host_matrix
     }
 }
 
@@ -44,7 +49,7 @@ impl From<&HostMatrix> for DeviceMatrix {
         let device_data = allocate_on_device(value.dim.size());
         copy_to_device(&value.data, device_data);
         Self {
-            device: device_data,
+            data: device_data,
             dim: value.dim,
         }
     }

@@ -74,9 +74,9 @@ pub fn copy_to_device(elements: &[f32], device_memory: *mut f32) {
     }
 }
 
-pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32) {
+pub fn copy_from_device(device_array: *const f32, count: usize, host_array: &mut [f32]) {
     unsafe {
-        inner::copy_from_device(device_array, count, host_array);
+        inner::copy_from_device(device_array, count, host_array.as_mut_ptr());
     }
 }
 
@@ -98,12 +98,12 @@ pub fn launch_gpu_gemm(params: DeviceGemmParams) {
         shared_mem_size,
     } = params.launch_config;
     let a = ConstMatrixDetails {
-        data: params.a.device,
+        data: params.a.data,
         rows: params.a.dim.rows as u32,
         columns: params.a.dim.columns as u32,
     };
     let b = ConstMatrixDetails {
-        data: params.b.device,
+        data: params.b.data,
         rows: params.b.dim.rows as u32,
         columns: params.b.dim.columns as u32,
     };
@@ -114,7 +114,7 @@ pub fn launch_gpu_gemm(params: DeviceGemmParams) {
         b,
         op_b: params.op_b,
         beta: params.beta,
-        c: params.c.device,
+        c: params.c.data,
     };
     unsafe {
         inner::launch_tiled_multiply(params, grid, block, shared_mem_size);
