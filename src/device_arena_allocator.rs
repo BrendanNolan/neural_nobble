@@ -1,10 +1,10 @@
 use crate::ffi;
 use std::ptr;
 
-pub struct DeviceBlockAllocator {
+pub struct DeviceArenaAllocator {
     original_spot: *mut f32,
     next_spot: *mut f32,
-    block_size: usize,
+    arena_size: usize,
     mode: Mode,
 }
 
@@ -13,12 +13,12 @@ pub enum Mode {
     Built,
 }
 
-impl DeviceBlockAllocator {
-    pub fn new() -> Self {
+impl DeviceArenaAllocator {
+    pub fn initialise() -> Self {
         Self {
             original_spot: ptr::null_mut(),
             next_spot: ptr::null_mut(),
-            block_size: 0,
+            arena_size: 0,
             mode: Mode::Building,
         }
     }
@@ -26,7 +26,7 @@ impl DeviceBlockAllocator {
     pub fn allocate(&mut self, count: usize) -> Option<*mut f32> {
         match self.mode {
             Mode::Building => {
-                self.block_size += count;
+                self.arena_size += count;
                 Some(ffi::allocate_on_device(count))
             }
             Mode::Built => {
@@ -46,19 +46,19 @@ impl DeviceBlockAllocator {
 
     pub fn finalise_padded(&mut self, padding_factor: f32) {
         self.mode = Mode::Built;
-        let allocation_size = (self.block_size as f32 * padding_factor) as usize;
+        let allocation_size = (self.arena_size as f32 * padding_factor) as usize;
         self.next_spot = ffi::allocate_on_device(allocation_size);
         self.original_spot = self.next_spot;
     }
 
     fn already_allocated(&self) -> usize {
         match self.mode {
-            Mode::Building => self.block_size,
+            Mode::Building => self.arena_size,
             Mode::Built => unsafe { self.next_spot.offset_from_unsigned(self.original_spot) },
         }
     }
 
     fn can_allocate(&self, count: usize) -> bool {
-        count + self.already_allocated() <= self.block_size
+        count + self.already_allocated() <= self.arena_size
     }
 }
