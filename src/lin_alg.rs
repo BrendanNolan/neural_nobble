@@ -7,13 +7,20 @@ use host::{HostMatrix, HostVector};
 
 impl From<DeviceVector> for HostVector {
     fn from(value: DeviceVector) -> Self {
-        todo!();
+        let mut host: Self = vec![0 as f32; value.len];
+        copy_from_device(value.data, value.len, &mut host);
+        host
     }
 }
 
 impl From<HostVector> for DeviceVector {
     fn from(value: HostVector) -> Self {
-        todo!();
+        let device_data = allocate_on_device(value.len());
+        copy_to_device(&value, device_data);
+        Self {
+            data: device_data,
+            len: value.len(),
+        }
     }
 }
 
@@ -59,10 +66,18 @@ impl From<&HostMatrix> for DeviceMatrix {
 mod tests {
     use super::*;
     #[test]
-    fn test_round_trip() {
+    fn test_round_trip_matrices() {
         let host_matrix = HostMatrix::zeroes(Dim::new(8, 8));
         let device_matrix = DeviceMatrix::from(&host_matrix);
         let host_matrix_round = HostMatrix::from(&device_matrix);
         assert!(host_matrix.almost_equal(&host_matrix_round));
+    }
+
+    #[test]
+    fn test_round_trip_vectors() {
+        let host_vector: HostVector = vec![0 as f32; 8];
+        let device_vector = DeviceVector::from(&host_vector);
+        let host_vector_round = HostVector::from(&device_vector);
+        assert!(host_vector.almost_equal(&host_matrix_round));
     }
 }
