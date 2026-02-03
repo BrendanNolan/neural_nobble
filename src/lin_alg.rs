@@ -17,6 +17,7 @@ impl Dim {
         self.rows * self.columns
     }
 }
+
 pub type HostVector = Vec<f32>;
 
 #[derive(Clone, Debug)]
@@ -32,7 +33,7 @@ impl HostMatrix {
     }
 
     pub fn almost_equal(&self, other: &HostMatrix) -> bool {
-        const TOLERANCE: f32 = 0.000001;
+        const TOLERANCE: f32 = 0.000001_f32;
         self.data
             .iter()
             .zip(other.data.iter())
