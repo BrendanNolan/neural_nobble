@@ -56,32 +56,11 @@ impl IndexMut<(usize, usize)> for HostMatrix {
     }
 }
 
-pub struct DeviceVector {
-    pub data: *mut f32,
-    pub len: usize,
-}
-
-pub struct DeviceMatrix {
-    pub data: *mut f32,
-    pub dim: Dim,
-}
-
 impl From<DeviceVector> for HostVector {
     fn from(value: DeviceVector) -> Self {
         let mut host: Self = vec![0 as f32; value.len];
         copy_from_device(value.data, value.len, &mut host);
         host
-    }
-}
-
-impl From<HostVector> for DeviceVector {
-    fn from(value: HostVector) -> Self {
-        let device_data = allocate_on_device(value.len());
-        copy_to_device(&value, device_data);
-        Self {
-            data: device_data,
-            len: value.len(),
-        }
     }
 }
 
@@ -93,6 +72,39 @@ impl From<&DeviceMatrix> for HostMatrix {
         };
         copy_from_device(value.data, value.dim.size(), &mut host_matrix.data);
         host_matrix
+    }
+}
+
+pub struct DeviceVector {
+    pub data: *mut f32,
+    pub len: usize,
+}
+
+impl DeviceVector {}
+
+pub struct DeviceMatrix {
+    pub data: *mut f32,
+    pub dim: Dim,
+}
+
+impl DeviceMatrix {
+    pub fn dot_to_new(&self, other: &DeviceMatrix) -> DeviceMatrix {
+        todo!();
+    }
+
+    pub fn dot_to_existing(&self, other: &DeviceMatrix, result: &mut DeviceMatrix) {
+        todo!();
+    }
+}
+
+impl From<HostVector> for DeviceVector {
+    fn from(value: HostVector) -> Self {
+        let device_data = allocate_on_device(value.len());
+        copy_to_device(&value, device_data);
+        Self {
+            data: device_data,
+            len: value.len(),
+        }
     }
 }
 
