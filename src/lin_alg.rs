@@ -1,9 +1,69 @@
-pub mod device;
-pub mod host;
+use std::ops::{Index, IndexMut};
 
 use crate::ffi::{allocate_on_device, copy_from_device, copy_to_device};
-pub use device::{DeviceMatrix, DeviceVector};
-use host::{HostMatrix, HostVector};
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Dim {
+    pub rows: usize,
+    pub columns: usize,
+}
+
+impl Dim {
+    pub fn new(rows: usize, columns: usize) -> Self {
+        Self { rows, columns }
+    }
+
+    pub fn size(&self) -> usize {
+        self.rows * self.columns
+    }
+}
+pub type HostVector = Vec<f32>;
+
+#[derive(Clone, Debug)]
+pub struct HostMatrix {
+    pub data: Vec<f32>,
+    pub dim: Dim,
+}
+
+impl HostMatrix {
+    pub fn zeroes(dim: Dim) -> Self {
+        let data = vec![0_f32; dim.rows * dim.columns];
+        Self { data, dim }
+    }
+
+    pub fn almost_equal(&self, other: &HostMatrix) -> bool {
+        const TOLERANCE: f32 = 0.000001;
+        self.data
+            .iter()
+            .zip(other.data.iter())
+            .all(|(x, y)| (x - y).abs() < TOLERANCE)
+    }
+}
+
+impl Index<(usize, usize)> for HostMatrix {
+    type Output = f32;
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        let (i, j) = index;
+        &self.data[i * self.dim.columns + j]
+    }
+}
+
+impl IndexMut<(usize, usize)> for HostMatrix {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+        let (i, j) = index;
+        &mut self.data[i * self.dim.columns + j]
+    }
+}
+
+pub struct DeviceVector {
+    pub data: *mut f32,
+    pub len: usize,
+}
+
+pub struct DeviceMatrix {
+    pub data: *mut f32,
+    pub dim: Dim,
+}
 
 impl From<DeviceVector> for HostVector {
     fn from(value: DeviceVector) -> Self {
@@ -21,22 +81,6 @@ impl From<HostVector> for DeviceVector {
             data: device_data,
             len: value.len(),
         }
-    }
-}
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct Dim {
-    pub rows: usize,
-    pub columns: usize,
-}
-
-impl Dim {
-    pub fn new(rows: usize, columns: usize) -> Self {
-        Self { rows, columns }
-    }
-
-    pub fn size(&self) -> usize {
-        self.rows * self.columns
     }
 }
 
