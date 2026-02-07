@@ -122,8 +122,8 @@ TEST(CorrectnessTest, Tiny) {
     b_raw[6] = 3.0f;
     b_raw[7] = 2.0f;
     b_raw[8] = 1.0f;
-    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{2U, 2U});
-    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{2U, 2U});
+    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{3U, 3U});
+    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{3U, 3U});
     correctness_test(a, b);
 }
 
