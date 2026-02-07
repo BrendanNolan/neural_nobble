@@ -56,7 +56,7 @@ void run_test(const lin_alg::Matrix& a,
                   << std::chrono::duration_cast<std::chrono::milliseconds>(naive_end - naive_start)
                              .count()
                   << "ms"
-                  << " Tiled:"
+                  << " Tiled(tile size " << tile_size << "):"
                   << std::chrono::duration_cast<std::chrono::milliseconds>(tiled_end - tiled_start)
                              .count()
                   << "ms" << std::endl;
