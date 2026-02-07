@@ -64,12 +64,12 @@ void run_test(const lin_alg::Matrix& a,
     if (!can_multiply(a, op_a, b, op_b)) {
         return;
     }
-    const auto naive_start = std::chrono::high_resolution_clock::now();
-    const auto naive_result = lin_alg::naive_multiply(a, op_a, alpha, b, op_b);
-    const auto naive_end = std::chrono::high_resolution_clock::now();
     const auto tiled_start = std::chrono::high_resolution_clock::now();
     const auto tiled_result = lin_alg::tiled_multiply<op_a, op_b>(a, alpha, b, tile_size);
     const auto tiled_end = std::chrono::high_resolution_clock::now();
+    const auto naive_start = std::chrono::high_resolution_clock::now();
+    const auto naive_result = lin_alg::naive_multiply(a, op_a, alpha, b, op_b);
+    const auto naive_end = std::chrono::high_resolution_clock::now();
     auto description = std::stringstream{};
     description << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b) << " "
                 << display(a.dim()) << "x" << display(b.dim()) << " Naive:"
