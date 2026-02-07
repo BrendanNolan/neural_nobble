@@ -137,16 +137,22 @@ bool admits_tile(const Matrix& matrix, unsigned int tile_size) {
     return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;
 }
 
-Matrix naive_multiply(Matrix a, const Op op_a, const float alpha, Matrix b, const Op op_b) {
-    if (op_a == Transpose)
-        a.transpose();
-    if (op_b == Transpose)
-        b.transpose();
-    auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
+Matrix naive_multiply(const Matrix& a,
+        const Op op_a,
+        const float alpha,
+        const Matrix& b,
+        const Op op_b) {
+    assert(a.dim().j == b.dim().i);
+    auto c = Matrix::zeroes(Dimension{.i = (op_a == Transpose ? a.dim().j : a.dim().i),
+            .j = (op_b == Transpose ? b.dim().i : b.dim().j)});
+    auto element =
+            [](const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
+                return op == Transpose ? matrix(j, i) : matrix(i, j);
+            };
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {
             for (auto k = 0U; k < a.dim().j; ++k) {
-                c(i, j) += alpha * a(i, k) * b(k, j);
+                c(i, j) += alpha * element(a, op_a, i, k) * element(b, op_b, k, j);
             }
         }
     }
