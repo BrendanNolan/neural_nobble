@@ -32,8 +32,12 @@ std::vector<unsigned int> get_tile_sizes(const TilePolicy tile_policy) {
     auto tile_sizes = std::vector<unsigned int>{};
     tile_sizes.emplace_back(TestConfig::instance().tile_edge);
     for (const auto i : std::vector{1U, 2U, 4U, 8U, 16U, 32U, 64U}) {
-        if (tile_policy == TilePolicy::exclude_small && i < 8U)
+        if (tile_policy == TilePolicy::exclude_small && i < 8U) {
             continue;
+        }
+        if (std::find(tile_sizes.cbegin(), tile_sizes.cend(), i) != tile_sizes.cend()) {
+            continue;
+        }
         tile_sizes.emplace_back(i);
     }
     return tile_sizes;
