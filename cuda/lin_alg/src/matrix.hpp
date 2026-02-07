@@ -53,11 +53,7 @@ bool can_multiply(const Matrix& a, const Op op_a, const Matrix& b, const Op op_b
 unsigned int raw_size(const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
 bool admits_tile(const Matrix& matrix, unsigned int tile_size);
-Matrix naive_multiply(Matrix a,
-        const Op op_a,
-        const float alpha,
-        Matrix b,
-        const Op op_b);
+Matrix naive_multiply(Matrix a, const Op op_a, const float alpha, Matrix b, const Op op_b);
 
 template <Op op_a, Op op_b>
 Matrix tiled_multiply(const Matrix& a,

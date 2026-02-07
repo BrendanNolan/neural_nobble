@@ -32,7 +32,7 @@ void Matrix::transpose() {
     dim_ = Dimension{.i = dim_.j, .j = dim_.i};
     for (auto i = 0U; i < dim_.i; ++i) {
         for (auto j = 0U; j < dim_.j; ++j) {
-                new_data[i * dim_.j + j] = data_[j * dim_.i + i];
+            new_data[i * dim_.j + j] = data_[j * dim_.i + i];
         }
     }
     auto* old_data = data_;
@@ -137,11 +137,7 @@ bool admits_tile(const Matrix& matrix, unsigned int tile_size) {
     return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;
 }
 
-Matrix naive_multiply(Matrix a,
-        const Op op_a,
-        const float alpha,
-        Matrix b,
-        const Op op_b) {
+Matrix naive_multiply(Matrix a, const Op op_a, const float alpha, Matrix b, const Op op_b) {
     if (op_a == Transpose)
         a.transpose();
     if (op_b == Transpose)

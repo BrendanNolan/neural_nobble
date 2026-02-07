@@ -71,15 +71,15 @@ void run_test(const lin_alg::Matrix& a,
     const auto tiled_result = lin_alg::tiled_multiply<op_a, op_b>(a, alpha, b, tile_size);
     const auto tiled_end = std::chrono::high_resolution_clock::now();
     auto description = std::stringstream{};
-        description << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b) << " "
-                  << display(a.dim()) << "x" << display(b.dim()) << " Naive:"
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(naive_end - naive_start)
-                             .count()
-                  << "ms"
-                  << " Tiled(tile size " << tile_size << "):"
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(tiled_end - tiled_start)
-                             .count()
-                  << "ms";
+    description << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b) << " "
+                << display(a.dim()) << "x" << display(b.dim()) << " Naive:"
+                << std::chrono::duration_cast<std::chrono::milliseconds>(naive_end - naive_start)
+                           .count()
+                << "ms"
+                << " Tiled(tile size " << tile_size << "):"
+                << std::chrono::duration_cast<std::chrono::milliseconds>(tiled_end - tiled_start)
+                           .count()
+                << "ms";
     if (timing == Timing::time_calls) {
         std::cout << description.str() << std::endl;
     }
