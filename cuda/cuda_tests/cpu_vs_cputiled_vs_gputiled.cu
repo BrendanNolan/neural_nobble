@@ -206,15 +206,16 @@ std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint ra
 void check_multiplication_results(const lin_alg::Matrix& a,
         const lin_alg::Matrix& b,
         const LaunchConfigRangeHint range_hint) {
-    const auto naive_multiply_result = lin_alg::naive_multiply(a, Identity, 1.0, b, Identity);
+    const auto cpu_tiled_multiply_result =
+            lin_alg::tiled_multiply<Identity, Identity>(a, 1.0, b, 8U);
     const auto cuda_multiply_result = cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0);
-    EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
+    EXPECT_EQ(cuda_multiply_result.result_matrix, cpu_tiled_multiply_result);
     for (const auto& config : generate_launch_configs(range_hint)) {
         std::cout << "Checking for correctness with launch config: " << to_string(config)
                   << std::endl;
         const auto cuda_multiply_result =
                 cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
-        EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
+        EXPECT_EQ(cuda_multiply_result.result_matrix, cpu_tiled_multiply_result);
     }
 }
 
@@ -236,27 +237,17 @@ void correctness_test_random(const unsigned int rows_left,
 void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRangeHint range_hint) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
-
     auto start = std::chrono::high_resolution_clock::now();
-    const auto naive_multiply_result = lin_alg::naive_multiply(a, Identity, 1.0, b, Identity);
-    auto end = std::chrono::high_resolution_clock::now();
-    const auto naive_time =
-            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Naive CPU execution time: " << naive_time << " ms" << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    auto tiled_multiply_result = lin_alg::tiled_multiply<Identity, Identity>(a, 1.0, b, 8U);
+    auto cpu_tiled_multiply_result = lin_alg::tiled_multiply<Identity, Identity>(a, 1.0, b, 8U);
     end = std::chrono::high_resolution_clock::now();
     const auto optimised_cpu_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
-
     for (const auto& config : generate_launch_configs(range_hint)) {
         const auto cuda_multiply_result =
                 cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
         std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
-        EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
-        EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
+        EXPECT_EQ(cuda_multiply_result.result_matrix, cpu_tiled_multiply_result);
     }
 }
 
