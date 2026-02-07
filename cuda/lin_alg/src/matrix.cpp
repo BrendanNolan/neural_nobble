@@ -147,14 +147,10 @@ Matrix naive_multiply(Matrix a,
     if (op_b == Transpose)
         b.transpose();
     auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
-    auto element =
-            [](const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
-                return op == Transpose ? matrix(j, i) : matrix(i, j);
-            };
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {
             for (auto k = 0U; k < a.dim().j; ++k) {
-                c(i, j) += alpha * element(a, op_a, i, k) * element(b, op_b, k, j);
+                c(i, j) += alpha * a(i, k) * b(k, j);
             }
         }
     }
