@@ -137,4 +137,21 @@ Matrix naive_multiply(const Matrix& a,
     return c;
 }
 
+bool can_multiply(const Matrix& a, const Op op_a, const Matrix& b, const Op op_b) {
+    if (op_a == Identity && op_b == Identity) {
+        return a.dim().j == b.dim().i;
+    }
+    if (op_a == Identity && op_b == Transpose) {
+        return a.dim().j == b.dim().j;
+    }
+    if (op_a == Transpose && op_b == Identity) {
+        return a.dim().i == b.dim().i;
+    }
+    if (op_a == Transpose && op_b == Transpose) {
+        return a.dim().i == b.dim().j;
+    }
+    assert(false && "Missed a case");
+    return false;
+}
+
 }// namespace lin_alg

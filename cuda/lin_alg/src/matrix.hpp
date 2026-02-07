@@ -42,6 +42,8 @@ class Matrix {
     Dimension dim_;
 };
 
+bool can_multiply(const Matrix& a, const Op op_a, const Matrix& b, const Op op_b);
+
 unsigned int raw_size(const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
 bool admits_tile(const Matrix& matrix, unsigned int tile_size);

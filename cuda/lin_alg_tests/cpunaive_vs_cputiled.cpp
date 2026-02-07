@@ -56,6 +56,9 @@ void run_test(const lin_alg::Matrix& a,
         const float alpha,
         const unsigned int tile_size,
         const Timing timing) {
+    if (!can_multiply(a, op_a, b, op_b)) {
+        return;
+    }
     const auto naive_start = std::chrono::high_resolution_clock::now();
     const auto naive_result = lin_alg::naive_multiply(a, op_a, alpha, b, op_b);
     const auto naive_end = std::chrono::high_resolution_clock::now();
