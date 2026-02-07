@@ -38,6 +38,11 @@ pub struct HostMatrix {
 }
 
 impl HostMatrix {
+    pub fn new(data: Vec<f32>, dim: Dim) -> Self {
+        assert_eq!(dim.size(), data.len());
+        Self { data, dim }
+    }
+
     pub fn zeroes(dim: Dim) -> Self {
         let data = vec![0_f32; dim.rows * dim.columns];
         Self { data, dim }
@@ -131,7 +136,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_round_trip_matrices() {
-        let host_matrix = HostMatrix::zeroes(Dim::new(8, 8));
+        let host_matrix = HostMatrix::new(vec![147_f32, 155_f32, 42_f32, 36_f32], Dim::new(2, 2));
         let device_matrix = DeviceMatrix::from(&host_matrix);
         let host_matrix_round = HostMatrix::from(&device_matrix);
         assert!(host_matrices_almost_equal(&host_matrix, &host_matrix_round));
@@ -139,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_round_trip_vectors() {
-        let host_vector: HostVector = vec![0 as f32; 8];
+        let host_vector: HostVector = vec![147_f32, 155_f32, 42_f32, 36_f32];
         let device_vector = DeviceVector::from(&host_vector);
         let host_vector_round = HostVector::from(&device_vector);
         assert!(host_vectors_almost_equal(&host_vector, &host_vector_round));
