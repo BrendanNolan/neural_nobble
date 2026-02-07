@@ -7,7 +7,9 @@ fn main() {
     println!("cargo:rustc-link-search=native={}", so_dir.display());
     println!("cargo:rustc-link-lib=dylib=cuda_lin_alg");
     println!("cargo:rustc-link-arg=-Wl,-rpath,{}", so_dir.display());
-    println!("cargo:rerun-if-changed={}", cuda_dir.display());
+    println!("cargo:rerun-if-changed=cuda/cuda_lin_alg/src");
+    println!("cargo:rerun-if-changed=cuda/lin_alg/src");
+    println!("cargo:rerun-if-changed=cuda/CMakeLists.txt");
 }
 
 fn create_cuda_so(cuda_dir: &PathBuf) -> PathBuf {
