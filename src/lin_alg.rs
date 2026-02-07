@@ -42,10 +42,10 @@ impl HostMatrix {
         let data = vec![0_f32; dim.rows * dim.columns];
         Self { data, dim }
     }
+}
 
-    pub fn almost_equal(&self, other: &HostMatrix) -> bool {
-        self.dim == other.dim && host_vectors_almost_equal(&self.data, &other.data)
-    }
+pub fn host_matrices_almost_equal(a: &HostMatrix, b: &HostMatrix) -> bool {
+    a.dim == b.dim && host_vectors_almost_equal(&a.data, &b.data)
 }
 
 impl Index<(usize, usize)> for HostMatrix {
@@ -63,8 +63,8 @@ impl IndexMut<(usize, usize)> for HostMatrix {
     }
 }
 
-impl From<DeviceVector> for HostVector {
-    fn from(value: DeviceVector) -> Self {
+impl From<&DeviceVector> for HostVector {
+    fn from(value: &DeviceVector) -> Self {
         let mut host: Self = vec![0 as f32; value.len];
         copy_from_device(value.data, value.len, &mut host);
         host
@@ -104,10 +104,10 @@ impl DeviceMatrix {
     }
 }
 
-impl From<HostVector> for DeviceVector {
-    fn from(value: HostVector) -> Self {
+impl From<&HostVector> for DeviceVector {
+    fn from(value: &HostVector) -> Self {
         let device_data = allocate_on_device(value.len());
-        copy_to_device(&value, device_data);
+        copy_to_device(value, device_data);
         Self {
             data: device_data,
             len: value.len(),
@@ -134,7 +134,7 @@ mod tests {
         let host_matrix = HostMatrix::zeroes(Dim::new(8, 8));
         let device_matrix = DeviceMatrix::from(&host_matrix);
         let host_matrix_round = HostMatrix::from(&device_matrix);
-        assert!(host_matrix.almost_equal(&host_matrix_round));
+        assert!(host_matrices_almost_equal(&host_matrix, &host_matrix_round));
     }
 
     #[test]
@@ -142,6 +142,6 @@ mod tests {
         let host_vector: HostVector = vec![0 as f32; 8];
         let device_vector = DeviceVector::from(&host_vector);
         let host_vector_round = HostVector::from(&device_vector);
-        assert!(host_vector.almost_equal(&host_matrix_round));
+        assert!(host_vectors_almost_equal(&host_vector, &host_vector_round));
     }
 }
