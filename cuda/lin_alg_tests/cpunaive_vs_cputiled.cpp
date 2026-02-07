@@ -123,6 +123,22 @@ void speed_test(const unsigned int dim_of_square_matrix) {
 
 }// namespace
 
+TEST(CorrectnessTest, Minute) {
+    auto* a_raw = static_cast<float*>(malloc(2 * 2 * sizeof(float)));
+    auto* b_raw = static_cast<float*>(malloc(2 * 2 * sizeof(float)));
+    a_raw[0] = 1.0f;
+    a_raw[1] = 1.0f;
+    a_raw[2] = 2.0f;
+    a_raw[3] = 2.0f;
+    b_raw[0] = 1.0f;
+    b_raw[1] = 1.0f;
+    b_raw[2] = 2.0f;
+    b_raw[3] = 2.0f;
+    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{2U, 2U});
+    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{2U, 2U});
+    correctness_test(a, b);
+}
+
 TEST(CorrectnessTest, Tiny) {
     auto* a_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
     auto* b_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
