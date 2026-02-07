@@ -18,11 +18,22 @@ impl Dim {
     }
 }
 
+pub fn floats_almost_equal(a: f32, b: f32) -> bool {
+    const TOLERANCE: f32 = 0.000001_f32;
+    (a - b).abs() < TOLERANCE
+}
+
 pub type HostVector = Vec<f32>;
+
+pub fn host_vectors_almost_equal(a: &HostVector, b: &HostVector) -> bool {
+    a.iter()
+        .zip(b.iter())
+        .all(|(x, y)| floats_almost_equal(*x, *y))
+}
 
 #[derive(Clone, Debug)]
 pub struct HostMatrix {
-    pub data: Vec<f32>,
+    pub data: HostVector,
     pub dim: Dim,
 }
 
@@ -33,11 +44,7 @@ impl HostMatrix {
     }
 
     pub fn almost_equal(&self, other: &HostMatrix) -> bool {
-        const TOLERANCE: f32 = 0.000001_f32;
-        self.data
-            .iter()
-            .zip(other.data.iter())
-            .all(|(x, y)| (x - y).abs() < TOLERANCE)
+        self.dim == other.dim && host_vectors_almost_equal(&self.data, &other.data)
     }
 }
 
