@@ -13,6 +13,9 @@ struct Dimension {
     unsigned int j = 0U;
     bool operator==(const Dimension& other) const;
     bool operator!=(const Dimension& other) const;
+    unsigned int size() const {
+        return i * j;
+    }
 };
 std::string display(const Dimension& dim);
 
@@ -22,7 +25,10 @@ class Matrix {
     static Matrix all_same(float entry, const Dimension& dim);
     static Matrix random(const Dimension& dim);
     static Matrix from_raw(float* entries, const Dimension& dim);
+    Matrix(const Matrix&);
+    Matrix(Matrix&&) = default;
     ~Matrix();
+    void transpose();
     Dimension dim() const;
     float operator()(unsigned int i, unsigned int j) const {
         return data_[i * dim_.j + j];
@@ -47,10 +53,10 @@ bool can_multiply(const Matrix& a, const Op op_a, const Matrix& b, const Op op_b
 unsigned int raw_size(const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
 bool admits_tile(const Matrix& matrix, unsigned int tile_size);
-Matrix naive_multiply(const Matrix& a,
+Matrix naive_multiply(Matrix a,
         const Op op_a,
         const float alpha,
-        const Matrix& b,
+        Matrix b,
         const Op op_b);
 
 template <Op op_a, Op op_b>

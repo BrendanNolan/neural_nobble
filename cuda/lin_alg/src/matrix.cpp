@@ -27,8 +27,29 @@ Matrix Matrix::from_raw(float* impl, const Dimension& dim) {
     return Matrix{impl, dim};
 }
 
+void Matrix::transpose() {
+    auto* new_data = static_cast<float*>(malloc(dim_.size() * sizeof(float)));
+    dim_ = Dimension{.i = dim_.j, .j = dim_.i};
+    for (auto i = 0U; i < dim_.i; ++i) {
+        for (auto j = 0U; j < dim_.j; ++j) {
+                new_data[i * dim_.j + j] = data_[j * dim_.i + i];
+        }
+    }
+    auto* old_data = data_;
+    data_ = new_data;
+    free(old_data);
+}
+
 Matrix::~Matrix() {
     free(data_);
+}
+
+Matrix::Matrix(const Matrix& other) {
+    dim_ = other.dim_;
+    data_ = static_cast<float*>(malloc(dim_.size() * sizeof(float)));
+    for (auto i = 0U; i < dim_.size(); ++i) {
+        data_[i] = other.data_[i];
+    }
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
@@ -116,12 +137,15 @@ bool admits_tile(const Matrix& matrix, unsigned int tile_size) {
     return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;
 }
 
-Matrix naive_multiply(const Matrix& a,
+Matrix naive_multiply(Matrix a,
         const Op op_a,
         const float alpha,
-        const Matrix& b,
+        Matrix b,
         const Op op_b) {
-    assert(a.dim().j == b.dim().i);
+    if (op_a == Transpose)
+        a.transpose();
+    if (op_b == Transpose)
+        b.transpose();
     auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
     auto element =
             [](const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
