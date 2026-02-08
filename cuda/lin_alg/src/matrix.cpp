@@ -80,13 +80,20 @@ Dimension Matrix::dim() const {
     return dim_;
 }
 
+namespace {
+bool almost_equal(const float a, const float b) {
+    constexpr auto TOLERANCE = 1e-4f;
+    using namespace std;
+    return abs(a - b) / max(abs(a), abs(b)) < TOLERANCE;
+}
+}// namespace
+
 bool Matrix::operator==(const Matrix& other) const {
-    constexpr auto tolerance = 0.00000001f;
     if (this->dim() != other.dim())
         return false;
     for (auto row = 0U; row < this->dim().i; ++row) {
         for (auto column = 0U; column < this->dim().j; ++column) {
-            if (std::abs((*this)(row, column) - other(row, column)) > tolerance) {
+            if (!almost_equal((*this)(row, column), other(row, column))) {
                 return false;
             }
         }

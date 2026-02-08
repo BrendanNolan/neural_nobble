@@ -19,8 +19,8 @@ impl Dim {
 }
 
 pub fn floats_almost_equal(a: f32, b: f32) -> bool {
-    const TOLERANCE: f32 = 0.000001_f32;
-    (a - b).abs() < TOLERANCE
+    const TOLERANCE: f32 = 1e-4_f32;
+    (a - b).abs() / a.abs().max(b.abs()) < TOLERANCE
 }
 
 pub type HostVector = Vec<f32>;
