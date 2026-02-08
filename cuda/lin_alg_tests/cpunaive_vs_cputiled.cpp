@@ -8,7 +8,6 @@
 #include <iostream>
 #include <optional>
 #include <ratio>
-#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -59,6 +58,7 @@ template <Op op_a, Op op_b>
 void run_test(const lin_alg::Matrix& a,
         const lin_alg::Matrix& b,
         const float alpha,
+        const std::map<std::pair<Op, Op>, lin_alg::Matrix>& expected_answers,
         const unsigned int tile_size,
         const Timing timing) {
     if (!can_multiply(a, op_a, b, op_b)) {
@@ -67,23 +67,15 @@ void run_test(const lin_alg::Matrix& a,
     const auto tiled_start = std::chrono::high_resolution_clock::now();
     const auto tiled_result = lin_alg::tiled_multiply<op_a, op_b>(a, alpha, b, tile_size);
     const auto tiled_end = std::chrono::high_resolution_clock::now();
-    const auto naive_start = std::chrono::high_resolution_clock::now();
-    const auto naive_result = lin_alg::naive_multiply(a, op_a, alpha, b, op_b);
-    const auto naive_end = std::chrono::high_resolution_clock::now();
-    auto description = std::stringstream{};
-    description << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b) << " "
-                << display(a.dim()) << "x" << display(b.dim()) << " Naive:"
-                << std::chrono::duration_cast<std::chrono::milliseconds>(naive_end - naive_start)
-                           .count()
-                << "ms"
-                << " Tiled(tile size " << tile_size << "):"
-                << std::chrono::duration_cast<std::chrono::milliseconds>(tiled_end - tiled_start)
-                           .count()
-                << "ms";
     if (timing == Timing::time_calls) {
-        std::cout << description.str() << std::endl;
+        std::cout << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b) << " "
+                  << display(a.dim()) << "x" << display(b.dim()) << " Tiled(tile size " << tile_size
+                  << "):"
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(tiled_end - tiled_start)
+                             .count()
+                  << "ms";
     }
-    EXPECT_EQ(naive_result, tiled_result) << description.str();
+    EXPECT_EQ(expected_answers.at(std::make_pair(op_a, op_b)), tiled_result);
 }
 
 void test(const lin_alg::Matrix& a,
@@ -91,11 +83,31 @@ void test(const lin_alg::Matrix& a,
         const TilePolicy tile_policy,
         const Timing timing) {
     const auto alpha = 2.3f;
+    auto expected_answers = std::map<std::pair<Op, Op>, lin_alg::Matrix>{};
+    for (const auto op_a : {Identity, Transpose}) {
+        for (const auto op_b : {Identity, Transpose}) {
+            if (!can_multiply(a, op_a, b, op_b)) {
+                continue;
+            }
+            const auto naive_start = std::chrono::high_resolution_clock::now();
+            expected_answers.emplace(
+                    std::make_pair(op_a, op_b), lin_alg::naive_multiply(a, op_a, alpha, b, op_b));
+            const auto naive_end = std::chrono::high_resolution_clock::now();
+            if (timing == Timing::time_calls) {
+                std::cout << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b)
+                          << " " << display(a.dim()) << "x" << display(b.dim()) << " Naive:"
+                          << std::chrono::duration_cast<std::chrono::milliseconds>(
+                                     naive_end - naive_start)
+                                     .count()
+                          << "ms";
+            }
+        }
+    }
     for (const auto tile_size : get_tile_sizes(tile_policy)) {
-        run_test<Identity, Identity>(a, b, alpha, tile_size, timing);
-        run_test<Identity, Transpose>(a, b, alpha, tile_size, timing);
-        run_test<Transpose, Identity>(a, b, alpha, tile_size, timing);
-        run_test<Transpose, Transpose>(a, b, alpha, tile_size, timing);
+        run_test<Identity, Identity>(a, b, alpha, expected_answers, tile_size, timing);
+        run_test<Identity, Transpose>(a, b, alpha, expected_answers, tile_size, timing);
+        run_test<Transpose, Identity>(a, b, alpha, expected_answers, tile_size, timing);
+        run_test<Transpose, Transpose>(a, b, alpha, expected_answers, tile_size, timing);
     }
 }
 
