@@ -26,7 +26,7 @@ class Matrix {
     static Matrix random(const Dimension& dim);
     static Matrix from_raw(float* entries, const Dimension& dim);
     Matrix(const Matrix&);
-    Matrix(Matrix&&) = default;
+    Matrix(Matrix&&);
     ~Matrix();
     void transpose();
     Dimension dim() const;

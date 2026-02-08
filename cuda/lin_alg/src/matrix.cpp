@@ -52,6 +52,13 @@ Matrix::Matrix(const Matrix& other) {
     }
 }
 
+Matrix::Matrix(Matrix&& other) {
+    data_ = other.data_;
+    dim_ = other.dim_;
+    other.data_ = nullptr;
+    other.dim_ = Dimension{.i = 0U, .j = 0U};
+}
+
 Matrix Matrix::zeroes(const Dimension& dim) {
     return Matrix{static_cast<float*>(calloc(dim.i * dim.j, sizeof(float))), dim};
 }
