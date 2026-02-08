@@ -18,45 +18,24 @@ bool Dimension::operator!=(const Dimension& other) const {
     return !(*this == other);
 }
 
-Matrix::Matrix(float* impl, const Dimension& dim)
-    : data_{impl}
+Matrix::Matrix(std::vector<float> data, const Dimension& dim)
+    : data_{std::move{data}}
     , dim_{dim} {
 }
 
-Matrix Matrix::from_raw(float* impl, const Dimension& dim) {
+Matrix Matrix::from_raw(std::vector<float> impl, const Dimension& dim) {
     return Matrix{impl, dim};
 }
 
 void Matrix::transpose() {
-    auto* new_data = static_cast<float*>(malloc(dim_.size() * sizeof(float)));
+    auto new_data = data_;
     dim_ = Dimension{.i = dim_.j, .j = dim_.i};
     for (auto i = 0U; i < dim_.i; ++i) {
         for (auto j = 0U; j < dim_.j; ++j) {
             new_data[i * dim_.j + j] = data_[j * dim_.i + i];
         }
     }
-    auto* old_data = data_;
     data_ = new_data;
-    free(old_data);
-}
-
-Matrix::~Matrix() {
-    free(data_);
-}
-
-Matrix::Matrix(const Matrix& other) {
-    dim_ = other.dim_;
-    data_ = static_cast<float*>(malloc(dim_.size() * sizeof(float)));
-    for (auto i = 0U; i < dim_.size(); ++i) {
-        data_[i] = other.data_[i];
-    }
-}
-
-Matrix::Matrix(Matrix&& other) {
-    data_ = other.data_;
-    dim_ = other.dim_;
-    other.data_ = nullptr;
-    other.dim_ = Dimension{.i = 0U, .j = 0U};
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
@@ -109,7 +88,7 @@ bool Matrix::operator==(const Matrix& other) const {
 }
 
 const float* Matrix::raw() const {
-    return data_;
+    return data_.data();
 }
 
 unsigned int Matrix::element_count() const {

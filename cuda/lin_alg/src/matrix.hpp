@@ -3,6 +3,7 @@
 #include <cassert>
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "utils.h"
 
@@ -24,10 +25,7 @@ class Matrix {
     static Matrix zeroes(const Dimension& dim);
     static Matrix all_same(float entry, const Dimension& dim);
     static Matrix random(const Dimension& dim);
-    static Matrix from_raw(float* entries, const Dimension& dim);
-    Matrix(const Matrix&);
-    Matrix(Matrix&&);
-    ~Matrix();
+    static Matrix from_raw(std::vector<float> data, const Dimension& dim);
     void transpose();
     Dimension dim() const;
     float operator()(unsigned int i, unsigned int j) const {
@@ -42,9 +40,9 @@ class Matrix {
     Matrix& operator+=(const Matrix& other);
     unsigned int element_count() const;
  private:
-    Matrix(float* entries, const Dimension& dim);
+    Matrix(std::vector<float> data, const Dimension& dim);
  private:
-    float* data_ = nullptr;
+    std::vector<float> data_;
     Dimension dim_;
 };
 
