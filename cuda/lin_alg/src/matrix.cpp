@@ -141,12 +141,11 @@ Matrix naive_multiply(Matrix a, const Op op_a, const float alpha, Matrix b, cons
     if (op_b == Transpose) {
         b.transpose();
     }
-    auto c = Matrix::zeroes(Dimension{.rows = (op_a == Transpose ? a.dim().columns : a.dim().rows),
-            .columns = (op_b == Transpose ? b.dim().rows : b.dim().columns)});
+    auto c = Matrix::zeroes(Dimension{.rows = a.dim().rows, .columns = b.dim().columns});
     for (auto i = 0U; i < a.dim().rows; ++i) {
         for (auto j = 0U; j < b.dim().columns; ++j) {
             for (auto k = 0U; k < a.dim().columns; ++k) {
-                c(i, j) = alpha * a(i, k) * b(k, j);
+                c(i, j) += alpha * a(i, k) * b(k, j);
             }
         }
     }
