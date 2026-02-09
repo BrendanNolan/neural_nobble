@@ -68,9 +68,11 @@ Dimension Matrix::dim() const {
 
 namespace {
 bool almost_equal(const float a, const float b) {
-    constexpr auto TOLERANCE = 1e-4f;
+    constexpr auto ABSOLUTE_TOLERANCE = 1e-6f;
+    constexpr auto RELATIVE_TOLERANCE = 1e-4f;
     using namespace std;
-    return abs(a - b) / max(abs(a), abs(b)) < TOLERANCE;
+    const auto largest_absolute = max(abs(a), abs(b));
+    return abs(a - b) <= max(ABSOLUTE_TOLERANCE, RELATIVE_TOLERANCE * largest_absolute);
 }
 }// namespace
 
