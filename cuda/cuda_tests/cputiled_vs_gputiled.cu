@@ -127,20 +127,21 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     const auto default_launch_config = LaunchConfig::create(
             dim3{static_cast<unsigned int>(
                          (a.dim().rows + default_block_edge_size - 1) / default_block_edge_size),
-                    static_cast<unsigned int>(
-                            (b.dim().columns + default_block_edge_size - 1) / default_block_edge_size)},
+                    static_cast<unsigned int>((b.dim().columns + default_block_edge_size - 1)
+                            / default_block_edge_size)},
             dim3{default_block_edge_size, default_block_edge_size})
                                                .value();
-    return CudaInput{
-            .params = GemmParams{.A = ConstMatrixDetails{.data = A,
-                                         .rows = a.dim().rows,
-                                         .columns = a.dim().columns},
-                    .op_A = op_a,
-                    .alpha = alpha,
-                    .B = ConstMatrixDetails{.data = B, .rows = b.dim().rows, .columns = b.dim().columns},
-                    .op_B = op_b,
-                    .beta = beta,
-                    .C = C},
+    return CudaInput{.params = GemmParams{.A = ConstMatrixDetails{.data = A,
+                                                  .rows = a.dim().rows,
+                                                  .columns = a.dim().columns},
+                             .op_A = op_a,
+                             .alpha = alpha,
+                             .B = ConstMatrixDetails{.data = B,
+                                     .rows = b.dim().rows,
+                                     .columns = b.dim().columns},
+                             .op_B = op_b,
+                             .beta = beta,
+                             .C = C},
             .config = optional_config.value_or(default_launch_config)};
 }
 
