@@ -10,12 +10,12 @@
 namespace lin_alg {
 
 struct Dimension {
-    unsigned int i = 0U;
-    unsigned int j = 0U;
+    unsigned int rows = 0U;
+    unsigned int columns = 0U;
     bool operator==(const Dimension& other) const;
     bool operator!=(const Dimension& other) const;
     unsigned int size() const {
-        return i * j;
+        return rows * columns;
     }
 };
 std::string display(const Dimension& dim);
@@ -29,10 +29,10 @@ class Matrix {
     void transpose();
     Dimension dim() const;
     float operator()(unsigned int i, unsigned int j) const {
-        return data_[i * dim_.j + j];
+        return data_[i * dim_.columns + j];
     }
     float& operator()(unsigned int i, unsigned int j) {
-        return data_[i * dim_.j + j];
+        return data_[i * dim_.columns + j];
     }
     bool operator==(const Matrix& other) const;
     const float* raw() const;
@@ -61,15 +61,15 @@ Matrix tiled_multiply(const Matrix& a,
         const float alpha,
         const Matrix& b,
         const unsigned int tile_size) {
-    auto M = a.dim().i;
-    auto N = b.dim().j;
-    auto K = a.dim().j;
+    auto M = a.dim().rows;
+    auto N = b.dim().columns;
+    auto K = a.dim().columns;
     if constexpr (op_a == Transpose) {
-        M = a.dim().j;
-        K = a.dim().i;
+        M = a.dim().columns;
+        K = a.dim().rows;
     }
     if constexpr (op_b == Transpose) {
-        N = b.dim().i;
+        N = b.dim().rows;
     }
     const auto T = tile_size;
     auto C = Matrix::zeroes(Dimension{M, N});

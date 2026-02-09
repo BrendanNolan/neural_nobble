@@ -120,24 +120,24 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     float* B;
     cudaMalloc(&B, b_bytes);
     cudaMemcpy(B, b.raw(), b_bytes, cudaMemcpyHostToDevice);
-    const auto c_bytes = a.dim().i * b.dim().j * sizeof(float);
+    const auto c_bytes = a.dim().rows * b.dim().columns * sizeof(float);
     float* C;
     cudaMalloc(&C, c_bytes);
     const auto default_block_edge_size = 4U;
     const auto default_launch_config = LaunchConfig::create(
             dim3{static_cast<unsigned int>(
-                         (a.dim().i + default_block_edge_size - 1) / default_block_edge_size),
+                         (a.dim().rows + default_block_edge_size - 1) / default_block_edge_size),
                     static_cast<unsigned int>(
-                            (b.dim().j + default_block_edge_size - 1) / default_block_edge_size)},
+                            (b.dim().columns + default_block_edge_size - 1) / default_block_edge_size)},
             dim3{default_block_edge_size, default_block_edge_size})
                                                .value();
     return CudaInput{
             .params = GemmParams{.A = ConstMatrixDetails{.data = A,
-                                         .rows = a.dim().i,
-                                         .columns = a.dim().j},
+                                         .rows = a.dim().rows,
+                                         .columns = a.dim().columns},
                     .op_A = op_a,
                     .alpha = alpha,
-                    .B = ConstMatrixDetails{.data = B, .rows = b.dim().i, .columns = b.dim().j},
+                    .B = ConstMatrixDetails{.data = B, .rows = b.dim().rows, .columns = b.dim().columns},
                     .op_B = op_b,
                     .beta = beta,
                     .C = C},
@@ -166,7 +166,7 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
     auto h_C = std::vector<float>(input.params.A.rows * input.params.B.columns, 0.0f);
     cudaMemcpy(h_C.data(), input.params.C, h_C.size() * sizeof(float), cudaMemcpyDeviceToHost);
     return MultiplyResult{.result_matrix = lin_alg::Matrix::from_raw(
-                                  h_C, lin_alg::Dimension{a.dim().i, b.dim().j}),
+                                  h_C, lin_alg::Dimension{a.dim().rows, b.dim().columns}),
             .duration = duration_ms,
             .launch_config_used = input.config};
 }

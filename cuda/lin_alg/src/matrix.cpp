@@ -7,11 +7,11 @@
 namespace lin_alg {
 
 std::string display(const Dimension& dim) {
-    return "(" + std::to_string(dim.i) + ", " + std::to_string(dim.j) + ")";
+    return "(" + std::to_string(dim.rows) + ", " + std::to_string(dim.columns) + ")";
 }
 
 bool Dimension::operator==(const Dimension& other) const {
-    return this->i == other.i && this->j == other.j;
+    return this->rows == other.rows && this->columns == other.columns;
 }
 
 bool Dimension::operator!=(const Dimension& other) const {
@@ -29,10 +29,10 @@ Matrix Matrix::from_raw(std::vector<float> impl, const Dimension& dim) {
 
 void Matrix::transpose() {
     auto new_data = data_;
-    dim_ = Dimension{.i = dim_.j, .j = dim_.i};
-    for (auto i = 0U; i < dim_.i; ++i) {
-        for (auto j = 0U; j < dim_.j; ++j) {
-            new_data[i * dim_.j + j] = data_[j * dim_.i + i];
+    dim_ = Dimension{.rows = dim_.columns, .columns = dim_.rows};
+    for (auto i = 0U; i < dim_.rows; ++i) {
+        for (auto j = 0U; j < dim_.columns; ++j) {
+            new_data[i * dim_.columns + j] = data_[j * dim_.rows + i];
         }
     }
     data_ = new_data;
@@ -44,7 +44,7 @@ Matrix Matrix::zeroes(const Dimension& dim) {
 
 Matrix Matrix::all_same(float entry, const Dimension& dim) {
     auto entries = std::vector<float>(dim.size(), 0.0f);
-    for (auto index = 0U; index < dim.i * dim.j; ++index) {
+    for (auto index = 0U; index < dim.rows * dim.columns; ++index) {
         entries[index] = entry;
     }
     return Matrix{entries, dim};
@@ -54,8 +54,8 @@ Matrix Matrix::random(const Dimension& dim) {
     std::mt19937 gen(147);
     std::uniform_int_distribution<> dist(0, 100);
     auto matrix = Matrix::zeroes(dim);
-    for (auto i = 0U; i < dim.i; ++i) {
-        for (auto j = 0U; j < dim.j; ++j) {
+    for (auto i = 0U; i < dim.rows; ++i) {
+        for (auto j = 0U; j < dim.columns; ++j) {
             matrix(i, j) = dist(gen);
         }
     }
@@ -79,8 +79,8 @@ bool almost_equal(const float a, const float b) {
 bool Matrix::operator==(const Matrix& other) const {
     if (this->dim() != other.dim())
         return false;
-    for (auto row = 0U; row < this->dim().i; ++row) {
-        for (auto column = 0U; column < this->dim().j; ++column) {
+    for (auto row = 0U; row < this->dim().rows; ++row) {
+        for (auto column = 0U; column < this->dim().columns; ++column) {
             if (!almost_equal((*this)(row, column), other(row, column))) {
                 return false;
             }
@@ -94,7 +94,7 @@ const float* Matrix::raw() const {
 }
 
 unsigned int Matrix::element_count() const {
-    return dim().i * dim().j;
+    return dim().rows * dim().columns;
 }
 
 void Matrix::scale(const float scalar) {
@@ -111,11 +111,11 @@ Matrix& Matrix::operator+=(const Matrix& other) {
 
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
     os << std::endl;
-    if (matrix.dim().i == 0U || matrix.dim().j == 0U) {
+    if (matrix.dim().rows == 0U || matrix.dim().columns == 0U) {
         return os;
     }
-    for (auto i = 0U; i < matrix.dim().i; ++i) {
-        for (auto j = 0U; j < matrix.dim().j; ++j) {
+    for (auto i = 0U; i < matrix.dim().rows; ++i) {
+        for (auto j = 0U; j < matrix.dim().columns; ++j) {
             os << matrix(i, j) << ' ';
         }
         os << std::endl;
@@ -124,12 +124,12 @@ std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
 }
 
 unsigned int raw_size(const Matrix& matrix) {
-    return matrix.dim().i * matrix.dim().j;
+    return matrix.dim().rows * matrix.dim().columns;
 }
 
 bool admits_tile(const Matrix& matrix, unsigned int tile_size) {
     const auto dim = matrix.dim();
-    return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;
+    return tile_size > 0U && tile_size <= dim.rows && tile_size <= dim.columns;
 }
 
 Matrix naive_multiply(const Matrix& a,
@@ -137,16 +137,16 @@ Matrix naive_multiply(const Matrix& a,
         const float alpha,
         const Matrix& b,
         const Op op_b) {
-    assert(a.dim().j == b.dim().i);
-    auto c = Matrix::zeroes(Dimension{.i = (op_a == Transpose ? a.dim().j : a.dim().i),
-            .j = (op_b == Transpose ? b.dim().i : b.dim().j)});
+    assert(a.dim().columns == b.dim().rows);
+    auto c = Matrix::zeroes(Dimension{.rows = (op_a == Transpose ? a.dim().columns : a.dim().rows),
+            .columns = (op_b == Transpose ? b.dim().rows : b.dim().columns)});
     auto element =
             [](const Matrix& matrix, const Op op, const unsigned int i, const unsigned int j) {
                 return op == Transpose ? matrix(j, i) : matrix(i, j);
             };
-    for (auto i = 0U; i < a.dim().i; ++i) {
-        for (auto j = 0U; j < b.dim().j; ++j) {
-            for (auto k = 0U; k < a.dim().j; ++k) {
+    for (auto i = 0U; i < a.dim().rows; ++i) {
+        for (auto j = 0U; j < b.dim().columns; ++j) {
+            for (auto k = 0U; k < a.dim().columns; ++k) {
                 c(i, j) += alpha * element(a, op_a, i, k) * element(b, op_b, k, j);
             }
         }
@@ -156,16 +156,16 @@ Matrix naive_multiply(const Matrix& a,
 
 bool can_multiply(const Matrix& a, const Op op_a, const Matrix& b, const Op op_b) {
     if (op_a == Identity && op_b == Identity) {
-        return a.dim().j == b.dim().i;
+        return a.dim().columns == b.dim().rows;
     }
     if (op_a == Identity && op_b == Transpose) {
-        return a.dim().j == b.dim().j;
+        return a.dim().columns == b.dim().columns;
     }
     if (op_a == Transpose && op_b == Identity) {
-        return a.dim().i == b.dim().i;
+        return a.dim().rows == b.dim().rows;
     }
     if (op_a == Transpose && op_b == Transpose) {
-        return a.dim().i == b.dim().j;
+        return a.dim().rows == b.dim().columns;
     }
     assert(false && "Missed a case");
     return false;
