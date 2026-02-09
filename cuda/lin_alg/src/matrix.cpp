@@ -19,7 +19,7 @@ bool Dimension::operator!=(const Dimension& other) const {
 }
 
 Matrix::Matrix(std::vector<float> data, const Dimension& dim)
-    : data_{std::move{data}}
+    : data_{std::move(data)}
     , dim_{dim} {
 }
 
@@ -39,11 +39,11 @@ void Matrix::transpose() {
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
-    return Matrix{static_cast<float*>(calloc(dim.i * dim.j, sizeof(float))), dim};
+    return Matrix{std::vector<float>(dim.size(), 0.0f), dim};
 }
 
 Matrix Matrix::all_same(float entry, const Dimension& dim) {
-    auto* entries = static_cast<float*>(malloc(dim.i * dim.j * sizeof(float)));
+    auto entries = std::vector<float>(dim.size(), 0.0f);
     for (auto index = 0U; index < dim.i * dim.j; ++index) {
         entries[index] = entry;
     }

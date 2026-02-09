@@ -73,7 +73,7 @@ void run_test(const lin_alg::Matrix& a,
                   << "):"
                   << std::chrono::duration_cast<std::chrono::milliseconds>(tiled_end - tiled_start)
                              .count()
-                  << "ms";
+                  << "ms" << std::endl;
     }
     EXPECT_EQ(expected_answers.at(std::make_pair(op_a, op_b)), tiled_result);
 }
@@ -99,7 +99,7 @@ void test(const lin_alg::Matrix& a,
                           << std::chrono::duration_cast<std::chrono::milliseconds>(
                                      naive_end - naive_start)
                                      .count()
-                          << "ms";
+                          << "ms" << std::endl;
             }
         }
     }
@@ -136,8 +136,8 @@ void speed_test(const unsigned int dim_of_square_matrix) {
 }// namespace
 
 TEST(CorrectnessTest, Minute) {
-    auto* a_raw = static_cast<float*>(malloc(2 * 2 * sizeof(float)));
-    auto* b_raw = static_cast<float*>(malloc(2 * 2 * sizeof(float)));
+    auto a_raw = std::vector<float>(4U, 0.0f);
+    auto b_raw = a_raw;
     a_raw[0] = 1.0f;
     a_raw[1] = 1.0f;
     a_raw[2] = 2.0f;
@@ -152,8 +152,8 @@ TEST(CorrectnessTest, Minute) {
 }
 
 TEST(CorrectnessTest, Tiny) {
-    auto* a_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
-    auto* b_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
+    auto a_raw = std::vector<float>(9U, 0.0f);
+    auto b_raw = a_raw;
     a_raw[0] = 1.0f;
     a_raw[1] = 2.0f;
     a_raw[2] = 3.0f;

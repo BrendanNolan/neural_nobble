@@ -163,9 +163,8 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
         const std::optional<LaunchConfig>& optional_config = std::nullopt) {
     const auto input = ExtractInput(a, op_a, alpha, b, op_b, beta, optional_config);
     const auto duration_ms = raw_cuda_multiply(input);
-    const auto c_bytes = input.params.A.rows * input.params.B.columns * sizeof(float);
-    float* h_C = static_cast<float*>(malloc(c_bytes));
-    cudaMemcpy(h_C, input.params.C, c_bytes, cudaMemcpyDeviceToHost);
+    auto h_C = std::vector<float>(input.params.A.rows * input.params.B.columns, 0.0f);
+    cudaMemcpy(h_C.data(), input.params.C, h_C.size() * sizeof(float), cudaMemcpyDeviceToHost);
     return MultiplyResult{.result_matrix = lin_alg::Matrix::from_raw(
                                   h_C, lin_alg::Dimension{a.dim().i, b.dim().j}),
             .duration = duration_ms,
@@ -268,8 +267,8 @@ TEST(PrintGpuStats, Basic) {
 }
 
 TEST(CorrectnessTest, Tiny) {
-    auto* a_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
-    auto* b_raw = static_cast<float*>(malloc(3 * 3 * sizeof(float)));
+    auto a_raw = std::vector<float>(9U, 0.0f);
+    auto b_raw = a_raw;
     a_raw[0] = 1.0f;
     a_raw[1] = 2.0f;
     a_raw[2] = 3.0f;
