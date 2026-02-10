@@ -112,11 +112,11 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
         const Op op_b,
         const float beta,
         const std::optional<LaunchConfig>& optional_config) {
-    const auto a_bytes = raw_size(a) * sizeof(float);
+    const auto a_bytes = a.dim().size() * sizeof(float);
     float* A;
     cudaMalloc(&A, a_bytes);
     cudaMemcpy(A, a.raw(), a_bytes, cudaMemcpyHostToDevice);
-    const auto b_bytes = raw_size(b) * sizeof(float);
+    const auto b_bytes = b.dim().size() * sizeof(float);
     float* B;
     cudaMalloc(&B, b_bytes);
     cudaMemcpy(B, b.raw(), b_bytes, cudaMemcpyHostToDevice);
@@ -207,7 +207,7 @@ void check_multiplication_results(const lin_alg::Matrix& a,
         const lin_alg::Matrix& b,
         const LaunchConfigRangeHint range_hint) {
     const auto cpu_tiled_multiply_result =
-            lin_alg::tiled_multiply<Identity, Identity>(a, 1.0, b, 8U);
+            lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 8U);
     const auto cuda_multiply_result = cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0);
     EXPECT_EQ(cuda_multiply_result.result_matrix, cpu_tiled_multiply_result);
     for (const auto& config : generate_launch_configs(range_hint)) {
@@ -238,7 +238,7 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto start = std::chrono::high_resolution_clock::now();
-    auto cpu_tiled_multiply_result = lin_alg::tiled_multiply<Identity, Identity>(a, 1.0, b, 8U);
+    auto cpu_tiled_multiply_result = lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 8U);
     const auto end = std::chrono::high_resolution_clock::now();
     const auto optimised_cpu_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

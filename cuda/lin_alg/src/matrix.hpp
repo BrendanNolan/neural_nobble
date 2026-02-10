@@ -48,53 +48,17 @@ class Matrix {
 
 bool can_multiply(const Matrix& a, const Op op_a, const Matrix& b, const Op op_b);
 
-unsigned int raw_size(const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
+
 bool admits_tile(const Matrix& matrix, unsigned int tile_size);
+
 Matrix naive_multiply(Matrix a, const Op op_a, const float alpha, Matrix b, const Op op_b);
-template <Op op_a, Op op_b>
+
 Matrix tiled_multiply(const Matrix& a,
-        const float alpha,
+        Op op_a,
+        float alpha,
         const Matrix& b,
-        const unsigned int tile_size) {
-    auto M = a.dim().rows;
-    auto N = b.dim().columns;
-    auto K = a.dim().columns;
-    if constexpr (op_a == Transpose) {
-        M = a.dim().columns;
-        K = a.dim().rows;
-    }
-    if constexpr (op_b == Transpose) {
-        N = b.dim().rows;
-    }
-    const auto T = tile_size;
-    auto C = Matrix::zeroes(Dimension{M, N});
-    for (auto i = 0U; i < M; i += T) {
-        for (auto j = 0U; j < N; j += T) {
-            // top left of current C block is at (i,j)
-            for (auto k = 0U; k < K; k += T) {
-                for (auto ii = i; ii < std::min(i + T, M); ++ii) {
-                    for (auto kk = k; kk < std::min(k + T, K); ++kk) {
-                        const auto alpha_times_a_term = [&]() {
-                            if constexpr (op_a == Transpose) {
-                                return alpha * a(kk, ii);
-                            } else {
-                                return alpha * a(ii, kk);
-                            }
-                        }();
-                        for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                            if constexpr (op_b == Transpose) {
-                                C(ii, jj) += alpha_times_a_term * b(jj, kk);
-                            } else {
-                                C(ii, jj) += alpha_times_a_term * b(kk, jj);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return C;
-}
+        Op op_b,
+        unsigned int tile_size);
 
 }// namespace lin_alg

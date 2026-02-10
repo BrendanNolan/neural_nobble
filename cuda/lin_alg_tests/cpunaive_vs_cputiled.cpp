@@ -67,7 +67,7 @@ void run_test(const lin_alg::Matrix& a,
         return;
     }
     const auto tiled_start = std::chrono::high_resolution_clock::now();
-    const auto tiled_result = lin_alg::tiled_multiply<op_a, op_b>(a, alpha, b, tile_size);
+    const auto tiled_result = lin_alg::tiled_multiply(a, op_a, alpha, b, op_b, tile_size);
     const auto tiled_end = std::chrono::high_resolution_clock::now();
     if (timing == Timing::time_calls) {
         std::cout << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b) << " "
