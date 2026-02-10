@@ -2,12 +2,10 @@
 
 set -euo pipefail
 
-python3 -m venv .venv
-source venv/bin/activate
-pip3 install -r <<< "optuna"
-
-pushd "$(dirname "${0}")"/..
-./tune_network.py
-popd
-rm -rf .venv
+script_dir="$(dirname "${0}")"
+python3 -m venv "${script_dir}/.venv"
+source "${script_dir}/.venv/bin/activate"
+pip3 install optuna
+"${script_dir}/tune_network.py"
+rm -rf "${script_dir}/.venv"
 
