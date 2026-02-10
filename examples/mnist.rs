@@ -104,11 +104,13 @@ fn main() {
             hit_count += 1;
         } else {
             miss_count += 1;
+            let dir_name = "misidentified_images";
+            let _ = std::fs::create_dir_all(dir_name);
             _print_image(
                 &test_data,
                 image_index,
                 &format!(
-                    "misidentified_images/{image_index}_thought_it_was_a{}.png",
+                    "{dir_name}/{image_index}_thought_it_was_a{}.png",
                     predictions[image_index]
                 ),
             );
