@@ -23,6 +23,7 @@ def run_mnist(rng_seed):
     output = proc_result.stdout
     hits = int(re.search(r"Hits: (\d+)", output).group(1))
     misses = int(re.search(r"Misses: (\d+)", output).group(1))
+    print()
     print(f"Hits: {hits}, Misses: {misses}, Time: {elapsed_seconds} seconds")
     miss_rate = misses / (hits + misses)
     if miss_rate == 0:
