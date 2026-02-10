@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iostream>
 #include <optional>
+#include <ostream>
 #include <ratio>
 #include <stdexcept>
 #include <vector>
@@ -43,6 +44,7 @@ std::vector<unsigned int> get_tile_sizes(const TilePolicy tile_policy) {
     return tile_sizes;
 }
 
+namespace {
 std::string op_to_string(const Op op) {
     if (op == Identity) {
         return "Identity";
@@ -50,9 +52,9 @@ std::string op_to_string(const Op op) {
     if (op == Transpose) {
         return "Transpose";
     }
-    assert(false && "Unrecognised Op Value");
-    return {};
+    throw std::invalid_argument{"Unrecognised Op"};
 }
+}// namespace
 
 template <Op op_a, Op op_b>
 void run_test(const lin_alg::Matrix& a,
@@ -75,7 +77,10 @@ void run_test(const lin_alg::Matrix& a,
                              .count()
                   << "ms" << std::endl;
     }
-    EXPECT_EQ(expected_answers.at(std::make_pair(op_a, op_b)), tiled_result);
+    EXPECT_EQ(expected_answers.at(std::make_pair(op_a, op_b)), tiled_result)
+            << "a: " << a << "op_a: " << op_to_string(op_a) << std::endl
+            << "b: " << b << "op_b: " << op_to_string(op_b) << std::endl
+            << "alpha: " << alpha << std::endl;
 }
 
 void test(const lin_alg::Matrix& a,
