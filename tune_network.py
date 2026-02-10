@@ -19,14 +19,14 @@ def run_mnist(rng_seed):
         text=True)
     elapsed_seconds = time.time() - start
     if proc_result.returncode != 0:
-        return pow(2, 999999999)
+        return 1 << 64
     output = proc_result.stdout
     hits = int(re.search(r"Hits: (\d+)", output).group(1))
     misses = int(re.search(r"Misses: (\d+)", output).group(1))
     print(f"Hits: {hits}, Misses: {misses}, Time: {elapsed_seconds} seconds")
     miss_rate = misses / (hits + misses)
     if miss_rate == 0:
-        miss_rate = 0.0000001
+        miss_rate = 1 / (1 << 16)
     real_to_expected_seconds = elapsed_seconds / 3
     return real_to_expected_seconds * miss_rate
 
