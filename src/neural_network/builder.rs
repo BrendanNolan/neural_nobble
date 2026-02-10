@@ -18,6 +18,10 @@ pub struct NeuralNetworkBuilder {
 
 impl NeuralNetworkBuilder {
     pub fn new(input_size: usize) -> Self {
+        Self::new_with_rng_seed(input_size, 147)
+    }
+
+    pub fn new_with_rng_seed(input_size: usize, rng_seed: u64) -> Self {
         NeuralNetworkBuilder {
             input_size,
             // sacrificial zeroth layer to make indexing easier
@@ -26,7 +30,7 @@ impl NeuralNetworkBuilder {
             bias_vectors: vec![Array1::zeros(0)],
             // sacrificial zeroth layer to make indexing easier
             activation_functions: vec![ActivationFunction::Id],
-            random_number_generator: StdRng::seed_from_u64(8),
+            random_number_generator: StdRng::seed_from_u64(rng_seed),
         }
     }
 

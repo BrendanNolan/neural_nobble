@@ -40,7 +40,13 @@ fn main() {
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
     let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f32);
 
-    let mut network = builder::NeuralNetworkBuilder::new(image_size)
+    let args: Vec<String> = std::env::args().collect();
+    let rng_seed = if !args.is_empty() {
+        args[1].parse().unwrap()
+    } else {
+        147_u64
+    };
+    let mut network = builder::NeuralNetworkBuilder::new_with_rng_seed(image_size, rng_seed)
         .add_layer_random(32, ActivationFunction::Relu)
         .unwrap()
         .add_layer_random(32, ActivationFunction::Relu)
@@ -126,7 +132,9 @@ fn main() {
             }
         }
     }
-    print!("Hits: {hit_count}, Misses: {miss_count}");
+    println!();
+    println!("Hits: {hit_count}");
+    println!("Misses: {miss_count}");
 }
 
 pub fn print_grayscale_image_to_terminal<I>(image: I, column_count: usize)
