@@ -5,7 +5,6 @@ use crate::{
     back_propagation::{compute_gradient_of_cost_wrt_biases, BackPropagationMachine},
     common::*,
     cost_functions::{self, CostFunction},
-    device_arena_allocator::*,
     feed_forward::{feed_forward, print_details},
     gradient_descent::{descend, gradient_magnitude},
     logging,
@@ -34,7 +33,6 @@ pub fn train<C: CostFunction>(
     let mut epoch_counter = 0;
     let mut descent_counter = 0;
     let mut random_number_generator = StdRng::seed_from_u64(155);
-    let mut device_arena_allocator = DeviceArenaAllocator::initialise();
     loop {
         logging::log(&format!("{}", network.weight_and_bias_sum()));
         let mini_batch = create_minibatch(
