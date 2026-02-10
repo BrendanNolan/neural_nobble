@@ -2,10 +2,12 @@
 
 set -euo pipefail
 
-cd "$(dirname "${0}")"/..
-python3 -m venv venv
+python3 -m venv .venv
 source venv/bin/activate
-pip3 install -r requirements.txt
+pip3 install -r <<< "optuna"
 
+pushd "$(dirname "${0}")"/..
 ./tune_network.py
+popd
+rm -rf .venv
 
