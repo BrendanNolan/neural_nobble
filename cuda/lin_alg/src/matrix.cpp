@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <random>
-#include <utility>
 
 namespace lin_alg {
 
@@ -29,15 +28,14 @@ Matrix Matrix::from_raw(std::vector<float> impl, const Dimension& dim) {
 }
 
 void Matrix::transpose() {
+    auto new_data = data_;
+    dim_ = Dimension{.rows = dim_.columns, .columns = dim_.rows};
     for (auto i = 0U; i < dim_.rows; ++i) {
         for (auto j = 0U; j < dim_.columns; ++j) {
-            const auto current_index = i * dim_.columns + j;
-            const auto target_index = j * dim_.rows + i;
-            if (current_index < target_index)
-                std::swap(data_[current_index], data_[target_index]);
+            new_data[i * dim_.columns + j] = data_[j * dim_.rows + i];
         }
     }
-    dim_ = Dimension{.rows = dim_.columns, .columns = dim_.rows};
+    data_ = new_data;
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
