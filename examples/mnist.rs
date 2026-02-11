@@ -40,15 +40,17 @@ fn main() {
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
     let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f32);
 
-    let rng_seed = 8;
-    let mut network = builder::NeuralNetworkBuilder::new_with_rng_seed(image_size, rng_seed)
-        .add_layer_random(32, ActivationFunction::Relu)
-        .unwrap()
-        .add_layer_random(32, ActivationFunction::Relu)
-        .unwrap()
-        .add_layer_random(10, ActivationFunction::SoftMax)
-        .unwrap()
-        .build();
+    let args = parse_args();
+    let mut builder = builder::NeuralNetworkBuilder::new_with_rng_seed(image_size, args.rng_seed);
+    for layer_size in &args.layers[..args.layers.len() - 1] {
+        builder = builder
+            .add_layer_random(*layer_size, ActivationFunction::Relu)
+            .unwrap();
+    }
+    builder = builder
+        .add_layer_random(*args.layers.last().unwrap(), ActivationFunction::SoftMax)
+        .unwrap();
+    let mut network = builder.build();
 
     let training_options = TrainingOptions {
         cost_function: CrossEntropyCost,
@@ -164,29 +166,41 @@ fn _print_image(image_array: &Array2<f32>, image_col: usize, image_file_name: &s
     img.save(image_file_name).expect("Failed to save image");
 }
 
-#[derive(Default)]
-struct Args {
+struct CommandlineArgs {
     rng_seed: u64,
     layers: Vec<usize>,
+    learning_rate: f32,
+    epoch_limit: usize,
 }
 
-impl Args {
+impl CommandlineArgs {
+    fn new() -> Self {
+        Self {
+            rng_seed: 8,
+            layers: vec![32, 32, 10],
+            learning_rate: 0.02,
+            epoch_limit: 100,
+        }
+    }
+
     fn consume(&mut self, name: &str, value: &str) {
         match name {
-            "rng_seed" => self.rng_seed = value.parse().unwrap(),
+            "rng-seed" => self.rng_seed = value.parse().unwrap(),
             "layers" => self.layers = value.split(',').map(|x| x.parse().unwrap()).collect(),
+            "learning-rate" => self.learning_rate = value.parse().unwrap(),
+            "epoch-limit" => self.epoch_limit = value.parse().unwrap(),
             _ => {}
         }
     }
 }
 
-fn parse_args() -> Args {
-    let mut args = Args::default();
+fn parse_args() -> CommandlineArgs {
+    let mut args = CommandlineArgs::new();
     let arg_strings: Vec<String> = std::env::args().collect();
     for arg_pair in arg_strings.chunks(2) {
         match arg_pair {
             [name, value] => args.consume(name, value),
-            [_] => panic!(),
+            [_] => {},
             _ => unreachable!(),
         }
     }
