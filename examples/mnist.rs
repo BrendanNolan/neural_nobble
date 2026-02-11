@@ -40,12 +40,7 @@ fn main() {
         Array1::from_shape_vec(10_000, tst_lbl.clone()).expect("Error converting test labels");
     let test_labels_one_hot_encoded = one_hot_encode(&test_labels, 10).map(|x| *x as f32);
 
-    let args: Vec<String> = std::env::args().collect();
-    let rng_seed = if !args.is_empty() {
-        args[1].parse().unwrap()
-    } else {
-        147_u64
-    };
+    let rng_seed = 8;
     let mut network = builder::NeuralNetworkBuilder::new_with_rng_seed(image_size, rng_seed)
         .add_layer_random(32, ActivationFunction::Relu)
         .unwrap()
@@ -167,4 +162,33 @@ fn _print_image(image_array: &Array2<f32>, image_col: usize, image_file_name: &s
     }
 
     img.save(image_file_name).expect("Failed to save image");
+}
+
+#[derive(Default)]
+struct Args {
+    rng_seed: u64,
+    layers: Vec<usize>,
+}
+
+impl Args {
+    fn consume(&mut self, name: &str, value: &str) {
+        match name {
+            "rng_seed" => self.rng_seed = value.parse().unwrap(),
+            "layers" => self.layers = value.split(',').map(|x| x.parse().unwrap()).collect(),
+            _ => {}
+        }
+    }
+}
+
+fn parse_args() -> Args {
+    let mut args = Args::default();
+    let arg_strings: Vec<String> = std::env::args().collect();
+    for arg_pair in arg_strings.chunks(2) {
+        match arg_pair {
+            [name, value] => args.consume(name, value),
+            [_] => panic!(),
+            _ => unreachable!(),
+        }
+    }
+    args
 }
