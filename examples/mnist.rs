@@ -42,13 +42,13 @@ fn main() {
 
     let args = parse_args();
     let mut builder = builder::NeuralNetworkBuilder::new_with_rng_seed(image_size, args.rng_seed);
-    for layer_size in &args.layers[..args.layers.len() - 1] {
+    for layer_size in args.layers {
         builder = builder
-            .add_layer_random(*layer_size, ActivationFunction::Relu)
+            .add_layer_random(layer_size, ActivationFunction::Relu)
             .unwrap();
     }
     builder = builder
-        .add_layer_random(*args.layers.last().unwrap(), ActivationFunction::SoftMax)
+        .add_layer_random(10, ActivationFunction::SoftMax)
         .unwrap();
     let mut network = builder.build();
 
@@ -177,7 +177,7 @@ impl CommandlineArgs {
     fn new() -> Self {
         Self {
             rng_seed: 8,
-            layers: vec![32, 32, 10],
+            layers: vec![32, 32],
             learning_rate: 0.02,
             epoch_limit: 100,
         }
@@ -200,7 +200,7 @@ fn parse_args() -> CommandlineArgs {
     for arg_pair in arg_strings.chunks(2) {
         match arg_pair {
             [name, value] => args.consume(name, value),
-            [_] => {},
+            [_] => {}
             _ => unreachable!(),
         }
     }
