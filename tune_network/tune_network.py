@@ -15,7 +15,7 @@ def objective(trial):
 
 def run_mnist(rng_seed):
     project_root = Path(__file__).resolve().parent.parent
-    proc_result = subprocess.run(["cargo", "run", "--release", "--example", "mnist", "--", f"{rng_seed}"],
+    proc_result = subprocess.run(["cargo", "run", "--release", "--example", "mnist", "--", "--rng-seed", f"{rng_seed}"],
         cwd=project_root,
         capture_output=True,
         text=True)
