@@ -2,12 +2,19 @@
 
 set -euo pipefail
 
+if [[ "$#" -ne 1 ]]; then
+    echo "Please provide log file" >&2
+    exit 1
+fi
+
+log_file="$1"
+
 script_dir="$(dirname "${0}")"
 if [[ ! -d "${script_dir}/.venv" ]]; then
     python3 -m venv "${script_dir}/.venv"
 fi
 source "${script_dir}/.venv/bin/activate"
 pip3 install optuna
-"${script_dir}/tune_network.py"
+python3 -u "${script_dir}/tune_network.py" 2>&1 | tee "${log_file}"
 rm -rf "${script_dir}/.venv"
 
