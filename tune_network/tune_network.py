@@ -23,7 +23,7 @@ def run_mnist(rng_seed, layers):
     layers_str = ",".join(str(s) for s in layers)
     start_time = time.time()
     proc_result = subprocess.run(["cargo", "run", "--features", "neural_nobble_log", "--release", "--example", "mnist", "--",
-        "--rng-seed", f"{rng_seed}", "--layers", layers_str],
+        "--rng-seed", f"{rng_seed}", "--layers", layers_str, "--epoch-limit", "10000"],
         cwd=project_root,
         capture_output=True,
         text=True)

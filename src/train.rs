@@ -98,7 +98,8 @@ pub fn train<C: CostFunction>(
             break;
         }
     }
-    logging::log(&format!("__________ training ends after {epoch_counter} epochs."));
+    let the_epoch_limit = training_options.epoch_limit;
+    logging::log(&format!("__________ training ends after {epoch_counter} epochs; epoch limit was {the_epoch_limit}."));
 }
 
 fn create_minibatch(

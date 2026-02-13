@@ -55,10 +55,10 @@ fn main() {
     let training_options = TrainingOptions {
         cost_function: CrossEntropyCost,
         batch_size: 64,
-        learning_rate: 0.02,
+        learning_rate: args.learning_rate,
         gradient_magnitude_stopping_criterion: 0.0001,
         cost_difference_stopping_criterion: 0.0001,
-        epoch_limit: 100,
+        epoch_limit: args.epoch_limit,
     };
 
     train(
@@ -185,10 +185,10 @@ impl CommandlineArgs {
 
     fn consume(&mut self, name: &str, value: &str) {
         match name {
-            "rng-seed" => self.rng_seed = value.parse().unwrap(),
-            "layers" => self.layers = value.split(',').map(|x| x.parse().unwrap()).collect(),
-            "learning-rate" => self.learning_rate = value.parse().unwrap(),
-            "epoch-limit" => self.epoch_limit = value.parse().unwrap(),
+            "--rng-seed" => self.rng_seed = value.parse().unwrap(),
+            "--layers" => self.layers = value.split(',').map(|x| x.parse().unwrap()).collect(),
+            "--learning-rate" => self.learning_rate = value.parse().unwrap(),
+            "--epoch-limit" => self.epoch_limit = value.parse().unwrap(),
             _ => {}
         }
     }
@@ -196,7 +196,7 @@ impl CommandlineArgs {
 
 fn parse_args() -> CommandlineArgs {
     let mut args = CommandlineArgs::new();
-    let arg_strings: Vec<String> = std::env::args().collect();
+    let arg_strings: Vec<String> = std::env::args().skip(1).collect();
     for arg_pair in arg_strings.chunks(2) {
         match arg_pair {
             [name, value] => args.consume(name, value),
