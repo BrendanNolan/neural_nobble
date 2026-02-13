@@ -9,23 +9,27 @@ import time
 
 def objective(trial):
     rng_seed = trial.suggest_int("rng_seed", 0, 1 << 32)
-    n_layers = trial.suggest_int("n_layers", 10000, 10000)
+    n_layers = trial.suggest_int("n_layers", 1, 1 << 3)
+    epoch_limit = trial.suggest_int("epoch_limit", 1000, 1000)
+    learning_rate = trial.suggest_float("learning_rate", 0.01, 0.1)
     layers = []
     for i in range(n_layers):
-        layer_size = trial.suggest_int(f"layer_{i}_size", 10000, 10000, log=True)
+        layer_size = trial.suggest_int(f"layer_{i}_size", 1 << 4, 1 << 8, log=True)
         layers.append(layer_size)
-    loss = run_mnist(rng_seed, layers)
+    loss = run_mnist(rng_seed, layers, epoch_limit, learning_rate)
     return loss
 
 
-def run_mnist(rng_seed, layers):
+def run_mnist(rng_seed, layers, epoch_limit, learning_rate):
     project_root = Path(__file__).resolve().parent.parent
     layers_str = ",".join(str(s) for s in layers)
+    command = ["cargo", "run", "--features", "neural_nobble_log", "--release", "--example", "mnist", "--",
+        "--rng-seed", str(rng_seed), "--layers", layers_str, "--epoch-limit", str(epoch_limit), "--learning-rate", str(learning_rate)]
+    print(f"\n\nRunning command: {command}", flush=True)
     start_time = time.time()
-    proc_result = subprocess.run(["cargo", "run", "--features", "neural_nobble_log", "--release", "--example", "mnist", "--",
-        "--rng-seed", f"{rng_seed}", "--layers", layers_str, "--epoch-limit", "10000"],
+    proc_result = subprocess.run(command,
         cwd=project_root,
-        capture_output=True,
+        stdout=subprocess.PIPE,
         text=True)
     total_time = time.time() - start_time
     if proc_result.returncode != 0:
@@ -38,8 +42,7 @@ def run_mnist(rng_seed, layers):
     miss_rate = misses / (hits + misses)
     print(flush=True)
     print(f"Time: {total_time}s, Hits: {hits}, Misses: {misses}", flush=True)
-    baseline_time = 3
-    return (total_time / baseline_time) * miss_rate
+    return miss_rate
 
 
 if __name__ == "__main__":

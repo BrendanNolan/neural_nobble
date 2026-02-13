@@ -15,6 +15,6 @@ if [[ ! -d "${script_dir}/.venv" ]]; then
 fi
 source "${script_dir}/.venv/bin/activate"
 pip3 install optuna
-"${script_dir}/tune_network.py" 2>&1 | tee "${log_file}"
+python3 -u "${script_dir}/tune_network.py" 2>&1 | tee "${log_file}"
 rm -rf "${script_dir}/.venv"
 
