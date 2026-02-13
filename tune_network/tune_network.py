@@ -10,7 +10,7 @@ import time
 def objective(trial):
     rng_seed = trial.suggest_int("rng_seed", 0, 1 << 32)
     n_layers = trial.suggest_int("n_layers", 1, 1 << 3)
-    epoch_limit = trial.suggest_int("epoch_limit", 1000, 1000)
+    epoch_limit = trial.suggest_int("epoch_limit", 100, 1000)
     learning_rate = trial.suggest_float("learning_rate", 0.01, 0.1)
     layers = []
     for i in range(n_layers):

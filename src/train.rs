@@ -73,6 +73,9 @@ pub fn train<C: CostFunction>(
             .rev()
             .collect::<Vec<_>>();
         let pre_descent_gradient_magnitude = gradient_magnitude(&weight_gradients, &bias_gradients);
+        if pre_descent_gradient_magnitude.is_nan() {
+            break;
+        }
         logging::log(&format!(
             "Cost: {cost}. Gradient magnitude: {pre_descent_gradient_magnitude} "
         ));
