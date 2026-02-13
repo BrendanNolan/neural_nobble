@@ -21,23 +21,30 @@ def objective(trial):
 def run_mnist(rng_seed, layers):
     project_root = Path(__file__).resolve().parent.parent
     layers_str = ",".join(str(s) for s in layers)
+    start_time = time.time()
     proc_result = subprocess.run(["cargo", "run", "--release", "--example", "mnist", "--",
         "--rng-seed", f"{rng_seed}", "--layers", layers_str],
         cwd=project_root,
         capture_output=True,
         text=True)
+    total_time = time.time() - start_time
     if proc_result.returncode != 0:
         raise optuna.TrialPruned()
     output = proc_result.stdout
     hits = int(re.search(r"Hits: (\d+)", output).group(1))
-    print()
-    print(f"Hits: {hits}")
-    return hits
+    misses = int(re.search(r"Misses: (\d+)", output).group(1))
+    if misses == 0:
+        misses = 1 / (1 << 32)
+    miss_rate = misses / (hits + misses)
+    print(flush=True)
+    print(f"Time: {total_time}s, Hits: {hits}, Misses: {misses}", flush=True)
+    baseline_time = 3
+    return (total_time / baseline_time) * miss_rate
 
 
 if __name__ == "__main__":
-    sample = optuna.create_study(direction="maximize")
+    sample = optuna.create_study(direction="minimize")
     sample.optimize(objective, n_trials=500)
-    print(sample.best_params)
-    print(sample.best_value)
+    print(sample.best_params, flush=True)
+    print(sample.best_value, flush=True)
 
