@@ -36,7 +36,6 @@ pub fn train<C: CostFunction>(
     let mut random_number_generator = StdRng::seed_from_u64(155);
     let mut device_arena_allocator = DeviceArenaAllocator::initialise();
     loop {
-        logging::log(&format!("{}", network.weight_and_bias_sum()));
         let mini_batch = create_minibatch(
             inputs,
             targets,

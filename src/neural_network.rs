@@ -45,9 +45,4 @@ impl NeuralNetwork {
             row_count(&self.weight_matrices[layer])
         }
     }
-
-    pub fn weight_and_bias_sum(&self) -> f32 {
-        self.weight_matrices.iter().flatten().sum::<f32>()
-            + self.bias_vectors.iter().flatten().sum::<f32>()
-    }
 }
