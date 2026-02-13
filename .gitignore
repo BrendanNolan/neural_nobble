@@ -8,3 +8,5 @@ compile_commands.json
 CMakeUserPresets.json
 test.log
 dc
+training.log
+tuning_report.txt

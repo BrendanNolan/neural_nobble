@@ -9,10 +9,10 @@ import time
 
 def objective(trial):
     rng_seed = trial.suggest_int("rng_seed", 0, 1 << 32)
-    n_layers = trial.suggest_int("n_layers", 1, 5)
+    n_layers = trial.suggest_int("n_layers", 10000, 10000)
     layers = []
     for i in range(n_layers):
-        layer_size = trial.suggest_int(f"layer_{i}_size", 16, 256, log=True)
+        layer_size = trial.suggest_int(f"layer_{i}_size", 10000, 10000, log=True)
         layers.append(layer_size)
     loss = run_mnist(rng_seed, layers)
     return loss
@@ -22,7 +22,7 @@ def run_mnist(rng_seed, layers):
     project_root = Path(__file__).resolve().parent.parent
     layers_str = ",".join(str(s) for s in layers)
     start_time = time.time()
-    proc_result = subprocess.run(["cargo", "run", "--release", "--example", "mnist", "--",
+    proc_result = subprocess.run(["cargo", "run", "--features", "neural_nobble_log", "--release", "--example", "mnist", "--",
         "--rng-seed", f"{rng_seed}", "--layers", layers_str],
         cwd=project_root,
         capture_output=True,
