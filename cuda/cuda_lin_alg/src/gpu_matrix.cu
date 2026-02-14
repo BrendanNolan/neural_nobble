@@ -115,8 +115,11 @@ void launch_sum_reduction(float* input,
     auto* output = allocate_on_device(grid_length);
     auto output_len = grid_length;
     auto input_len = length;
-    while (output_len > 1U) {
+    while (true) {
         sum_reduce<<<grid_length, block_length, block_length>>>(input, length, output);
+        if (output_len == 1U) {
+            break;
+        }
         std::swap(output, input);
         input_len = output_len;
         output_len = (input_len + block_length - 1) / block_length;
