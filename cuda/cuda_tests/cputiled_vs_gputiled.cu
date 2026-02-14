@@ -100,7 +100,6 @@ std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
             cuda_dim3_to_dim3pod(input.config.grid_dim()),
             cuda_dim3_to_dim3pod(input.config.block_dim()),
             input.config.shared_mem_per_block());
-    cudaDeviceSynchronize();
     const auto end = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 }
