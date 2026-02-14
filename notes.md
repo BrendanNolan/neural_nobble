@@ -14,3 +14,5 @@
 - The best way to allocate memory in the training loop is probably just to track how much memory the
   first loop iteration allocates and then preallocate that amount of memory (or perhaps 2X that or
   whatever) to be used for all following loop iterations.
+- Do we ever not have the shared-memory size equal to the block size? If these are always equal,
+  then make sure that we never allow them to be set separately.

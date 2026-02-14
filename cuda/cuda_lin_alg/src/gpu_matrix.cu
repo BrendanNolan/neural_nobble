@@ -1,6 +1,7 @@
 #include <cassert>
 #include <utility>
 
+#include "cuda_utils.h"
 #include "gpu_matrix.h"
 #include "utils.h"
 
@@ -20,13 +21,6 @@ __device__ float element(const float* matrix,
     }
 }
 
-template <typename T>
-__device__ void swap(T& a, T& b) {
-    const auto tmp = b;
-    b = a;
-    a = tmp;
-}
-
 __global__ void tiled_multiply(GemmParams params) {
     assert(blockDim.x == blockDim.y);
     const auto T = blockDim.x;
@@ -41,10 +35,10 @@ __global__ void tiled_multiply(GemmParams params) {
         return element(params.B.data, params.op_B, params.B.columns, i, j);
     };
     if (params.op_A == Transpose) {
-        swap(params.A.rows, params.A.columns);
+        cuda_helpers::swap(params.A.rows, params.A.columns);
     }
     if (params.op_B == Transpose) {
-        swap(params.B.rows, params.B.columns);
+        cuda_helpers::swap(params.B.rows, params.B.columns);
     }
     const auto ai = params.A.rows;
     const auto aj = params.A.columns;
@@ -91,16 +85,42 @@ void launch_tiled_multiply(GemmParams params,
     tiled_multiply<<<cuda_grid, cuda_block, shared_mem_size>>>(params);
 }
 
-__global__ void sum_reduce(const float* input, unsigned int length, float* output) {
+__global__ void sum_reduce(const float* input, unsigned int input_length, float* output) {
     extern __shared__ float shared[];
-    for (auto x = 0U; x < length; x += gridDim.x * blockDim.x) {
-        const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
-        if (g_i % 2U == 0U) {
-            output[g_i] = input[g_i] + input[g_i + 1];
+    shared[threadIdx.x] = 0.0f;
+    auto active_count = blockDim.x;
+    const auto global_first_index = 2U * (blockDim.x * blockIdx.x + threadIdx.x);
+    const auto global_second_index = global_first_index + 1U;
+    shared[threadIdx.x] += (global_first_index < input_length) ? input[global_first_index] : 0U;
+    shared[threadIdx.x] += (global_second_index < input_length) ? input[global_second_index] : 0U;
+    active_count = (active_count + 1U) / 2U;
+    while (active_count > 1U) {
+        if (threadIdx.x >= active_count) {
+            return;
         }
+        const auto operand_index = 2 * threadIdx.x + 1U;
+        shared[threadIdx.x] += (operand_index < blockDim.x) ? shared[operand_index] : 0U;
+        active_count = (active_count + 1U) / 2U;
+    }
+    if (threadIdx.x == 0U) {
+        output[blockDim.x * blockIdx.x] = shared[0U];
     }
 }
 
-void launch_reduction(const float* data, unsigned int length) {
-
+void launch_sum_reduction(float* input,
+        const unsigned int length,
+        float* result,
+        unsigned int grid_length,
+        const unsigned int block_length) {
+    auto* output = allocate_on_device(grid_length);
+    auto output_len = grid_length;
+    auto input_len = length;
+    while (output_len > 1U) {
+        sum_reduce<<<grid_length, block_length, block_length>>>(input, length, output);
+        std::swap(output, input);
+        input_len = output_len;
+        output_len = (input_len + block_length - 1) / block_length;
+    }
+    *result = output[0U];
+    cudaFree(output);
 }

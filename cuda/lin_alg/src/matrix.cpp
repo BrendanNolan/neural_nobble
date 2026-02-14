@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <random>
 
+#include "float_utils.h"
+
 namespace lin_alg {
 
 std::string display(const Dimension& dim) {
@@ -65,16 +67,6 @@ Matrix Matrix::random(const Dimension& dim) {
 Dimension Matrix::dim() const {
     return dim_;
 }
-
-namespace {
-bool almost_equal(const float a, const float b) {
-    constexpr auto ABSOLUTE_TOLERANCE = 1e-6f;
-    constexpr auto RELATIVE_TOLERANCE = 1e-4f;
-    using namespace std;
-    const auto largest_absolute = max(abs(a), abs(b));
-    return abs(a - b) <= max(ABSOLUTE_TOLERANCE, RELATIVE_TOLERANCE * largest_absolute);
-}
-}// namespace
 
 bool Matrix::operator==(const Matrix& other) const {
     if (this->dim() != other.dim())

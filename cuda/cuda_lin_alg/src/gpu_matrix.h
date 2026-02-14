@@ -43,4 +43,8 @@ void launch_tiled_multiply(GemmParams params,
         const unsigned int shared_mem_size);
 }
 
-void launch_reduction(const float* data, unsigned int length);
+void launch_sum_reduction(float* input,
+        unsigned int length,
+        float* result,
+        unsigned int grid_length,
+        unsigned int block_length);
