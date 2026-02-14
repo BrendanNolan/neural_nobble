@@ -16,3 +16,4 @@
   whatever) to be used for all following loop iterations.
 - Do we ever not have the shared-memory size equal to the block size? If these are always equal,
   then make sure that we never allow them to be set separately.
+- We should perhaps be launching only 1/2 as many threads in the sum_reduce kernel.
