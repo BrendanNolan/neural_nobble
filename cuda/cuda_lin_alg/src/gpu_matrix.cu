@@ -95,6 +95,7 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     shared[threadIdx.x] += (global_first_index < input_length) ? input[global_first_index] : 0U;
     shared[threadIdx.x] += (global_second_index < input_length) ? input[global_second_index] : 0U;
     active_count = (active_count + 1U) / 2U;
+    __syncthreads();
     while (active_count > 1U) {
         if (threadIdx.x >= active_count) {
             return;
@@ -102,6 +103,7 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
         const auto operand_index = 2 * threadIdx.x + 1U;
         shared[threadIdx.x] += (operand_index < blockDim.x) ? shared[operand_index] : 0U;
         active_count = (active_count + 1U) / 2U;
+        __syncthreads();
     }
     if (threadIdx.x == 0U) {
         output[blockDim.x * blockIdx.x] = shared[0U];
@@ -111,21 +113,12 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
 void launch_sum_reduction(float* input,
         const unsigned int length,
         float* result,
-        unsigned int grid_length,
-        const unsigned int block_length) {
-    auto* output = allocate_on_device(grid_length);
-    auto output_len = grid_length;
-    auto input_len = length;
-    while (true) {
-        sum_reduce<<<grid_length, block_length, block_length>>>(input, length, output);
-        cudaDeviceSynchronize();
-        if (output_len == 1U) {
-            break;
-        }
-        std::swap(output, input);
-        input_len = output_len;
-        output_len = (input_len + block_length - 1) / block_length;
-    }
-    *result = output[0U];
-    cudaFree(output);
+        unsigned int grid_x,
+        const unsigned int block_x) {
+    auto* big_output = allocate_on_device(grid_x);
+    sum_reduce<<<grid_x, block_x, block_x>>>(input, length, big_output);
+    cudaDeviceSynchronize();
+    sum_reduce<<<1U, block_x, block_x>>>(big_output, block_x, result);
+    cudaDeviceSynchronize();
+    cudaFree(big_output);
 }

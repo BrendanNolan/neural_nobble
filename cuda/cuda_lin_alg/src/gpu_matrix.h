@@ -46,5 +46,5 @@ void launch_tiled_multiply(GemmParams params,
 void launch_sum_reduction(float* input,
         unsigned int length,
         float* result,
-        unsigned int grid_length,
-        unsigned int block_length);
+        unsigned int grid_x,
+        unsigned int block_x);

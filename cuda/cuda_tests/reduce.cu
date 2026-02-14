@@ -9,15 +9,16 @@
 #include <stdlib.h>
 
 TEST(ReductionTest, Basic) {
-    const auto total_length = 1U << 16U;
-    const auto grid_length = 256U;
-    const auto block_length = 256U;
+    const auto grid_x = 256U;
+    const auto block_x = 256U;
+    const auto total_length = grid_x * block_x;
     auto* input = allocate_on_device(total_length);
     const auto input_host = std::vector<float>(total_length, 1.0f);
     copy_to_device(input_host.data(), input_host.size(), input);
     auto* result_d = allocate_on_device(1U);
-    launch_sum_reduction(input, total_length, result_d, grid_length, block_length);
+    launch_sum_reduction(input, total_length, result_d, grid_x, block_x);
     auto result = 0.0f;
     copy_from_device(result_d, 1U, &result);
-    EXPECT_TRUE(almost_equal(result, total_length));
+    const auto expected = static_cast<float>(total_length);
+    EXPECT_TRUE(almost_equal(result, expected)) << "Expected " << expected << " Got " << result;
 }
