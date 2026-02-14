@@ -90,3 +90,17 @@ void launch_tiled_multiply(GemmParams params,
     const auto cuda_block = dim3pod_to_cuda_dim3(block);
     tiled_multiply<<<cuda_grid, cuda_block, shared_mem_size>>>(params);
 }
+
+__global__ void sum_reduce(const float* input, unsigned int length, float* output) {
+    extern __shared__ float shared[];
+    for (auto x = 0U; x < length; x += gridDim.x * blockDim.x) {
+        const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
+        if (g_i % 2U == 0U) {
+            output[g_i] = input[g_i] + input[g_i + 1];
+        }
+    }
+}
+
+void launch_reduction(const float* data, unsigned int length) {
+
+}

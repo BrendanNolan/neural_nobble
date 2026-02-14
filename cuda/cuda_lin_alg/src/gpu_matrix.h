@@ -42,3 +42,5 @@ void launch_tiled_multiply(GemmParams params,
         const Dim3POD block,
         const unsigned int shared_mem_size);
 }
+
+void launch_reduction(const float* data, unsigned int length);
