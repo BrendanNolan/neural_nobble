@@ -3,40 +3,40 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage: configure_build <build_type(Release|Debug|RelWithDebInfo)>"
+    echo "Usage: configure_build <build_type(Release|Debug|RelWithDebInfo)>"
 }
 
 if [[ $# -ge 2 ]]; then
-	usage >&2
-	exit 1
+    usage >&2
+    exit 1
 fi
 
 mkdir -p build
 
 build_type=Release
 if [[ $# -eq 1 ]]; then
-	if [[ "${1}" == -h ]] || [[ "${1}" == --help ]]; then
-		usage
-		exit 0
-	fi
-	if [[ ! "${1}" =~ ^(Debug|Release|RelWithDebInfo)$ ]]; then
-		usage >&2
-		exit 1
-	fi
-	build_type="${1}"
+    if [[ "${1}" == -h ]] || [[ "${1}" == --help ]]; then
+        usage
+        exit 0
+    fi
+    if [[ ! "${1}" =~ ^(Debug|Release|RelWithDebInfo)$ ]]; then
+        usage >&2
+        exit 1
+    fi
+    build_type="${1}"
 fi
 
 conan install . --output-folder=build --build=missing --settings build_type="${build_type}"
 
 cmake_args=(
-  -B build
-  -S .
-  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-  -DCMAKE_BUILD_TYPE="${build_type}"
+    -B build
+    -S .
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    -DCMAKE_BUILD_TYPE="${build_type}"
 )
 
 if [[ "${build_type}" == "Debug" ]]; then
-  cmake_args+=(-DCMAKE_CUDA_FLAGS="-G -O0")
+    cmake_args+=(-DCMAKE_CUDA_FLAGS="-G -O0")
 fi
 
 cmake "${cmake_args[@]}"

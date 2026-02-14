@@ -5,39 +5,39 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage: build_everything [--build-type <Release|Debug>] [--cpus <number_of_cpus>]"
+    echo "Usage: build_everything [--build-type <Release|Debug>] [--cpus <number_of_cpus>]"
 }
 
 build_type=Release
 cpus=1
 if command -v nproc &>/dev/null; then
-	cpus="$(nproc)"
+    cpus="$(nproc)"
 fi
 
 while [[ $# -gt 0 ]]; do
-	case $1 in
-	--build-type)
-		build_type="$2"
-		shift 2
-		;;
-	--cpus)
-		cpus="$2"
-		shift 2
-		;;
-	-h | --help)
-		usage
-		exit 0
-		;;
-	*)
-		usage >&2
-		exit 1
-		;;
-	esac
+    case $1 in
+    --build-type)
+        build_type="$2"
+        shift 2
+        ;;
+    --cpus)
+        cpus="$2"
+        shift 2
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        usage >&2
+        exit 1
+        ;;
+    esac
 done
 
 if [[ ! "${build_type}" =~ ^(Debug|Release)$ ]]; then
-	usage >&2
-	exit 1
+    usage >&2
+    exit 1
 fi
 
 source clean_sourceme

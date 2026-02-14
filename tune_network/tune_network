@@ -17,4 +17,3 @@ source "${script_dir}/.venv/bin/activate"
 pip3 install optuna
 python3 -u "${script_dir}/tune_network.py" 2>&1 | tee "${log_file}"
 rm -rf "${script_dir}/.venv"
-

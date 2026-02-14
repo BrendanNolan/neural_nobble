@@ -3,47 +3,47 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage: test [--cpu <tile_edge_length>] [--gpu <block_edge_length>]"
-	echo "Either --cpu or --gpu must be provided"
+    echo "Usage: test [--cpu <tile_edge_length>] [--gpu <block_edge_length>]"
+    echo "Either --cpu or --gpu must be provided"
 }
 
 cpu_tile_edge=''
 gpu_block_edge=''
 while [[ $# -gt 0 ]]; do
-	case $1 in
-	--cpu)
-		cpu_tile_edge="${2}"
-		shift 2
-		;;
-	--gpu)
-		gpu_block_edge="${2}"
-		shift 2
-		;;
-	-h | --help)
-		usage
-		exit 0
-		;;
-	*)
-		usage >&2
-		exit 1
-		;;
-	esac
+    case $1 in
+    --cpu)
+        cpu_tile_edge="${2}"
+        shift 2
+        ;;
+    --gpu)
+        gpu_block_edge="${2}"
+        shift 2
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        usage >&2
+        exit 1
+        ;;
+    esac
 done
 
 if [[ -z "${cpu_tile_edge}" && -z "${gpu_block_edge}" ]]; then
-	usage >&2
-	exit 1
+    usage >&2
+    exit 1
 fi
 
 script_dir="$(dirname "${BASH_SOURCE[0]}")"
 script_dir="$(realpath "${script_dir}")"
 pushd "${script_dir}"
 if [[ -n "${cpu_tile_edge}" ]]; then
-	echo "Running cpu tests"
-	./build/lin_alg_tests/lin_alg_tests --tile-edge "${cpu_tile_edge}"
+    echo "Running cpu tests"
+    ./build/lin_alg_tests/lin_alg_tests --tile-edge "${cpu_tile_edge}"
 fi
 if [[ -n "${gpu_block_edge}" ]]; then
-	echo "Running cuda tests"
-	./build/cuda_tests/cuda_tests --block-edge "${gpu_block_edge}"
+    echo "Running cuda tests"
+    ./build/cuda_tests/cuda_tests --block-edge "${gpu_block_edge}"
 fi
 popd

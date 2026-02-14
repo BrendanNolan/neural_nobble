@@ -3,28 +3,28 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage compile [cpu_count]"
+    echo "Usage compile [cpu_count]"
 }
 
 if [[ $# -ge 2 ]]; then
-	usage >&2
-	exit 1
+    usage >&2
+    exit 1
 fi
 
 num_cpus=1
 if command -v nproc &>/dev/null; then
-	num_cpus="$(nproc)"
+    num_cpus="$(nproc)"
 fi
 if [[ $# -eq 1 ]]; then
-	if [[ "${1}" == -h ]] || [[ "${1}" == --help ]]; then
-		usage
-		exit 0
-	fi
-	if [[ ! "${1}" =~ ^[0-9]+$ ]]; then
-		usage >&2
-		exit 1
-	fi
-	num_cpus="${1}"
+    if [[ "${1}" == -h ]] || [[ "${1}" == --help ]]; then
+        usage
+        exit 0
+    fi
+    if [[ ! "${1}" =~ ^[0-9]+$ ]]; then
+        usage >&2
+        exit 1
+    fi
+    num_cpus="${1}"
 fi
 
 cmake --build build -- "-j${num_cpus}"
