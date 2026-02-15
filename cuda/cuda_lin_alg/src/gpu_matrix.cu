@@ -88,25 +88,17 @@ void launch_tiled_multiply(GemmParams params,
 
 __global__ void sum_reduce(const float* input, unsigned int input_length, float* output) {
     extern __shared__ float shared[];
-    shared[threadIdx.x] = 0.0f;
-    auto active_count = blockDim.x;
-    const auto global_first_index = 2U * (blockDim.x * blockIdx.x + threadIdx.x);
-    const auto global_second_index = global_first_index + 1U;
-    shared[threadIdx.x] += (global_first_index < input_length) ? input[global_first_index] : 0.0f;
-    shared[threadIdx.x] += (global_second_index < input_length) ? input[global_second_index] : 0.0f;
-    active_count = (active_count + 1U) / 2U;
+    const auto global_index = blockDim.x * blockIdx.x + threadIdx.x;
+    shared[threadIdx.x] = (global_index < input_length) ? input[global_index] : 0.0f;
     __syncthreads();
-    while (active_count > 1U) {
-        if (threadIdx.x >= active_count) {
-            return;
+    for (auto i = blockDim.x / 2U; i > 0U; i /= 2U) {
+        if (threadIdx.x < i) {
+            shared[threadIdx.x] += shared[threadIdx.x + i];
         }
-        const auto operand_index = 2U * threadIdx.x + 1U;
-        shared[threadIdx.x] += (operand_index < blockDim.x) ? shared[operand_index] : 0U;
-        active_count = (active_count + 1U) / 2U;
         __syncthreads();
     }
     if (threadIdx.x == 0U) {
-        output[blockDim.x * blockIdx.x] = shared[0U];
+        output[blockIdx.x] = shared[0U];
     }
 }
 
