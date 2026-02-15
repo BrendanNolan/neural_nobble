@@ -105,8 +105,8 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
 void launch_sum_reduction(float* input,
         const unsigned int length,
         float* result,
-        unsigned int grid_x,
         const unsigned int block_x) {
+    const auto grid_x = cover_divide(cover_divide(length, block_x), 2U);
     auto* big_output = allocate_on_device(grid_x);
     sum_reduce<<<grid_x, block_x, block_x>>>(input, length, big_output);
     cudaDeviceSynchronize();
