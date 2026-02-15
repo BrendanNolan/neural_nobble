@@ -92,15 +92,15 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     auto active_count = blockDim.x;
     const auto global_first_index = 2U * (blockDim.x * blockIdx.x + threadIdx.x);
     const auto global_second_index = global_first_index + 1U;
-    shared[threadIdx.x] += (global_first_index < input_length) ? input[global_first_index] : 0U;
-    shared[threadIdx.x] += (global_second_index < input_length) ? input[global_second_index] : 0U;
+    shared[threadIdx.x] += (global_first_index < input_length) ? input[global_first_index] : 0.0f;
+    shared[threadIdx.x] += (global_second_index < input_length) ? input[global_second_index] : 0.0f;
     active_count = (active_count + 1U) / 2U;
     __syncthreads();
     while (active_count > 1U) {
         if (threadIdx.x >= active_count) {
             return;
         }
-        const auto operand_index = 2 * threadIdx.x + 1U;
+        const auto operand_index = 2U * threadIdx.x + 1U;
         shared[threadIdx.x] += (operand_index < blockDim.x) ? shared[operand_index] : 0U;
         active_count = (active_count + 1U) / 2U;
         __syncthreads();
