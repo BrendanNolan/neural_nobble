@@ -105,7 +105,7 @@ void launch_sum_reduction(float* input,
         const unsigned int length,
         float* result,
         const unsigned int block_x) {
-    const auto grid_x = cover_divide(cover_divide(length, block_x), 2U);
+    const auto grid_x = cover_divide(length, block_x);
     auto* big_output = allocate_on_device(grid_x);// TODO: Pass this device-allocated memory in.
     sum_reduce<<<grid_x, block_x, block_x>>>(input, length, big_output);
     sum_reduce<<<1U, block_x, block_x>>>(big_output, block_x, result);
