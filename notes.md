@@ -17,3 +17,9 @@
 - Do we ever not have the shared-memory size equal to the block size? If these are always equal,
   then make sure that we never allow them to be set separately.
 - We should perhaps be launching only 1/2 as many threads in the sum_reduce kernel.
+- Grid-stride the sum reduce and make sure that each thread block handles 2 x blockDim.x elements.
+- Depending on the transposing, make the gemm kernel fill the shared memory in row or column major
+  order and adjust the hot loop accordingly.
+- Make a "HostScalar" typedef and a "DeviceScalar" type in rust, with the usual From/Into
+  conversions. This is the 0-dim case of the HostVector/DeviceVector and HostMatrix/DeviceMatrix
+  types.
