@@ -37,10 +37,14 @@ struct Dim3POD {
 // where the ops are either identity or transpose depending on transpose_A, transpose_B
 // e.g. C = A * B results from setting transpose_A and transpose_B to no_transpose,
 // alpha to 1.0, and beta to 0.0
-void launch_tiled_multiply(GemmParams params,
+void run_tiled_multiply(GemmParams params,
         const Dim3POD grid,
         const Dim3POD block,
         const unsigned int shared_mem_size);
 }
 
-void launch_sum_reduce(float* input, unsigned int length, float* result, unsigned int block_x);
+void run_sum_reduce(float* input,
+        unsigned int length,
+        float* result,
+        unsigned int grid_x,
+        unsigned int block_x);

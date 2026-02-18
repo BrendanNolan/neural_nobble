@@ -49,7 +49,7 @@ mod inner {
         pub fn allocate_on_device(count: usize) -> *mut f32;
         pub fn copy_to_device(host_array: *const f32, count: usize, device_memory: *mut f32);
         pub fn copy_from_device(device_array: *const f32, count: usize, host_array: *mut f32);
-        pub fn launch_tiled_multiply(
+        pub fn run_tiled_multiply(
             params: super::GemmParams,
             grid: super::Dim3,
             block: super::Dim3,
@@ -117,7 +117,7 @@ pub fn launch_gpu_gemm(params: DeviceGemmParams) {
         c: params.c.data,
     };
     unsafe {
-        inner::launch_tiled_multiply(params, grid, block, shared_mem_size);
+        inner::run_tiled_multiply(params, grid, block, shared_mem_size);
     }
 }
 

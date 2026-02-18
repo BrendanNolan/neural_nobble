@@ -76,7 +76,7 @@ dim3 dim3pod_to_cuda_dim3(const Dim3POD& pod) {
 }
 }// namespace
 
-void launch_tiled_multiply(GemmParams params,
+void run_tiled_multiply(GemmParams params,
         const Dim3POD grid,
         const Dim3POD block,
         const unsigned int shared_mem_size) {
@@ -101,14 +101,14 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     }
 }
 
-void launch_sum_reduce(float* input,
+void run_sum_reduce(float* input,
         const unsigned int length,
         float* result,
+        const unsigned int grid_x,
         const unsigned int block_x) {
-    const auto grid_x = cover_divide(length, block_x);
     auto* big_output = allocate_on_device(grid_x);// TODO: Pass this device-allocated memory in.
     sum_reduce<<<grid_x, block_x, block_x>>>(input, length, big_output);
     sum_reduce<<<1U, block_x, block_x>>>(big_output, block_x, result);
-    cudaDeviceSynchronize();// TODO: Move this call to after the call to launch_sum_reduce.
+    cudaDeviceSynchronize();
     cudaFree(big_output);// Remove this free when device-allocated memory is passed in.
 }

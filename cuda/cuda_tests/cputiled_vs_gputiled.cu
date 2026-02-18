@@ -96,11 +96,10 @@ Dim3POD cuda_dim3_to_dim3pod(const dim3& dim) {
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
-    launch_tiled_multiply(input.params,
+    run_tiled_multiply(input.params,
             cuda_dim3_to_dim3pod(input.config.grid_dim()),
             cuda_dim3_to_dim3pod(input.config.block_dim()),
             input.config.shared_mem_per_block());
-    cudaDeviceSynchronize();
     const auto end = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 }
