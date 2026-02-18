@@ -101,7 +101,7 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     }
 }
 
-void launch_sum_reduction(float* input,
+void launch_sum_reduce(float* input,
         const unsigned int length,
         float* result,
         const unsigned int block_x) {
@@ -109,6 +109,6 @@ void launch_sum_reduction(float* input,
     auto* big_output = allocate_on_device(grid_x);// TODO: Pass this device-allocated memory in.
     sum_reduce<<<grid_x, block_x, block_x>>>(input, length, big_output);
     sum_reduce<<<1U, block_x, block_x>>>(big_output, block_x, result);
-    cudaDeviceSynchronize();// TODO: Move this call to after the call to launch_sum_reduction.
+    cudaDeviceSynchronize();// TODO: Move this call to after the call to launch_sum_reduce.
     cudaFree(big_output);// Remove this free when device-allocated memory is passed in.
 }

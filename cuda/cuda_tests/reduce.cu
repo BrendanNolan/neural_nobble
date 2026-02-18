@@ -16,7 +16,7 @@ TEST(ReductionTest, Basic) {
     const auto input_host = std::vector<float>(total_length, 1.0f);
     copy_to_device(input_host.data(), input_host.size(), input);
     auto* result_d = allocate_on_device(1U);
-    launch_sum_reduction(input, total_length, result_d, block_x);
+    launch_sum_reduce(input, total_length, result_d, block_x);
     auto result = 0.0f;
     copy_from_device(result_d, 1U, &result);
     const auto expected = static_cast<float>(total_length);
