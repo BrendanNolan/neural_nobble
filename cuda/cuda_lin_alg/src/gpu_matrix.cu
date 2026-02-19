@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iterator>
 #include <utility>
 
 #include "cuda_utils.h"
@@ -90,9 +91,10 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     const auto global_index = blockDim.x * blockIdx.x + threadIdx.x;
     shared[threadIdx.x] = (global_index < input_length) ? input[global_index] : 0.0f;
     __syncthreads();
-    for (auto i = blockDim.x / 2U; i > 0U; i /= 2U) {
-        if (threadIdx.x < i) {
-            shared[threadIdx.x] += shared[threadIdx.x + i];
+    for (auto highest_active_thread = blockDim.x / 2U; highest_active_thread > 0U;
+            highest_active_thread /= 2U) {
+        if (threadIdx.x < highest_active_thread) {
+            shared[threadIdx.x] += shared[threadIdx.x + highest_active_thread];
         }
         __syncthreads();
     }
@@ -106,9 +108,21 @@ void run_sum_reduce(float* input,
         float* result,
         const unsigned int grid_x,
         const unsigned int block_x) {
-    auto* big_output = allocate_on_device(grid_x);// TODO: Pass this device-allocated memory in.
-    sum_reduce<<<grid_x, block_x, block_x>>>(input, length, big_output);
-    sum_reduce<<<1U, block_x, block_x>>>(big_output, block_x, result);
+    auto* scratch_a = allocate_on_device(2U * grid_x);
+    auto* scratch_b = std::next(scratch_a, grid_x);
+    auto* output = scratch_a;
+    sum_reduce<<<grid_x, block_x, block_x>>>(input, length, output);
+    input = output;
+    output = scratch_b;
+    sum_reduce<<<1U, block_x, block_x>>>(input, block_x, output);
+    // Further calls should swap input and output, e.g.
+    // sum_reduce<<<...
+    // std::swap(input, output);
+    // sum_reduce<<<...
+    // std::swap(input, output);
+    // ...
     cudaDeviceSynchronize();
-    cudaFree(big_output);// Remove this free when device-allocated memory is passed in.
+    cudaMemcpy(result, output, sizeof(float), cudaMemcpyDeviceToDevice);
+    cudaFree(scratch_a);
+    cudaFree(scratch_b);
 }
