@@ -45,21 +45,21 @@ __global__ void tiled_multiply(GemmParams params) {
     const auto aj = params.A.columns;
     const auto bi = params.B.rows;
     const auto bj = params.B.columns;
-    for (auto x = 0U; x < ai; x += gridDim.x * blockDim.x) {
-        for (auto y = 0U; y < bj; y += gridDim.y * blockDim.y) {
+    for (auto x = 0u; x < ai; x += gridDim.x * blockDim.x) {
+        for (auto y = 0u; y < bj; y += gridDim.y * blockDim.y) {
             const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
             const auto g_j = y + blockIdx.y * blockDim.y + threadIdx.y;
             const auto l_c_cell = threadIdx.x * T + threadIdx.y;
             const auto c_global_index = g_i * bj + g_j;
             const auto c_global_index_valid = g_i < ai && g_j < bj;
-            c_tile[l_c_cell] = c_global_index_valid ? params.beta * params.C[c_global_index] : 0U;
-            for (auto k = 0U; k < aj; k += T) {
+            c_tile[l_c_cell] = c_global_index_valid ? params.beta * params.C[c_global_index] : 0u;
+            for (auto k = 0u; k < aj; k += T) {
                 const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
                 const auto in_scope_for_b = (k + threadIdx.x < bi && g_j < bj);
-                a_tile[l_c_cell] = in_scope_for_a ? a_at(g_i, k + threadIdx.y) : 0U;
-                b_tile[l_c_cell] = in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0U;
+                a_tile[l_c_cell] = in_scope_for_a ? a_at(g_i, k + threadIdx.y) : 0u;
+                b_tile[l_c_cell] = in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
                 __syncthreads();
-                for (auto kk = 0U; kk < T; ++kk) {
+                for (auto kk = 0u; kk < T; ++kk) {
                     c_tile[l_c_cell] += params.alpha * a_tile[threadIdx.x * T + kk]
                             * b_tile[kk * T + threadIdx.y];
                 }
@@ -77,7 +77,7 @@ inline dim3 dim3pod_to_cuda_dim3(const Dim3POD& pod) {
 }
 
 [[maybe_unused]] __device__ __forceinline__ bool is_power_of_two(const unsigned int x) {
-    return (x != 0U) && ((x & (x - 1U)) == 0U);
+    return (x != 0u) && ((x & (x - 1u)) == 0u);
 }
 }// namespace
 
@@ -93,29 +93,29 @@ void run_tiled_multiply(GemmParams params,
 __global__ void sum_reduce(const float* input, unsigned int input_length, float* output) {
     assert(is_power_of_two(blockDim.x));
     extern __shared__ float shared[];
-    shared[threadIdx.x] = 0U;
+    shared[threadIdx.x] = 0u;
     auto add_to_shared = [input_length, input](const unsigned int global_index) {
         if (global_index < input_length)
             shared[threadIdx.x] += input[global_index];
     };
     const auto threads_per_grid = gridDim.x * blockDim.x;
-    const auto index_within_stride = (blockIdx.x * blockDim.x * 2U) + threadIdx.x;
-    for (auto stride_start = 0U; stride_start < input_length;
-            stride_start += 2U * threads_per_grid) {
+    const auto index_within_stride = (blockIdx.x * blockDim.x * 2u) + threadIdx.x;
+    for (auto stride_start = 0u; stride_start < input_length;
+            stride_start += 2u * threads_per_grid) {
         const auto global_index = stride_start + index_within_stride;
         add_to_shared(global_index);
         add_to_shared(global_index + blockDim.x);
     }
     __syncthreads();
-    for (auto highest_active_thread = blockDim.x / 2U; highest_active_thread > 0U;
-            highest_active_thread /= 2U) {
+    for (auto highest_active_thread = blockDim.x / 2u; highest_active_thread > 0u;
+            highest_active_thread /= 2u) {
         if (threadIdx.x < highest_active_thread) {
             shared[threadIdx.x] += shared[threadIdx.x + highest_active_thread];
         }
         __syncthreads();
     }
-    if (threadIdx.x == 0U) {
-        output[blockIdx.x] = shared[0U];
+    if (threadIdx.x == 0u) {
+        output[blockIdx.x] = shared[0u];
     }
 }
 
@@ -128,15 +128,15 @@ void run_sum_reduce(float* input,
     auto* output = scratch_a;
     auto grid_x = initial_grid_x;
     while (true) {
-        auto block_x = 512U;
+        auto block_x = 512u;
         while (block_x >= length) {
-            block_x /= 2U;
-            if (block_x == 2U) {
+            block_x /= 2u;
+            if (block_x == 2u) {
                 break;
             }
         }
         sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
-        if (grid_x == 1U) {
+        if (grid_x == 1u) {
             break;
         }
         if (grid_x == initial_grid_x) {
@@ -146,7 +146,7 @@ void run_sum_reduce(float* input,
             std::swap(input, output);
         }
         length = grid_x;
-        grid_x /= 2U;
+        grid_x /= 2u;
     }
     cudaDeviceSynchronize();
     cudaMemcpy(result, output, sizeof(float), cudaMemcpyDeviceToDevice);

@@ -8,5 +8,5 @@ enum { Identity, Transpose };
 }
 
 inline unsigned int cover_divide(const unsigned int numerator, const unsigned int denominator) {
-    return (numerator + denominator - 1U) / denominator;
+    return (numerator + denominator - 1u) / denominator;
 }

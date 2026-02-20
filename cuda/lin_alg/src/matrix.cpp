@@ -32,8 +32,8 @@ Matrix Matrix::from_raw(std::vector<float> impl, const Dimension& dim) {
 void Matrix::transpose() {
     auto new_data = data_;
     dim_ = Dimension{.rows = dim_.columns, .columns = dim_.rows};
-    for (auto i = 0U; i < dim_.rows; ++i) {
-        for (auto j = 0U; j < dim_.columns; ++j) {
+    for (auto i = 0u; i < dim_.rows; ++i) {
+        for (auto j = 0u; j < dim_.columns; ++j) {
             new_data[i * dim_.columns + j] = data_[j * dim_.rows + i];
         }
     }
@@ -46,7 +46,7 @@ Matrix Matrix::zeroes(const Dimension& dim) {
 
 Matrix Matrix::all_same(float entry, const Dimension& dim) {
     auto entries = std::vector<float>(dim.size(), 0.0f);
-    for (auto index = 0U; index < dim.rows * dim.columns; ++index) {
+    for (auto index = 0u; index < dim.rows * dim.columns; ++index) {
         entries[index] = entry;
     }
     return Matrix{entries, dim};
@@ -56,8 +56,8 @@ Matrix Matrix::random(const Dimension& dim) {
     std::mt19937 gen(147);
     std::uniform_int_distribution<> dist(0, 100);
     auto matrix = Matrix::zeroes(dim);
-    for (auto i = 0U; i < dim.rows; ++i) {
-        for (auto j = 0U; j < dim.columns; ++j) {
+    for (auto i = 0u; i < dim.rows; ++i) {
+        for (auto j = 0u; j < dim.columns; ++j) {
             matrix(i, j) = dist(gen);
         }
     }
@@ -71,8 +71,8 @@ Dimension Matrix::dim() const {
 bool Matrix::operator==(const Matrix& other) const {
     if (this->dim() != other.dim())
         return false;
-    for (auto row = 0U; row < this->dim().rows; ++row) {
-        for (auto column = 0U; column < this->dim().columns; ++column) {
+    for (auto row = 0u; row < this->dim().rows; ++row) {
+        for (auto column = 0u; column < this->dim().columns; ++column) {
             if (!almost_equal((*this)(row, column), other(row, column))) {
                 return false;
             }
@@ -90,24 +90,24 @@ unsigned int Matrix::element_count() const {
 }
 
 void Matrix::scale(const float scalar) {
-    for (auto index = 0U; index < element_count(); ++index)
+    for (auto index = 0u; index < element_count(); ++index)
         data_[index] *= scalar;
 }
 
 Matrix& Matrix::operator+=(const Matrix& other) {
     const auto* other_raw = other.raw();
-    for (auto index = 0U; index < element_count(); ++index)
+    for (auto index = 0u; index < element_count(); ++index)
         data_[index] += other_raw[index];
     return *this;
 }
 
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
     os << std::endl;
-    if (matrix.dim().rows == 0U || matrix.dim().columns == 0U) {
+    if (matrix.dim().rows == 0u || matrix.dim().columns == 0u) {
         return os;
     }
-    for (auto i = 0U; i < matrix.dim().rows; ++i) {
-        for (auto j = 0U; j < matrix.dim().columns; ++j) {
+    for (auto i = 0u; i < matrix.dim().rows; ++i) {
+        for (auto j = 0u; j < matrix.dim().columns; ++j) {
             os << matrix(i, j) << ' ';
         }
         os << std::endl;
@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
 
 bool admits_tile(const Matrix& matrix, unsigned int tile_size) {
     const auto dim = matrix.dim();
-    return tile_size > 0U && tile_size <= dim.rows && tile_size <= dim.columns;
+    return tile_size > 0u && tile_size <= dim.rows && tile_size <= dim.columns;
 }
 
 Matrix naive_multiply(Matrix a, const Op op_a, const float alpha, Matrix b, const Op op_b) {
@@ -128,9 +128,9 @@ Matrix naive_multiply(Matrix a, const Op op_a, const float alpha, Matrix b, cons
         b.transpose();
     }
     auto c = Matrix::zeroes(Dimension{.rows = a.dim().rows, .columns = b.dim().columns});
-    for (auto i = 0U; i < a.dim().rows; ++i) {
-        for (auto j = 0U; j < b.dim().columns; ++j) {
-            for (auto k = 0U; k < a.dim().columns; ++k) {
+    for (auto i = 0u; i < a.dim().rows; ++i) {
+        for (auto j = 0u; j < b.dim().columns; ++j) {
+            for (auto k = 0u; k < a.dim().columns; ++k) {
                 c(i, j) += alpha * a(i, k) * b(k, j);
             }
         }
@@ -174,10 +174,10 @@ Matrix tiled_multiply(const Matrix& a,
     }
     const auto T = tile_size;
     auto C = Matrix::zeroes(Dimension{M, N});
-    for (auto i = 0U; i < M; i += T) {
-        for (auto j = 0U; j < N; j += T) {
+    for (auto i = 0u; i < M; i += T) {
+        for (auto j = 0u; j < N; j += T) {
             // top left of current C block is at (i,j)
-            for (auto k = 0U; k < K; k += T) {
+            for (auto k = 0u; k < K; k += T) {
                 for (auto ii = i; ii < std::min(i + T, M); ++ii) {
                     for (auto kk = k; kk < std::min(k + T, K); ++kk) {
                         const auto alpha_times_a_term = [&]() {

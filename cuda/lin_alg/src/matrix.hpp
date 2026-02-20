@@ -10,8 +10,8 @@
 namespace lin_alg {
 
 struct Dimension {
-    unsigned int rows = 0U;
-    unsigned int columns = 0U;
+    unsigned int rows = 0u;
+    unsigned int columns = 0u;
     bool operator==(const Dimension& other) const;
     bool operator!=(const Dimension& other) const;
     unsigned int size() const {

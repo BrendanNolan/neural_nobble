@@ -32,8 +32,8 @@ enum class Timing { time_calls, do_not_time_calls };
 std::vector<unsigned int> get_tile_sizes(const TilePolicy tile_policy) {
     auto tile_sizes = std::vector<unsigned int>{};
     tile_sizes.emplace_back(TestConfig::instance().tile_edge);
-    for (const auto i : std::vector{1U, 2U, 4U, 8U, 16U, 32U, 64U}) {
-        if (tile_policy == TilePolicy::exclude_small && i < 8U) {
+    for (const auto i : std::vector{1u, 2u, 4u, 8u, 16u, 32u, 64u}) {
+        if (tile_policy == TilePolicy::exclude_small && i < 8u) {
             continue;
         }
         if (std::find(tile_sizes.cbegin(), tile_sizes.cend(), i) != tile_sizes.cend()) {
@@ -141,7 +141,7 @@ void speed_test(const unsigned int dim_of_square_matrix) {
 }// namespace
 
 TEST(CorrectnessTest, Minute) {
-    auto a_raw = std::vector<float>(4U, 0.0f);
+    auto a_raw = std::vector<float>(4u, 0.0f);
     auto b_raw = a_raw;
     a_raw[0] = 1.0f;
     a_raw[1] = 1.0f;
@@ -151,13 +151,13 @@ TEST(CorrectnessTest, Minute) {
     b_raw[1] = 1.0f;
     b_raw[2] = 2.0f;
     b_raw[3] = 2.0f;
-    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{2U, 2U});
-    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{2U, 2U});
+    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{2u, 2u});
+    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{2u, 2u});
     correctness_test(a, b);
 }
 
 TEST(CorrectnessTest, Tiny) {
-    auto a_raw = std::vector<float>(9U, 0.0f);
+    auto a_raw = std::vector<float>(9u, 0.0f);
     auto b_raw = a_raw;
     a_raw[0] = 1.0f;
     a_raw[1] = 2.0f;
@@ -177,51 +177,51 @@ TEST(CorrectnessTest, Tiny) {
     b_raw[6] = 3.0f;
     b_raw[7] = 2.0f;
     b_raw[8] = 1.0f;
-    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{3U, 3U});
-    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{3U, 3U});
+    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{3u, 3u});
+    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{3u, 3u});
     correctness_test(a, b);
 }
 
 TEST(RandomCorrectnessTest, Tiny) {
-    const auto rows_left = (1U << 2) + 1U;
-    const auto common = (1U << 2) + 3U;
-    const auto columns_right = (1U << 2) + 1U;
+    const auto rows_left = (1u << 2) + 1u;
+    const auto common = (1u << 2) + 3u;
+    const auto columns_right = (1u << 2) + 1u;
     correctness_test_random(rows_left, common, columns_right);
 }
 
 TEST(RandomCorrectnessTest, Small) {
-    const auto rows_left = 11U;
-    const auto common = 7U;
-    const auto columns_right = 9U;
+    const auto rows_left = 11u;
+    const auto common = 7u;
+    const auto columns_right = 9u;
     correctness_test_random(rows_left, common, columns_right);
 }
 
 TEST(RandomCorrectnessTest, Medium) {
-    const auto rows_left = (1U << 5) + 1U;
-    const auto common = (1U << 4) + 3U;
-    const auto columns_right = (1U << 6) + 1U;
+    const auto rows_left = (1u << 5) + 1u;
+    const auto common = (1u << 4) + 3u;
+    const auto columns_right = (1u << 6) + 1u;
     correctness_test_random(rows_left, common, columns_right);
 }
 
 TEST(RandomCorrectnessTest, Large) {
-    const auto rows_left = (1U << 8) + 1U;
-    const auto common = (1U << 7) + 3U;
-    const auto columns_right = (1U << 6) + 1U;
+    const auto rows_left = (1u << 8) + 1u;
+    const auto common = (1u << 7) + 3u;
+    const auto columns_right = (1u << 6) + 1u;
     correctness_test_random(rows_left, common, columns_right);
 }
 
 TEST(SpeedTest, SevenElements) {
-    speed_test(7U);
+    speed_test(7u);
 }
 
 TEST(SpeedTest, ThirtyThreeElements) {
-    speed_test(33U);
+    speed_test(33u);
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    speed_test(1U << 7U);
+    speed_test(1u << 7u);
 }
 
 TEST(SpeedTest, OneMillionElements) {
-    speed_test(1U << 10U);
+    speed_test(1u << 10u);
 }

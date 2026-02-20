@@ -37,7 +37,7 @@ class LaunchConfig {
         return block_dim_;
     }
     unsigned int shared_mem_per_block() const {
-        return tile_size() * 3U * sizeof(float);
+        return tile_size() * 3u * sizeof(float);
     }
  private:
     LaunchConfig() = default;
@@ -122,7 +122,7 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     const auto c_bytes = a.dim().rows * b.dim().columns * sizeof(float);
     float* C;
     cudaMalloc(&C, c_bytes);
-    const auto default_block_edge_size = 4U;
+    const auto default_block_edge_size = 4u;
     const auto default_launch_config =
             LaunchConfig::create(dim3{cover_divide(a.dim().rows, default_block_edge_size),
                                          cover_divide(b.dim().columns, default_block_edge_size)},
@@ -171,8 +171,8 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
 
 LaunchConfig get_test_config() {
     const auto config = LaunchConfig::create(
-            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U},
-            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U});
+            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1u},
+            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1u});
     if (!config) {
         throw std::invalid_argument{"Invalid Launch Configuration"};
     }
@@ -183,11 +183,11 @@ enum class LaunchConfigRangeHint { all, only_sensible };
 
 std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint range_hint) {
     auto configs = std::vector<LaunchConfig>{get_test_config()};
-    const auto sizes = std::vector<unsigned int>{256U, 128U, 64U, 32U, 16U, 8U, 4U, 2U, 1U};
+    const auto sizes = std::vector<unsigned int>{256u, 128u, 64u, 32u, 16u, 8u, 4u, 2u, 1u};
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
             if (range_hint == LaunchConfigRangeHint::only_sensible
-                    && (grid_edge < 8U || block_edge < 8U)) {
+                    && (grid_edge < 8u || block_edge < 8u)) {
                 continue;
             }
             const auto grid_dim = dim3(grid_edge, grid_edge);
@@ -204,7 +204,7 @@ void check_multiplication_results(const lin_alg::Matrix& a,
         const lin_alg::Matrix& b,
         const LaunchConfigRangeHint range_hint) {
     const auto cpu_tiled_multiply_result =
-            lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 8U);
+            lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 8u);
     const auto cuda_multiply_result = cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0);
     EXPECT_EQ(cuda_multiply_result.result_matrix, cpu_tiled_multiply_result);
     for (const auto& config : generate_launch_configs(range_hint)) {
@@ -235,7 +235,7 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto start = std::chrono::high_resolution_clock::now();
-    auto cpu_tiled_multiply_result = lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 8U);
+    auto cpu_tiled_multiply_result = lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 8u);
     const auto end = std::chrono::high_resolution_clock::now();
     const auto optimised_cpu_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -265,7 +265,7 @@ TEST(PrintGpuStats, Basic) {
 }
 
 TEST(CorrectnessTest, Tiny) {
-    auto a_raw = std::vector<float>(9U, 0.0f);
+    auto a_raw = std::vector<float>(9u, 0.0f);
     auto b_raw = a_raw;
     a_raw[0] = 1.0f;
     a_raw[1] = 2.0f;
@@ -285,51 +285,51 @@ TEST(CorrectnessTest, Tiny) {
     b_raw[6] = 3.0f;
     b_raw[7] = 2.0f;
     b_raw[8] = 1.0f;
-    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{3U, 3U});
-    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{3U, 3U});
+    const auto a = lin_alg::Matrix::from_raw(a_raw, lin_alg::Dimension{3u, 3u});
+    const auto b = lin_alg::Matrix::from_raw(b_raw, lin_alg::Dimension{3u, 3u});
     correctness_test(a, b, LaunchConfigRangeHint::all);
 }
 
 TEST(RandomCorrectnessTest, Tiny) {
-    const auto rows_left = (1U << 2) + 1U;
-    const auto common = (1U << 2) + 3U;
-    const auto columns_right = (1U << 2) + 1U;
+    const auto rows_left = (1u << 2) + 1u;
+    const auto common = (1u << 2) + 3u;
+    const auto columns_right = (1u << 2) + 1u;
     correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
 TEST(RandomCorrectnessTest, Small) {
-    const auto rows_left = 11U;
-    const auto common = 7U;
-    const auto columns_right = 9U;
+    const auto rows_left = 11u;
+    const auto common = 7u;
+    const auto columns_right = 9u;
     correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
 TEST(RandomCorrectnessTest, Medium) {
-    const auto rows_left = (1U << 5) + 1U;
-    const auto common = (1U << 4) + 3U;
-    const auto columns_right = (1U << 6) + 1U;
+    const auto rows_left = (1u << 5) + 1u;
+    const auto common = (1u << 4) + 3u;
+    const auto columns_right = (1u << 6) + 1u;
     correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::all);
 }
 
 TEST(RandomCorrectnessTest, Large) {
-    const auto rows_left = (1U << 8) + 1U;
-    const auto common = (1U << 7) + 3U;
-    const auto columns_right = (1U << 6) + 1U;
+    const auto rows_left = (1u << 8) + 1u;
+    const auto common = (1u << 7) + 3u;
+    const auto columns_right = (1u << 6) + 1u;
     correctness_test_random(rows_left, common, columns_right, LaunchConfigRangeHint::only_sensible);
 }
 
 TEST(SpeedTest, SevenElements) {
-    speed_test(7U, LaunchConfigRangeHint::all);
+    speed_test(7u, LaunchConfigRangeHint::all);
 }
 
 TEST(SpeedTest, ThirtyThreeElements) {
-    speed_test(33U, LaunchConfigRangeHint::all);
+    speed_test(33u, LaunchConfigRangeHint::all);
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    speed_test(1U << 7U, LaunchConfigRangeHint::all);
+    speed_test(1u << 7u, LaunchConfigRangeHint::all);
 }
 
 TEST(SpeedTest, OneMillionElements) {
-    speed_test(1U << 10U, LaunchConfigRangeHint::only_sensible);
+    speed_test(1u << 10u, LaunchConfigRangeHint::only_sensible);
 }

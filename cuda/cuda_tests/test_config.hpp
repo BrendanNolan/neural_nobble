@@ -3,5 +3,5 @@
 class TestConfig {
  public:
     static TestConfig& instance();
-    unsigned int block_edge = 1U;
+    unsigned int block_edge = 1u;
 };
