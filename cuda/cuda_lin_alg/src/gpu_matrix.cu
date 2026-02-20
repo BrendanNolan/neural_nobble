@@ -103,10 +103,9 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     for (auto stride_start = 0U; stride_start < input_length; stride_start += threads_per_grid) {
         const auto global_index = stride_start + index_within_stride;
         add_to_shared(global_index);
-        add_to_shared(global_index + blockDim.x);
     }
     __syncthreads();
-    for (auto highest_active_thread = blockDim.x; highest_active_thread > 0U;
+    for (auto highest_active_thread = blockDim.x / 2U; highest_active_thread > 0U;
             highest_active_thread /= 2U) {
         if (threadIdx.x < highest_active_thread) {
             shared[threadIdx.x] += shared[threadIdx.x + highest_active_thread];
@@ -121,8 +120,8 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
 void run_sum_reduce(float* input, unsigned int length, float* result) {
     auto grid_x = 2048U;
     auto block_x = 512U;
-    auto* scratch_a = allocate_on_device(2U * grid_x);
-    auto* scratch_b = std::next(scratch_a, grid_x);
+    auto* scratch_a = allocate_on_device(grid_x);
+    auto* scratch_b = allocate_on_device(grid_x);
     auto* output = scratch_a;
     sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
     input = output;
