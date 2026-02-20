@@ -118,24 +118,25 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
 }
 
 void run_sum_reduce(float* input, unsigned int length, float* result) {
-    auto grid_x = 2U;
-    auto block_x = 512U;
-    auto* scratch_a = allocate_on_device(grid_x);
-    auto* scratch_b = allocate_on_device(grid_x);
+    const auto block_x = 512U;
+    const auto initial_grid_x = 64U;
+    auto* scratch_a = allocate_on_device(initial_grid_x);
+    auto* scratch_b = allocate_on_device(initial_grid_x);
     auto* output = scratch_a;
-    sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
-    if (grid_x != 1U) {
-        input = output;
-        output = scratch_b;
-        length = grid_x;
-        while (grid_x >= 1U) {
-            sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
-            length = grid_x;
-            if (length > 1U) {
-                std::swap(input, output);
-                grid_x /= block_x;
-            }
+    auto grid_x = initial_grid_x;
+    while (true) {
+        sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
+        if (grid_x == 1U) {
+            break;
         }
+        if (grid_x == initial_grid_x) {
+            input = output;
+            output = scratch_b;
+        } else {
+            std::swap(input, output);
+        }
+        length = grid_x;
+        grid_x /= 2U;
     }
     cudaDeviceSynchronize();
     cudaMemcpy(result, output, sizeof(float), cudaMemcpyDeviceToDevice);
