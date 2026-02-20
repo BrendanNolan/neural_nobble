@@ -3,12 +3,13 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: test [--cpu <tile_edge_length>] [--gpu <block_edge_length>]"
+    echo "Usage: test [--cpu <tile_edge_length>] [--gpu <block_edge_length>] [--filter <gtest_filter>]"
     echo "Either --cpu or --gpu must be provided"
 }
 
 cpu_tile_edge=''
 gpu_block_edge=''
+filter='*'
 while [[ $# -gt 0 ]]; do
     case $1 in
     --cpu)
@@ -17,6 +18,10 @@ while [[ $# -gt 0 ]]; do
         ;;
     --gpu)
         gpu_block_edge="${2}"
+        shift 2
+        ;;
+    --filter)
+        filter="${2}"
         shift 2
         ;;
     -h | --help)
@@ -40,10 +45,10 @@ script_dir="$(realpath "${script_dir}")"
 pushd "${script_dir}"
 if [[ -n "${cpu_tile_edge}" ]]; then
     echo "Running cpu tests"
-    ./build/lin_alg_tests/lin_alg_tests --tile-edge "${cpu_tile_edge}"
+    ./build/lin_alg_tests/lin_alg_tests --tile-edge "${cpu_tile_edge}" --gtest_filter="${filter}"
 fi
 if [[ -n "${gpu_block_edge}" ]]; then
     echo "Running cuda tests"
-    ./build/cuda_tests/cuda_tests --block-edge "${gpu_block_edge}"
+    ./build/cuda_tests/cuda_tests --block-edge "${gpu_block_edge}" --gtest_filter="${filter}"
 fi
 popd
