@@ -99,10 +99,12 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
             shared[threadIdx.x] += input[global_index];
     };
     const auto threads_per_grid = gridDim.x * blockDim.x;
-    const auto index_within_stride = (blockIdx.x * blockDim.x) + threadIdx.x;
-    for (auto stride_start = 0U; stride_start < input_length; stride_start += threads_per_grid) {
+    const auto index_within_stride = (blockIdx.x * blockDim.x * 2U) + threadIdx.x;
+    for (auto stride_start = 0U; stride_start < input_length;
+            stride_start += 2U * threads_per_grid) {
         const auto global_index = stride_start + index_within_stride;
         add_to_shared(global_index);
+        add_to_shared(global_index + blockDim.x);
     }
     __syncthreads();
     for (auto highest_active_thread = blockDim.x / 2U; highest_active_thread > 0U;
@@ -117,14 +119,22 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     }
 }
 
-void run_sum_reduce(float* input, unsigned int length, float* result) {
-    const auto block_x = 512U;
-    const auto initial_grid_x = 64U;
+void run_sum_reduce(float* input,
+        unsigned int length,
+        float* result,
+        const unsigned int initial_grid_x) {
     auto* scratch_a = allocate_on_device(initial_grid_x);
     auto* scratch_b = allocate_on_device(initial_grid_x);
     auto* output = scratch_a;
     auto grid_x = initial_grid_x;
     while (true) {
+        auto block_x = 512U;
+        while (block_x >= length) {
+            block_x /= 2U;
+            if (block_x == 2U) {
+                break;
+            }
+        }
         sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
         if (grid_x == 1U) {
             break;
