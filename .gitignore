@@ -7,6 +7,5 @@ compile_commands.json
 .venv/
 CMakeUserPresets.json
 test.log
-dc
 training.log
 tuning_report.txt
