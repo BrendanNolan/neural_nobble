@@ -96,7 +96,7 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
     shared[threadIdx.x] = 0U;
     auto add_to_shared = [input_length, input](const unsigned int global_index) {
         if (global_index < input_length)
-            shared[threadIdx.x] = input[global_index];
+            shared[threadIdx.x] += input[global_index];
     };
     const auto threads_per_grid = gridDim.x * blockDim.x;
     const auto index_within_stride = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -118,21 +118,23 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
 }
 
 void run_sum_reduce(float* input, unsigned int length, float* result) {
-    auto grid_x = 2048U;
+    auto grid_x = 2U;
     auto block_x = 512U;
     auto* scratch_a = allocate_on_device(grid_x);
     auto* scratch_b = allocate_on_device(grid_x);
     auto* output = scratch_a;
     sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
-    input = output;
-    output = scratch_b;
-    length = grid_x;
-    while (grid_x >= 1U) {
-        sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
+    if (grid_x != 1U) {
+        input = output;
+        output = scratch_b;
         length = grid_x;
-        if (length > 1U) {
-            std::swap(input, output);
-            grid_x /= block_x;
+        while (grid_x >= 1U) {
+            sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
+            length = grid_x;
+            if (length > 1U) {
+                std::swap(input, output);
+                grid_x /= block_x;
+            }
         }
     }
     cudaDeviceSynchronize();
