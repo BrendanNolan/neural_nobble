@@ -94,14 +94,14 @@ Dim3POD cuda_dim3_to_dim3pod(const dim3& dim) {
 }
 }// namespace
 
-std::chrono::microseconds raw_cuda_multiply(const CudaInput& input) {
+std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
     run_tiled_multiply(input.params,
             cuda_dim3_to_dim3pod(input.config.grid_dim()),
             cuda_dim3_to_dim3pod(input.config.block_dim()),
             input.config.shared_mem_per_block());
     const auto end = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 }
 
 CudaInput ExtractInput(const lin_alg::Matrix& a,
@@ -144,12 +144,12 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
 
 struct MultiplyResult {
     lin_alg::Matrix result_matrix;
-    std::chrono::microseconds duration;
+    std::chrono::milliseconds duration;
     LaunchConfig launch_config_used;
 };
 std::string to_string(const MultiplyResult& result) {
     return "duration:    " + std::to_string(result.duration.count())
-            + " microseconds,    launch config :" + to_string(result.launch_config_used);
+            + "ms,    launch config :" + to_string(result.launch_config_used);
 }
 
 MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
@@ -238,9 +238,8 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
     auto cpu_tiled_multiply_result = lin_alg::tiled_multiply(a, Identity, 1.0, b, Identity, 8u);
     const auto end = std::chrono::high_resolution_clock::now();
     const auto optimised_cpu_time =
-            std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " microseconds"
-              << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
     for (const auto& config : generate_launch_configs(range_hint)) {
         const auto cuda_multiply_result =
                 cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
