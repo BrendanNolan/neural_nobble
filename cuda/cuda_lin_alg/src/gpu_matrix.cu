@@ -50,6 +50,7 @@ __global__ void tiled_multiply(GemmParams params) {
             const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
             const auto g_j = y + blockIdx.y * blockDim.y + threadIdx.y;
             const auto l_c_cell = threadIdx.x * T + threadIdx.y;
+            const auto l_c_cell_column_major = threadIdx.y * T + threadIdx.x;
             const auto c_global_index = g_i * bj + g_j;
             const auto c_global_index_valid = g_i < ai && g_j < bj;
             c_tile[l_c_cell] = c_global_index_valid ? params.beta * params.C[c_global_index] : 0u;
@@ -57,11 +58,12 @@ __global__ void tiled_multiply(GemmParams params) {
                 const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
                 const auto in_scope_for_b = (k + threadIdx.x < bi && g_j < bj);
                 a_tile[l_c_cell] = in_scope_for_a ? a_at(g_i, k + threadIdx.y) : 0u;
-                b_tile[l_c_cell] = in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
+                b_tile[l_c_cell_column_major] = in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
                 __syncthreads();
                 for (auto kk = 0u; kk < T; ++kk) {
+                    // b_tile was filled in column major order, so we access it differently
                     c_tile[l_c_cell] += params.alpha * a_tile[threadIdx.x * T + kk]
-                            * b_tile[kk * T + threadIdx.y];
+                            * b_tile[threadIdx.y * T + kk];
                 }
                 __syncthreads();
             }
