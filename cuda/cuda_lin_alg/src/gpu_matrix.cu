@@ -75,10 +75,6 @@ namespace {
 inline dim3 dim3pod_to_cuda_dim3(const Dim3POD& pod) {
     return dim3{pod.x, pod.y, pod.z};
 }
-
-[[maybe_unused]] __device__ __forceinline__ bool is_power_of_two(const unsigned int x) {
-    return (x != 0u) && ((x & (x - 1u)) == 0u);
-}
 }// namespace
 
 void run_tiled_multiply(GemmParams params,
@@ -91,34 +87,129 @@ void run_tiled_multiply(GemmParams params,
     cudaDeviceSynchronize();
 }
 
+namespace {
+__device__ constexpr bool is_power_of_2_in_range(const unsigned int x,
+        const unsigned int lower_bound_inclusive,
+        const unsigned int upper_bound_exclusive) {
+    for (auto power = lower_bound_inclusive; power < upper_bound_exclusive; ++power) {
+        if (x == 1u << power) {
+            return true;
+        }
+    }
+    return false;
+}
+
+template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound>
+__device__ __forceinline__ void run_reduction_step_with_sync(float* shared,
+        const unsigned int thread_id) {
+    static_assert(is_power_of_2_in_range(BlockDimX, 1u, 10u));
+    if constexpr (BlockDimX >= BlockDimXLowerBound) {
+        if (thread_id < BlockDimXLowerBound / 2u) {
+            shared[thread_id] += shared[thread_id + BlockDimXLowerBound / 2u];
+        }
+    }
+    __syncthreads();
+}
+
+template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound>
+__device__ __forceinline__ void run_warp_reduction_step(volatile float* shared,
+        const unsigned int thread_id) {
+    static_assert(is_power_of_2_in_range(BlockDimX, 1u, 10u));
+    if constexpr (BlockDimX >= BlockDimXLowerBound) {
+        if (thread_id < BlockDimXLowerBound / 2u) {
+            shared[thread_id] += shared[thread_id + BlockDimXLowerBound / 2u];
+        }
+    }
+}
+
+// Without the volatile keyword, since there is no __syncthreads, the compiler may optimise away
+// shared-memory reads and writes by keeping values in registers
+template <unsigned int BlockDimX>
+__device__ __forceinline__ void warp_reduce(volatile float* shared, const unsigned int thread_id) {
+    static_assert(is_power_of_2_in_range(BlockDimX, 1u, 10u));
+    assert(thread_id < 32u);
+    run_warp_reduction_step<BlockDimX, 64u>(shared, thread_id);
+    run_warp_reduction_step<BlockDimX, 32u>(shared, thread_id);
+    run_warp_reduction_step<BlockDimX, 16u>(shared, thread_id);
+    run_warp_reduction_step<BlockDimX, 8u>(shared, thread_id);
+    run_warp_reduction_step<BlockDimX, 4u>(shared, thread_id);
+    run_warp_reduction_step<BlockDimX, 2u>(shared, thread_id);
+}
+}// namespace
+
+template <unsigned int BlockDimX>
 __global__ void sum_reduce(const float* input, unsigned int input_length, float* output) {
-    assert(is_power_of_two(blockDim.x));
+    // 2^9 == 512, the laregest allowed block dimension
+    static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
+    assert(BlockDimX == blockDim.x);
     extern __shared__ float shared[];
-    shared[threadIdx.x] = 0u;
-    auto add_to_shared = [input_length, input](const unsigned int global_index) {
+    const auto thread_id = threadIdx.x;
+    shared[thread_id] = 0u;
+    auto add_to_shared = [input_length, input, thread_id](const unsigned int global_index) {
         if (global_index < input_length)
-            shared[threadIdx.x] += input[global_index];
+            shared[thread_id] += input[global_index];
     };
-    const auto threads_per_grid = gridDim.x * blockDim.x;
-    const auto index_within_stride = (blockIdx.x * blockDim.x * 2u) + threadIdx.x;
+    const auto threads_per_grid = gridDim.x * BlockDimX;
+    const auto index_within_stride = (blockIdx.x * BlockDimX * 2u) + thread_id;
     for (auto stride_start = 0u; stride_start < input_length;
             stride_start += 2u * threads_per_grid) {
         const auto global_index = stride_start + index_within_stride;
         add_to_shared(global_index);
-        add_to_shared(global_index + blockDim.x);
+        add_to_shared(global_index + BlockDimX);
     }
     __syncthreads();
-    for (auto highest_active_thread = blockDim.x / 2u; highest_active_thread > 0u;
-            highest_active_thread /= 2u) {
-        if (threadIdx.x < highest_active_thread) {
-            shared[threadIdx.x] += shared[threadIdx.x + highest_active_thread];
-        }
-        __syncthreads();
+    run_reduction_step_with_sync<BlockDimX, 512u>(shared, thread_id);
+    run_reduction_step_with_sync<BlockDimX, 256u>(shared, thread_id);
+    run_reduction_step_with_sync<BlockDimX, 128u>(shared, thread_id);
+    // At the previous reduction step, there were 64 active threads and there are now 64 active
+    // elements in shared memory; at the next step, there will be only 32 active threads, so
+    // there will be only one active warp and we will not need to call __syncthreads
+    if (thread_id < 32u) {
+        warp_reduce<BlockDimX>(shared, thread_id);
     }
-    if (threadIdx.x == 0u) {
+    if (thread_id == 0u) {
         output[blockIdx.x] = shared[0u];
     }
 }
+
+namespace {
+void launch_sum_reduce(float* input,
+        unsigned int length,
+        float* result,
+        const unsigned int grid_dim_x,
+        const unsigned int block_dim_x) {
+    switch (block_dim_x) {
+    case 512u:
+        sum_reduce<512u><<<grid_dim_x, 512u, 512u * sizeof(float)>>>(input, length, result);
+        return;
+    case 256u:
+        sum_reduce<256u><<<grid_dim_x, 256u, 256u * sizeof(float)>>>(input, length, result);
+        return;
+    case 128u:
+        sum_reduce<128u><<<grid_dim_x, 128u, 128u * sizeof(float)>>>(input, length, result);
+        return;
+    case 64u:
+        sum_reduce<64u><<<grid_dim_x, 64u, 64u * sizeof(float)>>>(input, length, result);
+        return;
+    case 32u:
+        sum_reduce<32u><<<grid_dim_x, 32u, 32u * sizeof(float)>>>(input, length, result);
+        return;
+    case 16u:
+        sum_reduce<16u><<<grid_dim_x, 16u, 16u * sizeof(float)>>>(input, length, result);
+        return;
+    case 8u:
+        sum_reduce<8u><<<grid_dim_x, 8u, 8u * sizeof(float)>>>(input, length, result);
+        return;
+    case 4u:
+        sum_reduce<4u><<<grid_dim_x, 4u, 4u * sizeof(float)>>>(input, length, result);
+        return;
+    case 2u:
+        sum_reduce<2u><<<grid_dim_x, 2u, 2u * sizeof(float)>>>(input, length, result);
+        return;
+    }
+    assert(false && "block_dim_x should be a power of 2u between 2u and 512u inclusively");
+}
+}// namespace
 
 void run_sum_reduce(float* input,
         unsigned int length,
@@ -136,7 +227,7 @@ void run_sum_reduce(float* input,
                 break;
             }
         }
-        sum_reduce<<<grid_x, block_x, block_x * sizeof(float)>>>(input, length, output);
+        launch_sum_reduce(input, length, result, grid_x, block_x);
         if (grid_x == 1u) {
             break;
         }
