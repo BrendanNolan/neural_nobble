@@ -90,6 +90,7 @@ void run_tiled_multiply(GemmParams params,
     const auto cuda_grid = dim3pod_to_cuda_dim3(grid);
     const auto cuda_block = dim3pod_to_cuda_dim3(block);
     tiled_multiply<<<cuda_grid, cuda_block, shared_mem_size>>>(params);
+    cudaDeviceSynchronize();
 }
 
 __global__ void sum_reduce(const float* input, unsigned int input_length, float* output) {
