@@ -37,6 +37,8 @@ cmake_args=(
 
 if [[ "${build_type}" == "Debug" ]]; then
     cmake_args+=(-DCMAKE_CUDA_FLAGS="-G -O0")
+else
+    cmake_args+=(-DCMAKE_CUDA_FLAGS="")
 fi
 
 cmake "${cmake_args[@]}"
