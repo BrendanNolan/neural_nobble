@@ -9,3 +9,4 @@ CMakeUserPresets.json
 test.log
 training.log
 tuning_report.txt
+debug_commands

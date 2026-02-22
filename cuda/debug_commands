@@ -1,2 +1,0 @@
-break run_reduction_step_with_sync
-run --gtest_filter='*Reduc*'

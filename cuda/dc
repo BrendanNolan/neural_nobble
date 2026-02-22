@@ -1,3 +1,0 @@
-b sum_reduce
-disable
-run --gtest_filter='*Reduc*'
