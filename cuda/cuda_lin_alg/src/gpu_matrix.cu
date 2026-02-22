@@ -227,7 +227,7 @@ void run_sum_reduce(float* input,
                 break;
             }
         }
-        launch_sum_reduce(input, length, result, grid_x, block_x);
+        launch_sum_reduce(input, length, output, grid_x, block_x);
         if (grid_x == 1u) {
             break;
         }
