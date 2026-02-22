@@ -100,25 +100,25 @@ __device__ constexpr bool is_power_of_2_in_range(const unsigned int x,
 }
 
 template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound>
-__device__ __forceinline__ void run_reduction_step_with_sync(float* shared,
-        const unsigned int thread_id) {
-    static_assert(is_power_of_2_in_range(BlockDimX, 1u, 10u));
+__device__ __forceinline__ void run_reduction_step(float* shared, const unsigned int thread_id) {
+    static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
     if constexpr (BlockDimX >= BlockDimXLowerBound) {
         if (thread_id < BlockDimXLowerBound / 2u) {
             shared[thread_id] += shared[thread_id + BlockDimXLowerBound / 2u];
         }
     }
-    __syncthreads();
 }
 
 template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound>
 __device__ __forceinline__ void run_warp_reduction_step(volatile float* shared,
         const unsigned int thread_id) {
-    static_assert(is_power_of_2_in_range(BlockDimX, 1u, 10u));
+    static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
+    static_assert(is_power_of_2_in_range(BlockDimXLowerBound, 1u, 7u));
     if constexpr (BlockDimX >= BlockDimXLowerBound) {
-        if (thread_id < BlockDimXLowerBound / 2u) {
-            shared[thread_id] += shared[thread_id + BlockDimXLowerBound / 2u];
-        }
+        // No need to check thread_id here; a little thought will reveal that this is safe because
+        // warp threads run in lock step (and we eventually care only about the result at positon
+        // 0u)
+        shared[thread_id] += shared[thread_id + BlockDimXLowerBound / 2u];
     }
 }
 
@@ -126,7 +126,7 @@ __device__ __forceinline__ void run_warp_reduction_step(volatile float* shared,
 // shared-memory reads and writes by keeping values in registers
 template <unsigned int BlockDimX>
 __device__ __forceinline__ void warp_reduce(volatile float* shared, const unsigned int thread_id) {
-    static_assert(is_power_of_2_in_range(BlockDimX, 1u, 10u));
+    static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
     assert(thread_id < 32u);
     run_warp_reduction_step<BlockDimX, 64u>(shared, thread_id);
     run_warp_reduction_step<BlockDimX, 32u>(shared, thread_id);
@@ -158,9 +158,12 @@ __global__ void sum_reduce(const float* input, unsigned int input_length, float*
         add_to_shared(global_index + BlockDimX);
     }
     __syncthreads();
-    run_reduction_step_with_sync<BlockDimX, 512u>(shared, thread_id);
-    run_reduction_step_with_sync<BlockDimX, 256u>(shared, thread_id);
-    run_reduction_step_with_sync<BlockDimX, 128u>(shared, thread_id);
+    run_reduction_step<BlockDimX, 512u>(shared, thread_id);
+    __syncthreads();
+    run_reduction_step<BlockDimX, 256u>(shared, thread_id);
+    __syncthreads();
+    run_reduction_step<BlockDimX, 128u>(shared, thread_id);
+    __syncthreads();
     // At the previous reduction step, there were 64 active threads and there are now 64 active
     // elements in shared memory; at the next step, there will be only 32 active threads, so
     // there will be only one active warp and we will not need to call __syncthreads
@@ -206,8 +209,11 @@ void launch_sum_reduce(float* input,
     case 2u:
         sum_reduce<2u><<<grid_dim_x, 2u, 2u * sizeof(float)>>>(input, length, result);
         return;
+    case 1u:
+        sum_reduce<1u><<<grid_dim_x, 1u, 1u * sizeof(float)>>>(input, length, result);
+        return;
     }
-    assert(false && "block_dim_x should be a power of 2u between 2u and 512u inclusively");
+    assert(false && "block_dim_x should be a power of 2u between 1u and 512u inclusively");
 }
 }// namespace
 
