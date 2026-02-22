@@ -220,12 +220,13 @@ void launch_sum_reduce(float* input,
 void run_sum_reduce(float* input,
         unsigned int length,
         float* result,
-        const unsigned int initial_grid_x) {
+        const unsigned int initial_grid_x,
+        const unsigned int initial_block_x) {
     auto* scratch_a = allocate_on_device(initial_grid_x);
     auto* scratch_b = allocate_on_device(initial_grid_x);
     auto* output = scratch_a;
     auto grid_x = initial_grid_x;
-    auto block_x = 512u;
+    auto block_x = initial_block_x;
     while (true) {
         while (block_x >= length) {
             block_x /= 2u;
