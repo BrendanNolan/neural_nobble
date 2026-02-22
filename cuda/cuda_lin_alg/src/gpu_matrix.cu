@@ -219,8 +219,8 @@ void run_sum_reduce(float* input,
     auto* scratch_b = allocate_on_device(initial_grid_x);
     auto* output = scratch_a;
     auto grid_x = initial_grid_x;
+    auto block_x = 512u;
     while (true) {
-        auto block_x = 512u;
         while (block_x >= length) {
             block_x /= 2u;
             if (block_x == 2u) {
