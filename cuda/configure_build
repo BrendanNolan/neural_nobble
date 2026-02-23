@@ -11,7 +11,8 @@ if [[ $# -ge 2 ]]; then
     exit 1
 fi
 
-mkdir -p build
+rm -rf build
+mkdir build
 
 build_type=Release
 if [[ $# -eq 1 ]]; then
