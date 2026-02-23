@@ -207,36 +207,54 @@ void launch_sum_reduce(float* input,
 }
 }// namespace
 
-void run_sum_reduce(float* input,
-        unsigned int length,
-        float* result,
-        const unsigned int initial_grid_x,
-        const unsigned int initial_block_x) {
+SumReduceLaunchConfig compute_sum_reduce_launch_config(unsigned int input_length) {
+    auto fit_block_size = [](const unsigned int upper_bound) {
+        if (upper_bound > 512u) {
+            return 512u;
+        }
+        auto block_dim_x = 512u;
+        while (block_dim_x >= upper_bound && block_dim_x >= 64u) {
+            block_dim_x /= 2u;
+        }
+        return block_dim_x;
+    };
+    if (input_length <= 512u) {
+        return SumReduceLaunchConfig{.grid_dim_x = 1u, .block_dim_x = fit_block_size(512u)};
+    }
+    const auto block_dim_x = 512u;
+    auto props = cudaDeviceProp{};
+    cudaGetDeviceProperties(&props, 0);
+    const auto sm_count = static_cast<unsigned int>(props.multiProcessorCount);
+    constexpr auto blocks_per_sm = 2u;
+    const auto max_grid_x = sm_count * blocks_per_sm;
+    // TODO: Make items_per_thread and grid_stride paramrs of this func and run_sum_reduce
+    const auto items_per_thread = 2u;
+    constexpr auto grid_stride = 4u;
+    const auto work_per_block = 512u * items_per_thread * grid_stride;
+    const auto blocks_needed = input_length / work_per_block;
+    return SumReduceLaunchConfig{
+            .grid_dim_x = std::min(max_grid_x, blocks_needed), .block_dim_x = block_dim_x};
+}
+
+void run_sum_reduce(float* input, unsigned int length, float* result) {
+    auto launch_config = compute_sum_reduce_launch_config(length);
+    const auto initial_grid_x = launch_config.grid_dim_x;
     auto* scratch_a = allocate_on_device(initial_grid_x);
     auto* scratch_b = allocate_on_device(initial_grid_x);
     auto* output = scratch_a;
-    auto grid_x = initial_grid_x;
-    auto block_x = initial_block_x;
-    while (true) {
-        while (block_x >= length) {
-            block_x /= 2u;
-            if (block_x == 2u) {
-                break;
-            }
-        }
-        launch_sum_reduce(input, length, output, grid_x, block_x);
-        if (grid_x == 1u) {
-            break;
-        }
-        if (grid_x == initial_grid_x) {
+    do {
+        launch_sum_reduce(
+                input, length, output, launch_config.grid_dim_x, launch_config.block_dim_x);
+        const auto first_iteration = launch_config.grid_dim_x == initial_grid_x;
+        if (first_iteration) {
             input = output;
             output = scratch_b;
         } else {
             std::swap(input, output);
         }
-        length = grid_x;
-        grid_x /= 2u;
-    }
+        length = launch_config.grid_dim_x;
+        launch_config = compute_sum_reduce_launch_config(launch_config.grid_dim_x);
+    } while (launch_config.grid_dim_x > 1u);
     cudaDeviceSynchronize();
     cudaMemcpy(result, output, sizeof(float), cudaMemcpyDeviceToDevice);
     cudaFree(scratch_a);

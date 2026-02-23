@@ -43,8 +43,11 @@ void run_tiled_multiply(GemmParams params,
         const unsigned int shared_mem_size);
 }
 
-void run_sum_reduce(float* input,
-        unsigned int length,
-        float* result,
-        unsigned int initial_grid_x,
-        unsigned int initial_block_x);
+struct SumReduceLaunchConfig {
+    unsigned int grid_dim_x;
+    unsigned int block_dim_x;
+};
+
+SumReduceLaunchConfig compute_sum_reduce_launch_config(unsigned int input_length);
+
+void run_sum_reduce(float* input, unsigned int length, float* result);
