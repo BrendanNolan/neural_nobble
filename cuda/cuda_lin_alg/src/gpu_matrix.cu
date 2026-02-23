@@ -99,26 +99,16 @@ __device__ constexpr bool is_power_of_2_in_range(const unsigned int x,
     return false;
 }
 
-template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound>
-__device__ __forceinline__ void run_reduction_step(float* shared, const unsigned int thread_id) {
+template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound, typename Float>
+__device__ __forceinline__ void run_reduction_step(Float shared, const unsigned int thread_id) {
+    static_assert(std::is_same_v<Float, float*>
+            || (std::is_same_v<Float, volatile float*>
+                    && is_power_of_2_in_range(BlockDimXLowerBound, 1u, 7u)));
     static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
     if constexpr (BlockDimX >= BlockDimXLowerBound) {
         if (thread_id < BlockDimXLowerBound / 2u) {
             shared[thread_id] += shared[thread_id + BlockDimXLowerBound / 2u];
         }
-    }
-}
-
-template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound>
-__device__ __forceinline__ void run_warp_reduction_step(volatile float* shared,
-        const unsigned int thread_id) {
-    static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
-    static_assert(is_power_of_2_in_range(BlockDimXLowerBound, 1u, 7u));
-    if constexpr (BlockDimX >= BlockDimXLowerBound) {
-        // No need to check thread_id here; a little thought will reveal that this is safe because
-        // warp threads run in lock step (and we eventually care only about the result at positon
-        // 0u)
-        shared[thread_id] += shared[thread_id + BlockDimXLowerBound / 2u];
     }
 }
 
@@ -128,12 +118,12 @@ template <unsigned int BlockDimX>
 __device__ __forceinline__ void warp_reduce(volatile float* shared, const unsigned int thread_id) {
     static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
     assert(thread_id < 32u);
-    run_warp_reduction_step<BlockDimX, 64u>(shared, thread_id);
-    run_warp_reduction_step<BlockDimX, 32u>(shared, thread_id);
-    run_warp_reduction_step<BlockDimX, 16u>(shared, thread_id);
-    run_warp_reduction_step<BlockDimX, 8u>(shared, thread_id);
-    run_warp_reduction_step<BlockDimX, 4u>(shared, thread_id);
-    run_warp_reduction_step<BlockDimX, 2u>(shared, thread_id);
+    run_reduction_step<BlockDimX, 64u>(shared, thread_id);
+    run_reduction_step<BlockDimX, 32u>(shared, thread_id);
+    run_reduction_step<BlockDimX, 16u>(shared, thread_id);
+    run_reduction_step<BlockDimX, 8u>(shared, thread_id);
+    run_reduction_step<BlockDimX, 4u>(shared, thread_id);
+    run_reduction_step<BlockDimX, 2u>(shared, thread_id);
 }
 }// namespace
 
