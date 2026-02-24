@@ -45,10 +45,10 @@ script_dir="$(realpath "${script_dir}")"
 pushd "${script_dir}"
 if [[ -n "${cpu_tile_edge}" ]]; then
     echo "Running cpu tests"
-    ./build/lin_alg_tests/lin_alg_tests --tile-edge "${cpu_tile_edge}" --gtest_filter="${filter}"
+    ./build_Release/lin_alg_tests/lin_alg_tests --tile-edge "${cpu_tile_edge}" --gtest_filter="${filter}"
 fi
 if [[ -n "${gpu_block_edge}" ]]; then
     echo "Running cuda tests"
-    ./build/cuda_tests/cuda_tests --block-edge "${gpu_block_edge}" --gtest_filter="${filter}"
+    ./build_Release/cuda_tests/cuda_tests --block-edge "${gpu_block_edge}" --gtest_filter="${filter}"
 fi
 popd
