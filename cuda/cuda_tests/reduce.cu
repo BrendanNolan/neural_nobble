@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 TEST(ReductionTest, Basic) {
-    const auto total_length = 256u * 256u * 3u + 53u;
+    const auto total_length = 100'000'001u;
     auto* input = allocate_on_device(total_length);
     const auto input_host = std::vector<float>(total_length, 1.0f);
     copy_to_device(input_host.data(), input_host.size(), input);

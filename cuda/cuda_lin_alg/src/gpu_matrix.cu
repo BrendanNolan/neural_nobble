@@ -225,13 +225,13 @@ SumReduceLaunchConfig compute_sum_reduce_launch_config(unsigned int input_length
     auto props = cudaDeviceProp{};
     cudaGetDeviceProperties(&props, 0);
     const auto sm_count = static_cast<unsigned int>(props.multiProcessorCount);
-    constexpr auto blocks_per_sm = 2u;
+    constexpr auto blocks_per_sm = 3u;
     const auto max_grid_x = sm_count * blocks_per_sm;
     // TODO: Make items_per_thread and grid_stride paramrs of this func and run_sum_reduce
     const auto items_per_thread = 2u;
     constexpr auto grid_stride = 4u;
     const auto work_per_block = 512u * items_per_thread * grid_stride;
-    const auto blocks_needed = input_length / work_per_block;
+    const auto blocks_needed = cover_divide(input_length, work_per_block);
     return SumReduceLaunchConfig{
             .grid_dim_x = std::min(max_grid_x, blocks_needed), .block_dim_x = block_dim_x};
 }
