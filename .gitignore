@@ -2,7 +2,10 @@
 misidentified_images/*
 Session.vim
 perf.data
-build/
+/cuda/build/
+/cuda/build_Release/
+/cuda/build_Debug/
+/cuda/build_RelWithDebInfo/
 compile_commands.json
 .venv/
 CMakeUserPresets.json

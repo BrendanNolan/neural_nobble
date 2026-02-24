@@ -24,7 +24,7 @@ if [[ $# -eq 1 ]]; then
     build_type="${1}"
 fi
 
-build_dir="build${1}"
+build_dir="build_${build_type}"
 rm -rf "${build_dir}"
 mkdir "${build_dir}"
 
