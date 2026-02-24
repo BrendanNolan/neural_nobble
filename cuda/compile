@@ -3,38 +3,30 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage compile [--cpu cpu_count] [--build-type <Release|RelWithDebInfo|Debug>]"
-    echo "--build-type defaults to Release"
+    echo "Usage: compile [build_type(Release|Debug|RelWithDebInfo)]"
+    echo "Build type defaults to Release"
 }
 
-build_type=Release
+if [[ $# -ge 2 ]]; then
+    usage >&2
+    exit 1
+fi
+
 cpus=8
 if command -v nproc &>/dev/null; then
     cpus="$(nproc)"
 fi
-while [[ $# -gt 0 ]]; do
-    case $1 in
-    --build-type)
-        build_type="$2"
-        shift 2
-        ;;
-    --cpu)
-        cpus="$2"
-        shift 2
-        ;;
-    -h | --help)
+build_type=Release
+if [[ $# -eq 1 ]]; then
+    if [[ "${1}" == -h ]] || [[ "${1}" == --help ]]; then
         usage
         exit 0
-        ;;
-    *)
+    fi
+    if [[ ! "${1}" =~ ^(Debug|Release|RelWithDebInfo)$ ]]; then
         usage >&2
         exit 1
-        ;;
-    esac
-done
-if [[ ! "${build_type}" =~ ^(Debug|RelWithDebInfo|Release)$ ]]; then
-    usage >&2
-    exit 1
+    fi
+    build_type="${1}"
 fi
 
 cmake --build "build_${build_type}" -- "-j${cpus}"

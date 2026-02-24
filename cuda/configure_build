@@ -3,7 +3,8 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: configure_build <build_type(Release|Debug|RelWithDebInfo)>"
+    echo "Usage: configure_build [build_type(Release|Debug|RelWithDebInfo)]"
+    echo "Build type defaults to Release"
 }
 
 if [[ $# -ge 2 ]]; then
