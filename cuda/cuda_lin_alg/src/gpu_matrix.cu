@@ -242,19 +242,23 @@ void run_sum_reduce(float* input, unsigned int length, float* result) {
     auto* scratch_a = allocate_on_device(initial_grid_x);
     auto* scratch_b = allocate_on_device(initial_grid_x);
     auto* output = scratch_a;
-    do {
+    auto first_iteration = true;
+    while (true) {
         launch_sum_reduce(
                 input, length, output, launch_config.grid_dim_x, launch_config.block_dim_x);
-        const auto first_iteration = launch_config.grid_dim_x == initial_grid_x;
+        if (launch_config.grid_dim_x == 1u) {
+            break;
+        }
+        length = launch_config.grid_dim_x;
+        launch_config = compute_sum_reduce_launch_config(launch_config.grid_dim_x);
         if (first_iteration) {
+            first_iteration = false;
             input = output;
             output = scratch_b;
         } else {
             std::swap(input, output);
         }
-        length = launch_config.grid_dim_x;
-        launch_config = compute_sum_reduce_launch_config(launch_config.grid_dim_x);
-    } while (launch_config.grid_dim_x > 1u);
+    }
     cudaDeviceSynchronize();
     cudaMemcpy(result, output, sizeof(float), cudaMemcpyDeviceToDevice);
     cudaFree(scratch_a);
