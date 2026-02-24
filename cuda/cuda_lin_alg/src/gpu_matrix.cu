@@ -233,7 +233,7 @@ SumReduceLaunchConfig compute_sum_reduce_launch_config(unsigned int input_length
     const auto work_per_block = 512u * items_per_thread * grid_stride;
     const auto blocks_needed = cover_divide(input_length, work_per_block);
     return SumReduceLaunchConfig{
-            .grid_dim_x = std::min(max_grid_x, blocks_needed), .block_dim_x = block_dim_x};
+            .grid_dim_x = std::min({max_grid_x, blocks_needed, 1u}), .block_dim_x = block_dim_x};
 }
 
 void run_sum_reduce(float* input, unsigned int length, float* result) {
