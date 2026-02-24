@@ -11,9 +11,6 @@ if [[ $# -ge 2 ]]; then
     exit 1
 fi
 
-rm -rf build
-mkdir build
-
 build_type=Release
 if [[ $# -eq 1 ]]; then
     if [[ "${1}" == -h ]] || [[ "${1}" == --help ]]; then
@@ -27,10 +24,14 @@ if [[ $# -eq 1 ]]; then
     build_type="${1}"
 fi
 
-conan install . --output-folder=build --build=missing --settings build_type="${build_type}"
+build_dir="build${1}"
+rm -rf "${build_dir}"
+mkdir "${build_dir}"
+
+conan install . --output-folder="${build_dir}" --build=missing --settings build_type="${build_type}"
 
 cmake_args=(
-    -B build
+    -B "${build_dir}"
     -S .
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     -DCMAKE_BUILD_TYPE="${build_type}"
@@ -38,8 +39,6 @@ cmake_args=(
 
 if [[ "${build_type}" == "Debug" ]]; then
     cmake_args+=(-DCMAKE_CUDA_FLAGS="-G -O0")
-else
-    cmake_args+=(-DCMAKE_CUDA_FLAGS="")
 fi
 
 cmake "${cmake_args[@]}"
