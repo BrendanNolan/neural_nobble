@@ -99,10 +99,11 @@ __device__ constexpr bool is_power_of_2_in_range(const unsigned int x,
     return false;
 }
 
-template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound, typename Float>
-__device__ __forceinline__ void run_reduction_step(Float shared, const unsigned int thread_id) {
-    static_assert(std::is_same_v<Float, float*>
-            || (std::is_same_v<Float, volatile float*>
+template <unsigned int BlockDimX, unsigned int BlockDimXLowerBound, typename FloatPointer>
+__device__ __forceinline__ void run_reduction_step(FloatPointer shared,
+        const unsigned int thread_id) {
+    static_assert(std::is_same_v<FloatPointer, float*>
+            || (std::is_same_v<FloatPointer, volatile float*>
                     && is_power_of_2_in_range(BlockDimXLowerBound, 1u, 7u)));
     static_assert(is_power_of_2_in_range(BlockDimX, 0u, 10u));
     if constexpr (BlockDimX >= BlockDimXLowerBound) {
