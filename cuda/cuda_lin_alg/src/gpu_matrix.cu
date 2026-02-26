@@ -28,7 +28,6 @@ __global__ void tiled_multiply(GemmParams params) {
     extern __shared__ float shared[];
     float* a_tile = shared;
     float* b_tile = a_tile + T * T;
-    float* c_tile = b_tile + T * T;
     auto a_at = [params](unsigned int i, unsigned int j) {
         return element(params.A.data, params.op_A, params.A.columns, i, j);
     };
@@ -45,6 +44,7 @@ __global__ void tiled_multiply(GemmParams params) {
     const auto aj = params.A.columns;
     const auto bi = params.B.rows;
     const auto bj = params.B.columns;
+    auto final_c_value = 0.0f;
     for (auto x = 0u; x < ai; x += gridDim.x * blockDim.x) {
         for (auto y = 0u; y < bj; y += gridDim.y * blockDim.y) {
             const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
@@ -52,7 +52,7 @@ __global__ void tiled_multiply(GemmParams params) {
             const auto l_c_cell = threadIdx.x * T + threadIdx.y;
             const auto c_global_index = g_i * bj + g_j;
             const auto c_global_index_valid = g_i < ai && g_j < bj;
-            c_tile[l_c_cell] = c_global_index_valid ? params.beta * params.C[c_global_index] : 0u;
+            final_c_value = c_global_index_valid ? params.beta * params.C[c_global_index] : 0u;
             for (auto k = 0u; k < aj; k += T) {
                 const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
                 const auto in_scope_for_b = (k + threadIdx.x < bi && g_j < bj);
@@ -60,13 +60,13 @@ __global__ void tiled_multiply(GemmParams params) {
                 b_tile[l_c_cell] = in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
                 __syncthreads();
                 for (auto kk = 0u; kk < T; ++kk) {
-                    c_tile[l_c_cell] += params.alpha * a_tile[threadIdx.x * T + kk]
+                    final_c_value += params.alpha * a_tile[threadIdx.x * T + kk]
                             * b_tile[kk * T + threadIdx.y];
                 }
                 __syncthreads();
             }
             if (c_global_index_valid)
-                params.C[c_global_index] = c_tile[l_c_cell];
+                params.C[c_global_index] = final_c_value;
         }
     }
 }
