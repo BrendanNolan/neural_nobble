@@ -1,7 +1,9 @@
 #pragma once
 
+#include "cuda_utils.h"
 #include "utils.h"
 #include <cuda_runtime.h>
+#include <optional>
 
 extern "C" {
 struct ConstMatrixDetails {
@@ -33,6 +35,25 @@ struct Dim3POD {
     unsigned int z;
 };
 
+class GemmLaunchConfig {
+ public:
+    static std::optional<GemmLaunchConfig> create(const dim3& grid_dim, const dim3& block_dim);
+    const dim3& grid_dim() const;
+    const dim3& block_dim() const;
+    unsigned int shared_mem_per_block() const;
+ private:
+    GemmLaunchConfig() = default;
+    bool is_legal() const;
+    unsigned int tile_size() const;
+    dim3 grid_dim_;
+    dim3 block_dim_;
+};
+
+struct SumReduceLaunchConfig {
+    unsigned int grid_dim_x;
+    unsigned int block_dim_x;
+};
+
 // C = alpha * op(A) * op(B) + beta * C
 // where the ops are either identity or transpose depending on transpose_A, transpose_B
 // e.g. C = A * B results from setting transpose_A and transpose_B to no_transpose,
@@ -42,11 +63,6 @@ void run_tiled_multiply(GemmParams params,
         const Dim3POD block,
         const unsigned int shared_mem_size);
 }
-
-struct SumReduceLaunchConfig {
-    unsigned int grid_dim_x;
-    unsigned int block_dim_x;
-};
 
 SumReduceLaunchConfig compute_sum_reduce_launch_config(unsigned int input_length);
 

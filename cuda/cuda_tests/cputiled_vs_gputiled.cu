@@ -19,64 +19,12 @@
 
 namespace {
 
-class LaunchConfig {
- public:
-    static std::optional<LaunchConfig> create(const dim3& grid_dim, const dim3& block_dim) {
-        auto config = LaunchConfig{};
-        config.grid_dim_ = grid_dim;
-        config.block_dim_ = block_dim;
-        if (!config.is_legal()) {
-            return std::nullopt;
-        }
-        return config;
-    }
-    const dim3& grid_dim() const {
-        return grid_dim_;
-    }
-    const dim3& block_dim() const {
-        return block_dim_;
-    }
-    unsigned int shared_mem_per_block() const {
-        return tile_size() * 3u * sizeof(float);
-    }
- private:
-    LaunchConfig() = default;
-    bool is_legal() const {
-        auto properties = cudaDeviceProp{};
-        cudaGetDeviceProperties(&properties, 0);
-        if (block_dim_.x * block_dim_.y * block_dim_.z
-                > static_cast<unsigned int>(properties.maxThreadsPerBlock)) {
-            return false;
-        }
-        if (block_dim_.x > static_cast<unsigned int>(properties.maxThreadsDim[0])
-                || block_dim_.y > static_cast<unsigned int>(properties.maxThreadsDim[1])
-                || block_dim_.z > static_cast<unsigned int>(properties.maxThreadsDim[2])) {
-            return false;
-        }
-        if (grid_dim_.x > static_cast<unsigned int>(properties.maxGridSize[0])
-                || grid_dim_.y > static_cast<unsigned int>(properties.maxGridSize[1])
-                || grid_dim_.z > static_cast<unsigned int>(properties.maxGridSize[2])) {
-            return false;
-        }
-        if (shared_mem_per_block() > static_cast<unsigned int>(properties.sharedMemPerBlock)) {
-            return false;
-        }
-        return true;
-    }
-    unsigned int tile_size() const {
-        assert(block_dim().x == block_dim().y);
-        return block_dim().x * block_dim().x;
-    }
-    dim3 grid_dim_;
-    dim3 block_dim_;
-};
-
 std::string to_string(const dim3& dim) {
     return "(" + std::to_string(dim.x) + "," + std::to_string(dim.y) + "," + std::to_string(dim.z)
             + ")";
 }
 
-std::string to_string(const LaunchConfig& config) {
+std::string to_string(const GemmLaunchConfig& config) {
     return "gridDim: " + to_string(config.grid_dim())
             + " blockDim: " + to_string(config.block_dim());
 }
@@ -85,14 +33,12 @@ using Dim = lin_alg::Dimension;
 
 struct CudaInput {
     GemmParams params;
-    LaunchConfig config;
+    GemmLaunchConfig config;
 };
 
-namespace {
 Dim3POD cuda_dim3_to_dim3pod(const dim3& dim) {
     return Dim3POD{.x = dim.x, .y = dim.y, .z = dim.z};
 }
-}// namespace
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
@@ -110,7 +56,7 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
         const lin_alg::Matrix& b,
         const Op op_b,
         const float beta,
-        const std::optional<LaunchConfig>& optional_config) {
+        const std::optional<GemmLaunchConfig>& optional_config) {
     const auto a_bytes = a.dim().size() * sizeof(float);
     float* A;
     cudaMalloc(&A, a_bytes);
@@ -123,11 +69,11 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     float* C;
     cudaMalloc(&C, c_bytes);
     const auto default_block_edge_size = 4u;
-    const auto default_launch_config =
-            LaunchConfig::create(dim3{cover_divide(a.dim().rows, default_block_edge_size),
-                                         cover_divide(b.dim().columns, default_block_edge_size)},
-                    dim3{default_block_edge_size, default_block_edge_size})
-                    .value();
+    const auto default_launch_config = GemmLaunchConfig::create(
+            dim3{cover_divide(a.dim().rows, default_block_edge_size),
+                    cover_divide(b.dim().columns, default_block_edge_size)},
+            dim3{default_block_edge_size, default_block_edge_size})
+                                               .value();
     return CudaInput{.params = GemmParams{.A = ConstMatrixDetails{.data = A,
                                                   .rows = a.dim().rows,
                                                   .columns = a.dim().columns},
@@ -145,7 +91,7 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
 struct MultiplyResult {
     lin_alg::Matrix result_matrix;
     std::chrono::milliseconds duration;
-    LaunchConfig launch_config_used;
+    GemmLaunchConfig launch_config_used;
 };
 std::string to_string(const MultiplyResult& result) {
     return "duration:    " + std::to_string(result.duration.count())
@@ -158,7 +104,7 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
         const lin_alg::Matrix& b,
         const Op op_b,
         const float beta,
-        const std::optional<LaunchConfig>& optional_config = std::nullopt) {
+        const std::optional<GemmLaunchConfig>& optional_config = std::nullopt) {
     const auto input = ExtractInput(a, op_a, alpha, b, op_b, beta, optional_config);
     const auto duration_ms = raw_cuda_multiply(input);
     auto h_C = std::vector<float>(input.params.A.rows * input.params.B.columns, 0.0f);
@@ -169,8 +115,8 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
             .launch_config_used = input.config};
 }
 
-LaunchConfig get_test_config() {
-    const auto config = LaunchConfig::create(
+GemmLaunchConfig get_test_config() {
+    const auto config = GemmLaunchConfig::create(
             dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1u},
             dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1u});
     if (!config) {
@@ -181,8 +127,8 @@ LaunchConfig get_test_config() {
 
 enum class LaunchConfigRangeHint { all, only_sensible };
 
-std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint range_hint) {
-    auto configs = std::vector<LaunchConfig>{get_test_config()};
+std::vector<GemmLaunchConfig> generate_launch_configs(const LaunchConfigRangeHint range_hint) {
+    auto configs = std::vector<GemmLaunchConfig>{get_test_config()};
     const auto sizes = std::vector<unsigned int>{256u, 128u, 64u, 32u, 16u, 8u, 4u, 2u, 1u};
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
@@ -192,7 +138,7 @@ std::vector<LaunchConfig> generate_launch_configs(const LaunchConfigRangeHint ra
             }
             const auto grid_dim = dim3(grid_edge, grid_edge);
             const auto block_dim = dim3(block_edge, block_edge);
-            if (const auto config = LaunchConfig::create(grid_dim, block_dim)) {
+            if (const auto config = GemmLaunchConfig::create(grid_dim, block_dim)) {
                 configs.push_back(config.value());
             }
         }

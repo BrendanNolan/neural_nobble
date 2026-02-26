@@ -270,3 +270,54 @@ void run_sum_reduce(float* input, unsigned int length, float* result) {
     cudaFree(scratch_a);
     cudaFree(scratch_b);
 }
+
+std::optional<GemmLaunchConfig> GemmLaunchConfig::create(const dim3& grid_dim,
+        const dim3& block_dim) {
+    auto config = GemmLaunchConfig{};
+    config.grid_dim_ = grid_dim;
+    config.block_dim_ = block_dim;
+    if (!config.is_legal()) {
+        return std::nullopt;
+    }
+    return config;
+}
+
+const dim3& GemmLaunchConfig::grid_dim() const {
+    return grid_dim_;
+}
+
+const dim3& GemmLaunchConfig::block_dim() const {
+    return block_dim_;
+}
+
+unsigned int GemmLaunchConfig::shared_mem_per_block() const {
+    return tile_size() * 2u * sizeof(float);
+}
+
+bool GemmLaunchConfig::is_legal() const {
+    auto properties = cudaDeviceProp{};
+    cudaGetDeviceProperties(&properties, 0);
+    if (block_dim_.x * block_dim_.y * block_dim_.z
+            > static_cast<unsigned int>(properties.maxThreadsPerBlock)) {
+        return false;
+    }
+    if (block_dim_.x > static_cast<unsigned int>(properties.maxThreadsDim[0])
+            || block_dim_.y > static_cast<unsigned int>(properties.maxThreadsDim[1])
+            || block_dim_.z > static_cast<unsigned int>(properties.maxThreadsDim[2])) {
+        return false;
+    }
+    if (grid_dim_.x > static_cast<unsigned int>(properties.maxGridSize[0])
+            || grid_dim_.y > static_cast<unsigned int>(properties.maxGridSize[1])
+            || grid_dim_.z > static_cast<unsigned int>(properties.maxGridSize[2])) {
+        return false;
+    }
+    if (shared_mem_per_block() > static_cast<unsigned int>(properties.sharedMemPerBlock)) {
+        return false;
+    }
+    return true;
+}
+
+unsigned int GemmLaunchConfig::tile_size() const {
+    assert(block_dim().x == block_dim().y);
+    return block_dim().x * block_dim().x;
+}
