@@ -42,4 +42,5 @@ if [[ "${build_type}" == "Debug" ]]; then
     cmake_args+=(-DCMAKE_CUDA_FLAGS="-G -O0")
 fi
 
+echo "Configuring ${build_type} mode"
 cmake "${cmake_args[@]}"

@@ -29,4 +29,5 @@ if [[ $# -eq 1 ]]; then
     build_type="${1}"
 fi
 
+echo "Compiling in ${build_type} mode"
 cmake --build "build_${build_type}" -- "-j${cpus}"
