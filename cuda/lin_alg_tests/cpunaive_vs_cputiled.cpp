@@ -22,7 +22,7 @@ using Dim = lin_alg::Dimension;
 
 struct MultiplyResult {
     lin_alg::Matrix result_matrix;
-    std::chrono::milliseconds duration;
+    std::chrono::microseconds duration;
 };
 
 enum class TilePolicy { exclude_small, all };
@@ -73,9 +73,9 @@ void run_test(const lin_alg::Matrix& a,
         std::cout << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b) << " "
                   << display(a.dim()) << "x" << display(b.dim()) << " Tiled(tile size " << tile_size
                   << "):"
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(tiled_end - tiled_start)
+                  << std::chrono::duration_cast<std::chrono::microseconds>(tiled_end - tiled_start)
                              .count()
-                  << "ms" << std::endl;
+                  << "microseconds" << std::endl;
     }
     EXPECT_EQ(expected_answers.at(std::make_pair(op_a, op_b)), tiled_result)
             << "a: " << a << "op_a: " << op_to_string(op_a) << std::endl
@@ -101,10 +101,10 @@ void test(const lin_alg::Matrix& a,
             if (timing == Timing::time_calls) {
                 std::cout << "op_a: " << op_to_string(op_a) << " op_b: " << op_to_string(op_b)
                           << " " << display(a.dim()) << "x" << display(b.dim()) << " Naive:"
-                          << std::chrono::duration_cast<std::chrono::milliseconds>(
+                          << std::chrono::duration_cast<std::chrono::microseconds>(
                                      naive_end - naive_start)
                                      .count()
-                          << "ms" << std::endl;
+                          << "microseconds" << std::endl;
             }
         }
     }
