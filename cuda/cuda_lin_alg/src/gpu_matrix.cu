@@ -26,8 +26,6 @@ __global__ void tiled_multiply(GemmParams params) {
     assert(blockDim.x == blockDim.y);
     const auto T = blockDim.x;
     extern __shared__ float shared[];
-    float* a_tile = shared;
-    float* b_tile = a_tile + T * T;
     auto a_at = [params](unsigned int i, unsigned int j) {
         return element(params.A.data, params.op_A, params.A.columns, i, j);
     };
@@ -45,23 +43,27 @@ __global__ void tiled_multiply(GemmParams params) {
     const auto bi = params.B.rows;
     const auto bj = params.B.columns;
     auto final_c_value = 0.0f;
+    float* a_tile = shared;
+    float* b_tile = a_tile + (T + 1u) * T;
     for (auto x = 0u; x < ai; x += gridDim.x * blockDim.x) {
         for (auto y = 0u; y < bj; y += gridDim.y * blockDim.y) {
             const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
             const auto g_j = y + blockIdx.y * blockDim.y + threadIdx.y;
-            const auto l_c_cell = threadIdx.x * T + threadIdx.y;
+            const auto tile_slot_padding_adjusted = threadIdx.x * (T + 1u) + threadIdx.y;
             const auto c_global_index = g_i * bj + g_j;
             const auto c_global_index_valid = g_i < ai && g_j < bj;
             final_c_value = c_global_index_valid ? params.beta * params.C[c_global_index] : 0u;
             for (auto k = 0u; k < aj; k += T) {
                 const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
                 const auto in_scope_for_b = (k + threadIdx.x < bi && g_j < bj);
-                a_tile[l_c_cell] = in_scope_for_a ? a_at(g_i, k + threadIdx.y) : 0u;
-                b_tile[l_c_cell] = in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
+                a_tile[tile_slot_padding_adjusted] =
+                        in_scope_for_a ? a_at(g_i, k + threadIdx.y) : 0u;
+                b_tile[tile_slot_padding_adjusted] =
+                        in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
                 __syncthreads();
                 for (auto kk = 0u; kk < T; ++kk) {
-                    final_c_value += params.alpha * a_tile[threadIdx.x * T + kk]
-                            * b_tile[kk * T + threadIdx.y];
+                    final_c_value += params.alpha * a_tile[threadIdx.x * (T + 1u) + kk]
+                            * b_tile[kk * (T + 1u) + threadIdx.y];
                 }
                 __syncthreads();
             }
@@ -291,7 +293,8 @@ const dim3& GemmLaunchConfig::block_dim() const {
 }
 
 unsigned int GemmLaunchConfig::shared_mem_per_block() const {
-    return tile_size() * 2u * sizeof(float);
+    assert(block_dim().x == block_dim().y);
+    return (block_dim().x + 1u) * block_dim().y * 2u * sizeof(float);
 }
 
 bool GemmLaunchConfig::is_legal() const {
@@ -315,9 +318,4 @@ bool GemmLaunchConfig::is_legal() const {
         return false;
     }
     return true;
-}
-
-unsigned int GemmLaunchConfig::tile_size() const {
-    assert(block_dim().x == block_dim().y);
-    return block_dim().x * block_dim().x;
 }

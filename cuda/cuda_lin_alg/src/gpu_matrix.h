@@ -44,7 +44,6 @@ class GemmLaunchConfig {
  private:
     GemmLaunchConfig() = default;
     bool is_legal() const;
-    unsigned int tile_size() const;
     dim3 grid_dim_;
     dim3 block_dim_;
 };
