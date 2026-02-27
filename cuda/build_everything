@@ -3,6 +3,6 @@
 set -euo pipefail
 
 source clean_sourceme
-source sourceme_bash
+source sourceme.bash
 ./configure_build
 ./compile
