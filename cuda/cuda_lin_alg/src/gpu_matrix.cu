@@ -62,13 +62,13 @@ __global__ void tiled_multiply(GemmParams params) {
                         in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
                 __syncthreads();
                 for (auto kk = 0u; kk < T; ++kk) {
-                    final_c_value += params.alpha * a_tile[threadIdx.x * (T + 1u) + kk]
+                    final_c_value += a_tile[threadIdx.x * (T + 1u) + kk]
                             * b_tile[kk * (T + 1u) + threadIdx.y];
                 }
                 __syncthreads();
             }
             if (c_global_index_valid)
-                params.C[c_global_index] = final_c_value;
+                params.C[c_global_index] = params.alpha * final_c_value;
         }
     }
 }
