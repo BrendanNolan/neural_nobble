@@ -24,6 +24,7 @@ if [[ $# -eq 1 ]]; then
     fi
     build_type="${1}"
 fi
+echo "Configuring ${build_type} mode"
 
 build_dir="build_${build_type}"
 rm -rf "${build_dir}"
@@ -42,5 +43,4 @@ if [[ "${build_type}" == "Debug" ]]; then
     cmake_args+=(-DCMAKE_CUDA_FLAGS="-G -O0")
 fi
 
-echo "Configuring ${build_type} mode"
 cmake "${cmake_args[@]}"
