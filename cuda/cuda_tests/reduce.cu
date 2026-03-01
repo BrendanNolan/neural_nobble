@@ -1,6 +1,6 @@
 #include "cuda_utils.h"
 #include "float_utils.h"
-#include "gpu_matrix.h"
+#include "reduce.h"
 
 #include <vector>
 

@@ -1,4 +1,4 @@
-#include "gpu_matrix.h"
+#include "matrix.h"
 #include "matrix.hpp"
 #include "test_config.hpp"
 #include "utils.h"

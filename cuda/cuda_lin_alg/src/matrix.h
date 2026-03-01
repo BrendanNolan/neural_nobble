@@ -48,11 +48,6 @@ class GemmLaunchConfig {
     dim3 block_dim_;
 };
 
-struct SumReduceLaunchConfig {
-    unsigned int grid_dim_x;
-    unsigned int block_dim_x;
-};
-
 // C = alpha * op(A) * op(B) + beta * C
 // where the ops are either identity or transpose depending on transpose_A, transpose_B
 // e.g. C = A * B results from setting transpose_A and transpose_B to no_transpose,
@@ -62,7 +57,3 @@ void run_tiled_multiply(GemmParams params,
         const Dim3POD block,
         const unsigned int shared_mem_size);
 }
-
-SumReduceLaunchConfig compute_sum_reduce_launch_config(unsigned int input_length);
-
-void run_sum_reduce(float* input, unsigned int length, float* result);
