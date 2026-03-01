@@ -45,6 +45,8 @@ __global__ void tiled_multiply(GemmParams params) {
     auto final_c_value = 0.0f;
     float* a_tile = shared;
     float* b_tile = a_tile + (T + 1u) * T;
+    // Remember that cuda indexes grid/block rows with y and columns with x, like the x and y axes
+    // of a graph, not the rows and columns of a matrix.
     for (auto row = 0u; row < ai; row += gridDim.y * blockDim.y) {
         for (auto column = 0u; column < bj; column += gridDim.x * blockDim.x) {
             const auto g_i = row + blockIdx.y * blockDim.y + threadIdx.y;
@@ -62,13 +64,13 @@ __global__ void tiled_multiply(GemmParams params) {
                         in_scope_for_b ? b_at(k + threadIdx.y, g_j) : 0u;
                 __syncthreads();
                 for (auto kk = 0u; kk < T; ++kk) {
-                    final_c_value += params.alpha * a_tile[threadIdx.y * (T + 1u) + kk]
+                    final_c_value += a_tile[threadIdx.y * (T + 1u) + kk]
                             * b_tile[kk * (T + 1u) + threadIdx.x];
                 }
                 __syncthreads();
             }
             if (c_global_index_valid)
-                params.C[c_global_index] = final_c_value;
+                params.C[c_global_index] = params.alpha * final_c_value;
         }
     }
 }
