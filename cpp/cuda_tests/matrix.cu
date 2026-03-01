@@ -106,12 +106,12 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
         const float beta,
         const std::optional<GemmLaunchConfig>& optional_config = std::nullopt) {
     const auto input = ExtractInput(a, op_a, alpha, b, op_b, beta, optional_config);
-    const auto duration_ms = raw_cuda_multiply(input);
+    const auto duration_microseconds = raw_cuda_multiply(input);
     auto h_C = std::vector<float>(input.params.A.rows * input.params.B.columns, 0.0f);
     cudaMemcpy(h_C.data(), input.params.C, h_C.size() * sizeof(float), cudaMemcpyDeviceToHost);
     return MultiplyResult{.result_matrix = lin_alg::Matrix::from_raw(
                                   h_C, lin_alg::Dimension{a.dim().rows, b.dim().columns}),
-            .duration = duration_ms,
+            .duration = duration_microseconds,
             .launch_config_used = input.config};
 }
 
