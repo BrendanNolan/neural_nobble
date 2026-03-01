@@ -95,7 +95,7 @@ struct MultiplyResult {
 };
 std::string to_string(const MultiplyResult& result) {
     return "duration:    " + std::to_string(result.duration.count())
-            + "ms,    launch config :" + to_string(result.launch_config_used);
+            + " microseconds,    launch config :" + to_string(result.launch_config_used);
 }
 
 MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
