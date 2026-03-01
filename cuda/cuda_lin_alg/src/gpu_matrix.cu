@@ -23,8 +23,8 @@ __device__ float element(const float* matrix,
 }
 
 __global__ void tiled_multiply(GemmParams params) {
-    assert(blockDim.x == blockDim.y);
-    const auto T = blockDim.x;
+    assert(blockDim.y == blockDim.x);
+    const auto T = blockDim.y;
     extern __shared__ float shared[];
     auto a_at = [params](unsigned int i, unsigned int j) {
         return element(params.A.data, params.op_A, params.A.columns, i, j);
@@ -45,25 +45,25 @@ __global__ void tiled_multiply(GemmParams params) {
     auto final_c_value = 0.0f;
     float* a_tile = shared;
     float* b_tile = a_tile + (T + 1u) * T;
-    for (auto x = 0u; x < ai; x += gridDim.x * blockDim.x) {
-        for (auto y = 0u; y < bj; y += gridDim.y * blockDim.y) {
-            const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;
-            const auto g_j = y + blockIdx.y * blockDim.y + threadIdx.y;
-            const auto tile_slot_padding_adjusted = threadIdx.x * (T + 1u) + threadIdx.y;
+    for (auto row = 0u; row < ai; row += gridDim.y * blockDim.y) {
+        for (auto column = 0u; column < bj; column += gridDim.x * blockDim.x) {
+            const auto g_i = row + blockIdx.y * blockDim.y + threadIdx.y;
+            const auto g_j = column + blockIdx.x * blockDim.x + threadIdx.x;
+            const auto tile_slot_padding_adjusted = threadIdx.y * (T + 1u) + threadIdx.x;
             const auto c_global_index = g_i * bj + g_j;
             const auto c_global_index_valid = g_i < ai && g_j < bj;
             final_c_value = c_global_index_valid ? params.beta * params.C[c_global_index] : 0u;
             for (auto k = 0u; k < aj; k += T) {
-                const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
-                const auto in_scope_for_b = (k + threadIdx.x < bi && g_j < bj);
+                const auto in_scope_for_a = (g_i < ai && k + threadIdx.x < aj);
+                const auto in_scope_for_b = (k + threadIdx.y < bi && g_j < bj);
                 a_tile[tile_slot_padding_adjusted] =
-                        in_scope_for_a ? a_at(g_i, k + threadIdx.y) : 0u;
+                        in_scope_for_a ? a_at(g_i, k + threadIdx.x) : 0u;
                 b_tile[tile_slot_padding_adjusted] =
-                        in_scope_for_b ? b_at(k + threadIdx.x, g_j) : 0u;
+                        in_scope_for_b ? b_at(k + threadIdx.y, g_j) : 0u;
                 __syncthreads();
                 for (auto kk = 0u; kk < T; ++kk) {
-                    final_c_value += params.alpha * a_tile[threadIdx.x * (T + 1u) + kk]
-                            * b_tile[kk * (T + 1u) + threadIdx.y];
+                    final_c_value += params.alpha * a_tile[threadIdx.y * (T + 1u) + kk]
+                            * b_tile[kk * (T + 1u) + threadIdx.x];
                 }
                 __syncthreads();
             }
