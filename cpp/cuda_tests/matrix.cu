@@ -8,7 +8,6 @@
 #include <chrono>
 #include <iostream>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -20,16 +19,9 @@
 
 namespace {
 
-std::string number_with_comma_separators(const unsigned int number) {
-    auto stream = std::stringstream{};
-    stream.imbue(std::locale{"en_US.UTF-8"});
-    stream << number;
-    return stream.str();
-}
-
 std::string to_string(const dim3& dim) {
-    return "(" + number_with_comma_separators(dim.x) + "," + number_with_comma_separators(dim.y)
-            + "," + number_with_comma_separators(dim.z) + ")";
+    return "(" + std::to_string(dim.x) + "," + std::to_string(dim.y) + "," + std::to_string(dim.z)
+            + ")";
 }
 
 std::string to_string(const GemmLaunchConfig& config) {
@@ -102,8 +94,8 @@ struct MultiplyResult {
     GemmLaunchConfig launch_config_used;
 };
 std::string to_string(const MultiplyResult& result) {
-    return "duration:    " + number_with_comma_separators(result.duration.count())
-            + " microseconds    launch config :" + to_string(result.launch_config_used);
+    return "duration:    " + std::to_string(result.duration.count())
+            + "ms,    launch config :" + to_string(result.launch_config_used);
 }
 
 MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
@@ -114,12 +106,12 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
         const float beta,
         const std::optional<GemmLaunchConfig>& optional_config = std::nullopt) {
     const auto input = ExtractInput(a, op_a, alpha, b, op_b, beta, optional_config);
-    const auto duration_microseconds = raw_cuda_multiply(input);
+    const auto duration_ms = raw_cuda_multiply(input);
     auto h_C = std::vector<float>(input.params.A.rows * input.params.B.columns, 0.0f);
     cudaMemcpy(h_C.data(), input.params.C, h_C.size() * sizeof(float), cudaMemcpyDeviceToHost);
     return MultiplyResult{.result_matrix = lin_alg::Matrix::from_raw(
                                   h_C, lin_alg::Dimension{a.dim().rows, b.dim().columns}),
-            .duration = duration_microseconds,
+            .duration = duration_ms,
             .launch_config_used = input.config};
 }
 
@@ -193,8 +185,8 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfigRange
     const auto end = std::chrono::high_resolution_clock::now();
     const auto optimised_cpu_time =
             std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    std::cout << "Optimised CPU execution time: "
-              << number_with_comma_separators(optimised_cpu_time) << " microseconds" << std::endl;
+    std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " microseconds"
+              << std::endl;
     for (const auto& config : generate_launch_configs(range_hint)) {
         const auto cuda_multiply_result =
                 cuda_tiled_multiply(a, Identity, 1.0, b, Identity, 1.0, config);
