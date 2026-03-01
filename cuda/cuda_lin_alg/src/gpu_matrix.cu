@@ -44,28 +44,25 @@ __global__ void tiled_multiply(GemmParams params) {
     const auto bj = params.B.columns;
     auto final_c_value = 0.0f;
     float* a_tile = shared;
-    float* b_tile = a_tile + (T + 1u) * T;
+    float* b_tile = a_tile + T * T;
     // Remember that cuda indexes grid/block rows with y and columns with x, like the x and y axes
     // of a graph, not the rows and columns of a matrix.
     for (auto row = 0u; row < ai; row += gridDim.y * blockDim.y) {
         for (auto column = 0u; column < bj; column += gridDim.x * blockDim.x) {
             const auto g_i = row + blockIdx.y * blockDim.y + threadIdx.y;
             const auto g_j = column + blockIdx.x * blockDim.x + threadIdx.x;
-            const auto tile_slot_padding_adjusted = threadIdx.y * (T + 1u) + threadIdx.x;
+            const auto tile_slot = threadIdx.y * T + threadIdx.x;
             const auto c_global_index = g_i * bj + g_j;
             const auto c_global_index_valid = g_i < ai && g_j < bj;
             final_c_value = c_global_index_valid ? params.beta * params.C[c_global_index] : 0u;
             for (auto k = 0u; k < aj; k += T) {
                 const auto in_scope_for_a = (g_i < ai && k + threadIdx.x < aj);
                 const auto in_scope_for_b = (k + threadIdx.y < bi && g_j < bj);
-                a_tile[tile_slot_padding_adjusted] =
-                        in_scope_for_a ? a_at(g_i, k + threadIdx.x) : 0u;
-                b_tile[tile_slot_padding_adjusted] =
-                        in_scope_for_b ? b_at(k + threadIdx.y, g_j) : 0u;
+                a_tile[tile_slot] = in_scope_for_a ? a_at(g_i, k + threadIdx.x) : 0u;
+                b_tile[tile_slot] = in_scope_for_b ? b_at(k + threadIdx.y, g_j) : 0u;
                 __syncthreads();
                 for (auto kk = 0u; kk < T; ++kk) {
-                    final_c_value += a_tile[threadIdx.y * (T + 1u) + kk]
-                            * b_tile[kk * (T + 1u) + threadIdx.x];
+                    final_c_value += a_tile[threadIdx.y * T + kk] * b_tile[kk * T + threadIdx.x];
                 }
                 __syncthreads();
             }
@@ -296,7 +293,7 @@ const dim3& GemmLaunchConfig::block_dim() const {
 
 unsigned int GemmLaunchConfig::shared_mem_per_block() const {
     assert(block_dim().x == block_dim().y);
-    return (block_dim().x + 1u) * block_dim().y * 2u * sizeof(float);
+    return block_dim().x * block_dim().y * 2u * sizeof(float);
 }
 
 bool GemmLaunchConfig::is_legal() const {
