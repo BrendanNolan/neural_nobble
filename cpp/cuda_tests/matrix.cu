@@ -70,8 +70,8 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     cudaMalloc(&C, c_bytes);
     const auto default_block_edge_size = 4u;
     const auto default_launch_config = GemmLaunchConfig::create(
-            dim3{cover_divide(a.dim().rows, default_block_edge_size),
-                    cover_divide(b.dim().columns, default_block_edge_size)},
+            dim3{ceiling_divide(a.dim().rows, default_block_edge_size),
+                    ceiling_divide(b.dim().columns, default_block_edge_size)},
             dim3{default_block_edge_size, default_block_edge_size})
                                                .value();
     return CudaInput{.params = GemmParams{.A = ConstMatrixDetails{.data = A,
