@@ -14,3 +14,4 @@ training.log
 tuning_report.txt
 debug_commands
 profiling.txt
+*.ncu-rep
