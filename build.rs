@@ -1,15 +1,15 @@
 use std::{fs, path::PathBuf, process::Command};
 
 fn main() {
-    let cuda_dir = fs::canonicalize("./cuda").unwrap();
-    let cuda_so = create_cuda_so(&cuda_dir);
+    let cpp_dir = fs::canonicalize("./cpp").unwrap();
+    let cuda_so = create_cuda_so(&cpp_dir);
     let so_dir = cuda_so.parent().unwrap();
     println!("cargo:rustc-link-search=native={}", so_dir.display());
     println!("cargo:rustc-link-lib=dylib=cuda_lin_alg");
     println!("cargo:rustc-link-arg=-Wl,-rpath,{}", so_dir.display());
-    println!("cargo:rerun-if-changed=cuda/cuda_lin_alg/src");
-    println!("cargo:rerun-if-changed=cuda/lin_alg/src");
-    println!("cargo:rerun-if-changed=cuda/CMakeLists.txt");
+    println!("cargo:rerun-if-changed=cpp/cuda_lin_alg/src");
+    println!("cargo:rerun-if-changed=cpp/lin_alg/src");
+    println!("cargo:rerun-if-changed=cpp/CMakeLists.txt");
 }
 
 fn create_cuda_so(cuda_dir: &PathBuf) -> PathBuf {
