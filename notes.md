@@ -24,3 +24,7 @@
   conversions. This is the 0-dim case of the HostVector/DeviceVector and HostMatrix/DeviceMatrix
   types.
 - Pad the matrix array in order to make sure that float4 loads are not misaligned.
+- We may want, in the actual tiled_multiply kernel, to have templated (Const/Mutable)MatrixDetails
+  types, to decide at compile time if we want to transpose or not. Since those types will be device
+  only, we don't need to worry about FFI and we can even give them inlined getter methods like
+  float& MutableMatrixDetails<Transpose>::at(i, j) or whatever.

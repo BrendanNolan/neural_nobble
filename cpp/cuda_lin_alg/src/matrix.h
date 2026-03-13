@@ -36,6 +36,9 @@ struct Dim3POD {
     unsigned int z;
 };
 
+constexpr auto ratio_block_y_to_block_x = 4u;
+constexpr auto square_root_of_ratio_block_y_to_block_x = 2u;
+
 class GemmLaunchConfig {
  public:
     static std::optional<GemmLaunchConfig> create(const dim3& grid_dim, const dim3& block_dim);
