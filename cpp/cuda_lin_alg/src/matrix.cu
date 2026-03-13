@@ -6,19 +6,48 @@
 #include "matrix.h"
 #include "utils.h"
 
-__device__ float element(const float* matrix,
-        const Op op,
-        unsigned int columns,
-        unsigned int i,
-        unsigned int j) {
-    switch (op) {
-    case Identity:
-        return matrix[i * columns + j];
-    case Transpose:
-        return matrix[j * columns + i];
-    default:
-        assert(false && "Unhandled Op case");
-        return 0.0f;
+__device__ __forceinline__ bool access_legal(const float* data,
+        const unsigned int rows,
+        const int columns,
+        const unsigned int i,
+        const unsigned int j,
+        const Op op) {
+    return (i < (op == Transpose) ? columns : rows) && (j < (op == Transpose) ? rows : columns);
+}
+
+__device__ __forceinline__ bool access_legal(const ConstMatrixDetails& matrix,
+        const unsigned int i,
+        const unsigned int j,
+        const Op op) {
+    return access_legal(matrix.data, matrix.rows, matrix.columns, i, j, op);
+}
+
+__device__ __forceinline__ bool access_legal(const MutableMatrixDetails& matrix,
+        const unsigned int i,
+        const unsigned int j,
+        const Op op) {
+    return access_legal(matrix.data, matrix.rows, matrix.columns, i, j, op);
+}
+
+__device__ __forceinline__ const float& at(const ConstMatrixDetails& matrix,
+        const unsigned int i,
+        const unsigned int j,
+        const Op op) {
+    assert(access_legal(matrix, i, j, op));
+    if (op == Transpose) {
+        return matrix.data[j * matrix.columns + i];
+    } else {
+        return matrix.data[i * matrix.columns + j];
+    }
+}
+
+__device__ __forceinline__ float&
+        at(MutableMatrixDetails& matrix, const unsigned int i, const unsigned int j, const Op op) {
+    assert(access_legal(matrix, i, j, op));
+    if (op == Transpose) {
+        return matrix.data[j * matrix.columns + i];
+    } else {
+        return matrix.data[i * matrix.columns + j];
     }
 }
 
@@ -26,11 +55,11 @@ __global__ void tiled_multiply(GemmParams params) {
     assert(blockDim.y == blockDim.x);
     const auto T = blockDim.y;
     extern __shared__ float shared[];
-    auto a_at = [params](unsigned int i, unsigned int j) {
-        return element(params.A.data, params.op_A, params.A.columns, i, j);
+    auto a_at = [params](unsigned int i, unsigned int j) -> float {
+        return at(params.A, i, j, params.op_A);
     };
-    auto b_at = [params](unsigned int i, unsigned int j) {
-        return element(params.B.data, params.op_B, params.B.columns, i, j);
+    auto b_at = [params](unsigned int i, unsigned int j) -> float {
+        return at(params.B, i, j, params.op_B);
     };
     if (params.op_A == Transpose) {
         cuda_helpers::swap(params.A.rows, params.A.columns);
