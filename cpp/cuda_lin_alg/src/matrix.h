@@ -11,6 +11,7 @@ struct ConstMatrixDetails {
     unsigned int rows;
     unsigned int columns;
 };
+
 struct MutableMatrixDetails {
     float* data;
     unsigned int rows;
