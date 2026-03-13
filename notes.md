@@ -23,3 +23,4 @@
 - Make a "HostScalar" typedef and a "DeviceScalar" type in rust, with the usual From/Into
   conversions. This is the 0-dim case of the HostVector/DeviceVector and HostMatrix/DeviceMatrix
   types.
+- Pad the matrix array in order to make sure that float4 loads are not misaligned.
