@@ -148,11 +148,11 @@ SumReduceLaunchConfig compute_sum_reduce_launch_config(unsigned int input_length
     const auto sm_count = static_cast<unsigned int>(props.multiProcessorCount);
     constexpr auto blocks_per_sm = 3u;
     const auto max_grid_x = sm_count * blocks_per_sm;
-    // TODO: Make items_per_thread and grid_stride paramrs of this func and run_sum_reduce
-    const auto items_per_thread = 2u;
+    // TODO: Make elements_per_thread and grid_stride paramrs of this func and run_sum_reduce
+    const auto elements_per_thread = 2u;
     constexpr auto grid_stride = 4u;
-    const auto work_per_block = 512u * items_per_thread * grid_stride;
-    const auto blocks_needed = ceiling_divide(input_length, work_per_block);
+    const auto work_per_block = 512u * elements_per_thread * grid_stride;
+    const auto blocks_needed = ceiling(input_length, work_per_block);
     return SumReduceLaunchConfig{.grid_dim_x = std::max(1u, std::min(max_grid_x, blocks_needed)),
             .block_dim_x = block_dim_x};
 }
