@@ -4,6 +4,9 @@ project(linear_algebra LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
+set(CMAKE_CUDA_FLAGS_DEBUG "-g -G -O0")
+
 # Include Conan toolchain early
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 
