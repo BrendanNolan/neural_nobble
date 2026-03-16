@@ -72,7 +72,7 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     const auto default_launch_config = GemmLaunchConfig::create(
             dim3{ceiling(a.dim().rows, default_block_edge_size),
                     ceiling(b.dim().columns, default_block_edge_size)},
-            dim3{default_block_edge_size, ratio_block_y_to_block_x * default_block_edge_size})
+            dim3{default_block_edge_size, target_elements_per_thread * default_block_edge_size})
                                                .value();
     return CudaInput{.params = GemmParams{.A = ConstMatrixDetails{.data = A,
                                                   .rows = a.dim().rows,
@@ -119,7 +119,7 @@ GemmLaunchConfig get_test_config() {
     const auto config = GemmLaunchConfig::create(
             dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1u},
             dim3{TestConfig::instance().block_edge,
-                    ratio_block_y_to_block_x * TestConfig::instance().block_edge,
+                    target_elements_per_thread * TestConfig::instance().block_edge,
                     1u});
     if (!config) {
         throw std::invalid_argument{"Invalid Launch Configuration"};
@@ -139,7 +139,7 @@ std::vector<GemmLaunchConfig> generate_launch_configs(const LaunchConfigRangeHin
                 continue;
             }
             const auto grid_dim = dim3(grid_edge, grid_edge);
-            const auto block_dim = dim3(block_edge, ratio_block_y_to_block_x * block_edge);
+            const auto block_dim = dim3(block_edge, target_elements_per_thread * block_edge);
             if (const auto config = GemmLaunchConfig::create(grid_dim, block_dim)) {
                 configs.push_back(config.value());
             }

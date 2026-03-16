@@ -36,8 +36,8 @@ struct Dim3POD {
     unsigned int z;
 };
 
-constexpr auto ratio_block_y_to_block_x = 4u;
-constexpr auto square_root_of_ratio_block_y_to_block_x = 2u;
+constexpr auto target_elements_per_thread = 4u;
+constexpr auto square_root_of_target_elements_per_thread = 2u;
 
 class GemmLaunchConfig {
  public:

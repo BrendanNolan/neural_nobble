@@ -111,9 +111,9 @@ struct GGemmParams {
 // they must be extern C.
 template <Op op_A, Op op_B>
 __global__ void tiled_multiply(GGemmParams<op_A, op_B> params) {
-    assert(blockDim.y == ratio_block_y_to_block_x * blockDim.x);
-    assert(square_root_of_ratio_block_y_to_block_x * square_root_of_ratio_block_y_to_block_x
-            == ratio_block_y_to_block_x);
+    assert(blockDim.y == target_elements_per_thread * blockDim.x);
+    assert(square_root_of_target_elements_per_thread * square_root_of_target_elements_per_thread
+            == target_elements_per_thread);
     extern __shared__ float shared[];
     auto c_inner = MutableMatrixDetails{
             .data = params.C, .rows = params.A.rows(), .columns = params.B.columns()};
@@ -122,13 +122,13 @@ __global__ void tiled_multiply(GGemmParams<op_A, op_B> params) {
     auto final_c_value = 0.0f;
     auto a_tile_inner = MutableMatrixDetails{.data = shared, .rows = T, .columns = T};
     auto a_tile = GMutableMatrixDetails<Identity>{&a_tile_inner};
-    auto b_tile_inner = MutableMatrixDetails{.data = a_tile.data + T * T, .rows = T, .columns = T};
+    auto b_tile_inner = MutableMatrixDetails{.data = shared + T * T, .rows = T, .columns = T};
     auto b_tile = GMutableMatrixDetails<Identity>{&b_tile_inner};
     // Remember that cuda indexes grid/block rows with y and columns with x, like the x and y axes
     // of a graph, not the rows and columns of a matrix.
-    for (auto row = 0u; row < ai; row += gridDim.y * blockDim.y) {
-        for (auto column = 0u; column < bj;
-                column += ratio_block_y_to_block_x * gridDim.x * blockDim.x) {
+    for (auto row = 0u; row < params.A.rows(); row += gridDim.y * blockDim.y) {
+        for (auto column = 0u; column < params.B.columns();
+                column += target_elements_per_thread * gridDim.x * blockDim.x) {
             const auto g_i = row + blockIdx.y * blockDim.y + threadIdx.y;
             const auto g_j = column + blockIdx.x * blockDim.x + threadIdx.x;
             auto g_ij = [&](const unsigned int mini_i, const unsigned int mini_j) -> Index {
@@ -139,21 +139,22 @@ __global__ void tiled_multiply(GGemmParams<op_A, op_B> params) {
             };
             float final_data[4] = {0.0f, 0.0f, 0.0f, 0.0f};
             auto final_c_values = MutableMatrixDetails{.data = final_data,
-                    .rows = square_root_of_ratio_block_y_to_block_x,
-                    .columns = square_root_of_ratio_block_y_to_block_x};
-            for (auto k = 0u; k < aj; k += T) {
-                for (auto kk = 0u; kk < bj; kk += T) {
-                    for (auto mini_i = 0u; mini_i < square_root_of_ratio_block_y_to_block_x;
+                    .rows = square_root_of_target_elements_per_thread,
+                    .columns = square_root_of_target_elements_per_thread};
+            for (auto k = 0u; k < params.A.columns(); k += T) {
+                for (auto kk = 0u; kk < params.B.rows(); kk += T) {
+                    for (auto mini_i = 0u; mini_i < square_root_of_target_elements_per_thread;
                             ++mini_i) {
-                        for (auto mini_j = 0u; mini_j < square_root_of_ratio_block_y_to_block_x;
+                        for (auto mini_j = 0u; mini_j < square_root_of_target_elements_per_thread;
                                 ++mini_j) {
                             a_tile[tile_slot] = in_scope_for_a ? a_at(g_i, k + threadIdx.x) : 0u;
                             b_tile[tile_slot] = in_scope_for_b ? b_at(k + threadIdx.y, g_j) : 0u;
                         }
                         __syncthreads();
-                        for (auto mini_i = 0u; mini_i < square_root_of_ratio_block_y_to_block_x;
+                        for (auto mini_i = 0u; mini_i < square_root_of_target_elements_per_thread;
                                 ++mini_i) {
-                            for (auto mini_j = 0u; mini_j < square_root_of_ratio_block_y_to_block_x;
+                            for (auto mini_j = 0u;
+                                    mini_j < square_root_of_target_elements_per_thread;
                                     ++mini_j) {
                                 __syncthreads();
                             }
@@ -184,7 +185,7 @@ void run_tiled_multiply(GemmParams params,
 
 std::optional<GemmLaunchConfig> GemmLaunchConfig::create(const dim3& grid_dim,
         const dim3& block_dim) {
-    assert(block_dim.y == ratio_block_y_to_block_x * block_dim.x);
+    assert(block_dim.y == target_elements_per_thread * block_dim.x);
     auto config = GemmLaunchConfig{};
     config.grid_dim_ = grid_dim;
     config.block_dim_ = block_dim;
@@ -203,7 +204,7 @@ const dim3& GemmLaunchConfig::block_dim() const {
 }
 
 unsigned int GemmLaunchConfig::shared_mem_per_block() const {
-    assert(block_dim().y == ratio_block_y_to_block_x * block_dim().x);
+    assert(block_dim().y == target_elements_per_thread * block_dim().x);
     return block_dim().y * block_dim().y * 2u * sizeof(float);
 }
 
