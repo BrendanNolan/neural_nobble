@@ -40,6 +40,9 @@ class GConstMatrixDetails {
     __device__ __forceinline__ GConstMatrixDetails(const ConstMatrixDetails* inner)
         : inner_{inner} {
     }
+    __device__ __forceinline__ const float* data() const {
+        return inner_->data;
+    }
     __device__ __forceinline__ const float& at(const unsigned int i, const unsigned int j) const {
         if constexpr (op == Transpose) {
             return inner_->data[j * inner_->columns + j];
@@ -70,6 +73,9 @@ class GMutableMatrixDetails {
  public:
     __device__ __forceinline__ GMutableMatrixDetails(MutableMatrixDetails* inner)
         : inner_{inner} {
+    }
+    __device__ __forceinline__ float* data() {
+        return inner_->data;
     }
     __device__ __forceinline__ float& at(const unsigned int i, const unsigned int j) {
         if constexpr (op == Transpose) {
@@ -143,6 +149,12 @@ __global__ void tiled_multiply(GGemmParams<op_A, op_B> params) {
                     .columns = square_root_of_target_elements_per_thread};
             for (auto k = 0u; k < params.A.columns(); k += T) {
                 for (auto kk = 0u; kk < params.B.rows(); kk += T) {
+                    const auto load_start = target_elements_per_ * (threadIdx.y * T + threadIdx.x);
+                    for (auto i = 0u; i < target_elements_per_thread; ++i) {
+                        const auto position = load_start + i;
+                        a_tile.data()[position] = ;
+                        b_tile.data()[position] = ;
+                    }
                     for (auto mini_i = 0u; mini_i < square_root_of_target_elements_per_thread;
                             ++mini_i) {
                         for (auto mini_j = 0u; mini_j < square_root_of_target_elements_per_thread;
