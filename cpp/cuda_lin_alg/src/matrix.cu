@@ -34,6 +34,8 @@ struct Index {
     unsigned int j = 0u;
 };
 
+enum class MatrixLayout { row_major, column_major };
+
 template <Op op>
 class GConstMatrixDetails {
  public:
@@ -62,6 +64,13 @@ class GConstMatrixDetails {
             return inner_->rows;
         } else {
             return inner_->columns;
+        }
+    }
+    __device__ __forceinline__ constexpr MatrixLayout layout() const {
+        if constexpr (op == Transpose) {
+            return MatrixLayout::column_major;
+        } else {
+            return MatrixLayout::row_major;
         }
     }
  private:
@@ -96,6 +105,13 @@ class GMutableMatrixDetails {
             return inner_->rows;
         } else {
             return inner_->columns;
+        }
+    }
+    __device__ __forceinline__ constexpr MatrixLayout layout() const {
+        if constexpr (op == Transpose) {
+            return MatrixLayout::column_major;
+        } else {
+            return MatrixLayout::row_major;
         }
     }
  private:
