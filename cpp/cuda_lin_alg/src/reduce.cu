@@ -8,7 +8,7 @@
 #include "utils.h"
 
 namespace {
-__device__ constexpr bool is_power_of_2_in_range(const unsigned int x,
+__device__ __forceinline__ constexpr bool is_power_of_2_in_range(const unsigned int x,
         const unsigned int lower_bound_inclusive,
         const unsigned int upper_bound_exclusive) {
     for (auto power = lower_bound_inclusive; power < upper_bound_exclusive; ++power) {

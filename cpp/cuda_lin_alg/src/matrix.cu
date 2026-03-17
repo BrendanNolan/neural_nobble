@@ -32,6 +32,12 @@ __device__ __forceinline__ bool access_legal(const MutableMatrixDetails& matrix,
 struct Index {
     unsigned int i = 0u;
     unsigned int j = 0u;
+    __device__ __forceinline__ Index operator+(const Index& other) const {
+        return Index{.i = i + other.i, .j = j + other.j};
+    }
+    __device__ __forceinline__ Index operator*(const unsigned int factor) const {
+        return Index{.i = i * factor, .j = j * factor};
+    }
 };
 
 enum class MatrixLayout { row_major, column_major };
@@ -39,27 +45,31 @@ enum class MatrixLayout { row_major, column_major };
 template <Op op>
 class GConstMatrixDetails {
  public:
-    __device__ __forceinline__ GConstMatrixDetails(const ConstMatrixDetails* inner)
+    __host__ __device__ __forceinline__ GConstMatrixDetails(const ConstMatrixDetails* inner)
         : inner_{inner} {
     }
     __device__ __forceinline__ const float* data() const {
         return inner_->data;
     }
-    __device__ __forceinline__ const float& at(const unsigned int i, const unsigned int j) const {
+    __device__ __forceinline__ const float* operator()(const unsigned int i,
+            const unsigned int j) const {
         if constexpr (op == Transpose) {
-            return inner_->data[j * inner_->columns + j];
+            return &inner_->data[j * inner_->columns + j];
         } else {
-            return inner_->data[i * inner_->columns + j];
+            return &inner_->data[i * inner_->columns + j];
         }
     }
-    __device__ __forceinline__ unsigned int rows() const {
+    __device__ __forceinline__ bool access_legal(const unsigned int i, const unsigned int j) const {
+        return ::access_legal(*inner_, i, j, op);
+    }
+    __host__ __device__ __forceinline__ unsigned int rows() const {
         if constexpr (op == Transpose) {
             return inner_->columns;
         } else {
             return inner_->rows;
         }
     }
-    __device__ __forceinline__ unsigned int columns() const {
+    __host__ __device__ __forceinline__ unsigned int columns() const {
         if constexpr (op == Transpose) {
             return inner_->rows;
         } else {
@@ -80,27 +90,30 @@ class GConstMatrixDetails {
 template <Op op>
 class GMutableMatrixDetails {
  public:
-    __device__ __forceinline__ GMutableMatrixDetails(MutableMatrixDetails* inner)
+    __host__ __device__ __forceinline__ GMutableMatrixDetails(MutableMatrixDetails* inner)
         : inner_{inner} {
     }
     __device__ __forceinline__ float* data() {
         return inner_->data;
     }
-    __device__ __forceinline__ float& at(const unsigned int i, const unsigned int j) {
+    __device__ __forceinline__ float* operator()(const unsigned int i, const unsigned int j) {
         if constexpr (op == Transpose) {
-            return inner_->data[j * inner_->columns + j];
+            return &inner_->data[j * inner_->columns + j];
         } else {
-            return inner_->data[i * inner_->columns + j];
+            return &inner_->data[i * inner_->columns + j];
         }
     }
-    __device__ __forceinline__ unsigned int rows() const {
+    __device__ __forceinline__ bool access_legal(const unsigned int i, const unsigned int j) const {
+        return ::access_legal(*inner_, i, j, op);
+    }
+    __host__ __device__ __forceinline__ unsigned int rows() const {
         if constexpr (op == Transpose) {
             return inner_->columns;
         } else {
             return inner_->rows;
         }
     }
-    __device__ __forceinline__ unsigned int columns() const {
+    __host__ __device__ __forceinline__ unsigned int columns() const {
         if constexpr (op == Transpose) {
             return inner_->rows;
         } else {
@@ -124,8 +137,32 @@ struct GGemmParams {
     float alpha;
     GConstMatrixDetails<op_B> B;
     float beta;
-    float* C;
+    GMutableMatrixDetails<Identity> C;
 };
+
+template <Op op_A, Op op_B>
+__device__ __forceinline__ void register_multiply(const GMutableMatrixDetails<op_A>& A,
+        const GMutableMatrixDetails<op_B>& B,
+        GMutableMatrixDetails<Identity>& C) {
+}
+
+template <Op op_source, Op op_target>
+__device__ __forceinline__ void wide_load(const GConstMatrixDetails<op_source>& source,
+        const Index source_index,
+        GMutableMatrixDetails<op_target>& target,
+        const Index target_index) {
+    for (auto offset = 0u; offset < target_elements_per_thread; ++offset) {
+        if (!target.access_legal(target_index.i + offset, target_index.j)) {
+            return;
+        }
+        if (source.access_legal(source_index.i + offset, source_index.j)) {
+            *target(target_index.i + offset, target_index.j) =
+                    *source(source_index.i + offset, source_index.j);
+        } else {
+            *target(target_index.i + offset, target_index.j) = 0.0f;
+        }
+    }
+}
 
 // Deals with GConstMatrixDetails and GMutableMatrixDetails, sometimes for the performance
 // optimisation of knowing the op at compile time, sometimes for the convenience of having the .at()
@@ -137,62 +174,36 @@ __global__ void tiled_multiply(GGemmParams<op_A, op_B> params) {
     assert(square_root_of_target_elements_per_thread * square_root_of_target_elements_per_thread
             == target_elements_per_thread);
     extern __shared__ float shared[];
-    auto c_inner = MutableMatrixDetails{
-            .data = params.C, .rows = params.A.rows(), .columns = params.B.columns()};
-    auto C = GMutableMatrixDetails<Identity>{&c_inner};
     const auto T = blockDim.y;
-    auto final_c_value = 0.0f;
     auto a_tile_inner = MutableMatrixDetails{.data = shared, .rows = T, .columns = T};
     auto a_tile = GMutableMatrixDetails<Identity>{&a_tile_inner};
     auto b_tile_inner = MutableMatrixDetails{.data = shared + T * T, .rows = T, .columns = T};
     auto b_tile = GMutableMatrixDetails<Identity>{&b_tile_inner};
     // Remember that cuda indexes grid/block rows with y and columns with x, like the x and y axes
     // of a graph, not the rows and columns of a matrix.
+    float final_data[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    auto final_inner = MutableMatrixDetails{.data = &final_data[0], .rows = 2u, .columns = 2u};
+    auto final = GMutableMatrixDetails<Identity>{&final_inner};
     for (auto row = 0u; row < params.A.rows(); row += gridDim.y * blockDim.y) {
         for (auto column = 0u; column < params.B.columns();
                 column += target_elements_per_thread * gridDim.x * blockDim.x) {
-            const auto g_i = row + blockIdx.y * blockDim.y + threadIdx.y;
-            const auto g_j = column + blockIdx.x * blockDim.x + threadIdx.x;
-            auto g_ij = [&](const unsigned int mini_i, const unsigned int mini_j) -> Index {
-                return Index{.i = g_i + mini_i, .j = g_j + mini_j};
-            };
-            auto tile_slot = [&](const unsigned int mini_i, const unsigned int mini_j) -> Index {
-                return Index{.i = threadIdx.y + mini_i, .j = threadIdx.x + mini_j};
-            };
-            float final_data[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-            auto final_c_values = MutableMatrixDetails{.data = final_data,
-                    .rows = square_root_of_target_elements_per_thread,
-                    .columns = square_root_of_target_elements_per_thread};
             for (auto k = 0u; k < params.A.columns(); k += T) {
-                for (auto kk = 0u; kk < params.B.rows(); kk += T) {
-                    const auto load_start = target_elements_per_ * (threadIdx.y * T + threadIdx.x);
-                    for (auto i = 0u; i < target_elements_per_thread; ++i) {
-                        const auto position = load_start + i;
-                        a_tile.data()[position] = ;
-                        b_tile.data()[position] = ;
-                    }
-                    for (auto mini_i = 0u; mini_i < square_root_of_target_elements_per_thread;
-                            ++mini_i) {
-                        for (auto mini_j = 0u; mini_j < square_root_of_target_elements_per_thread;
-                                ++mini_j) {
-                            a_tile[tile_slot] = in_scope_for_a ? a_at(g_i, k + threadIdx.x) : 0u;
-                            b_tile[tile_slot] = in_scope_for_b ? b_at(k + threadIdx.y, g_j) : 0u;
-                        }
-                        __syncthreads();
-                        for (auto mini_i = 0u; mini_i < square_root_of_target_elements_per_thread;
-                                ++mini_i) {
-                            for (auto mini_j = 0u;
-                                    mini_j < square_root_of_target_elements_per_thread;
-                                    ++mini_j) {
-                                __syncthreads();
-                            }
-                        }
-                    }
-                }
-                // Write back to main memory
+                const auto tile_load_index =
+                        Index{.i = threadIdx.y, .j = threadIdx.x * target_elements_per_thread};
+                // const auto global_row = row + blockIdx.y * blockDim.y + tile_row;
+                // const auto global_column = column + target_elements_per_thread * blockIdx.x *
+                // blockDim.x + tile_column;
+                const auto a_tile_corner = Index{.i = row + blockIdx.y * blockDim.y, .j = k * T};
+                const auto b_tile_corner = Index{.i = k * T,
+                        .j = column + blockIdx.x * blockDim.x * target_elements_per_thread};
+                wide_load(params.A, a_tile_corner + tile_load_index, a_tile, tile_load_index);
+                wide_load(params.B, b_tile_corner + tile_load_index, b_tile, tile_load_index);
+                __syncthreads();
+                register_multiply(a_tile, b_tile, final);
             }
         }
     }
+    // Write back to main memory
 }
 
 namespace {
@@ -207,7 +218,18 @@ void run_tiled_multiply(GemmParams params,
         const unsigned int shared_mem_size) {
     const auto cuda_grid = dim3pod_to_cuda_dim3(grid);
     const auto cuda_block = dim3pod_to_cuda_dim3(block);
-    tiled_multiply<<<cuda_grid, cuda_block, shared_mem_size>>>(params);
+    if (params.op_A == Identity && params.op_B == Identity) {
+        const auto A = GConstMatrixDetails<Identity>{&params.A};
+        const auto B = GConstMatrixDetails<Identity>{&params.B};
+        auto C_inner =
+                MutableMatrixDetails{.data = params.C, .rows = A.rows(), .columns = B.columns()};
+        auto g_params = GGemmParams<Identity, Identity>{.A = A,
+                .alpha = params.alpha,
+                .B = B,
+                .beta = params.beta,
+                .C = GMutableMatrixDetails<Identity>{&C_inner}};
+        tiled_multiply<<<cuda_grid, cuda_block, shared_mem_size>>>(g_params);
+    }
     cudaDeviceSynchronize();
 }
 
