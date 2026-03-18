@@ -76,7 +76,7 @@ class GConstMatrixDetails {
             return inner_.columns;
         }
     }
-    __device__ __forceinline__ constexpr MatrixLayout layout() const {
+    __device__ __forceinline__ static constexpr MatrixLayout layout() {
         if constexpr (op == Transpose) {
             return MatrixLayout::column_major;
         } else {
@@ -127,7 +127,7 @@ class GMutableMatrixDetails {
             return inner_.columns;
         }
     }
-    __device__ __forceinline__ constexpr MatrixLayout layout() const {
+    __device__ __forceinline__ static constexpr MatrixLayout layout() {
         if constexpr (op == Transpose) {
             return MatrixLayout::column_major;
         } else {
