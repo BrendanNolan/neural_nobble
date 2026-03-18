@@ -45,35 +45,35 @@ enum class MatrixLayout { row_major, column_major };
 template <Op op>
 class GConstMatrixDetails {
  public:
-    __host__ __device__ __forceinline__ GConstMatrixDetails(const ConstMatrixDetails* inner)
+    __host__ __device__ __forceinline__ GConstMatrixDetails(ConstMatrixDetails inner)
         : inner_{inner} {
     }
     __device__ __forceinline__ const float* data() const {
-        return inner_->data;
+        return inner_.data;
     }
     __device__ __forceinline__ const float* operator()(const unsigned int i,
             const unsigned int j) const {
         if constexpr (op == Transpose) {
-            return &inner_->data[j * inner_->columns + j];
+            return &inner_.data[j * inner_.columns + j];
         } else {
-            return &inner_->data[i * inner_->columns + j];
+            return &inner_.data[i * inner_.columns + j];
         }
     }
     __device__ __forceinline__ bool access_legal(const unsigned int i, const unsigned int j) const {
-        return ::access_legal(*inner_, i, j, op);
+        return ::access_legal(inner_, i, j, op);
     }
     __host__ __device__ __forceinline__ unsigned int rows() const {
         if constexpr (op == Transpose) {
-            return inner_->columns;
+            return inner_.columns;
         } else {
-            return inner_->rows;
+            return inner_.rows;
         }
     }
     __host__ __device__ __forceinline__ unsigned int columns() const {
         if constexpr (op == Transpose) {
-            return inner_->rows;
+            return inner_.rows;
         } else {
-            return inner_->columns;
+            return inner_.columns;
         }
     }
     __device__ __forceinline__ constexpr MatrixLayout layout() const {
@@ -84,40 +84,47 @@ class GConstMatrixDetails {
         }
     }
  private:
-    const ConstMatrixDetails* inner_ = nullptr;
+    ConstMatrixDetails inner_;
 };
+
+__device__ ConstMatrixDetails to_const(const MutableMatrixDetails& matrix) {
+    return ConstMatrixDetails{.data = matrix.data, .rows = matrix.rows, .columns = matrix.columns};
+}
 
 template <Op op>
 class GMutableMatrixDetails {
  public:
-    __host__ __device__ __forceinline__ GMutableMatrixDetails(MutableMatrixDetails* inner)
+    __host__ __device__ __forceinline__ GMutableMatrixDetails(MutableMatrixDetails inner)
         : inner_{inner} {
     }
+    __device__ GConstMatrixDetails<op> to_const() const {
+        return GConstMatrixDetails<op>{::to_const(inner_)};
+    }
     __device__ __forceinline__ float* data() {
-        return inner_->data;
+        return inner_.data;
     }
     __device__ __forceinline__ float* operator()(const unsigned int i, const unsigned int j) {
         if constexpr (op == Transpose) {
-            return &inner_->data[j * inner_->columns + j];
+            return &inner_.data[j * inner_.columns + j];
         } else {
-            return &inner_->data[i * inner_->columns + j];
+            return &inner_.data[i * inner_.columns + j];
         }
     }
     __device__ __forceinline__ bool access_legal(const unsigned int i, const unsigned int j) const {
-        return ::access_legal(*inner_, i, j, op);
+        return ::access_legal(inner_, i, j, op);
     }
     __host__ __device__ __forceinline__ unsigned int rows() const {
         if constexpr (op == Transpose) {
-            return inner_->columns;
+            return inner_.columns;
         } else {
-            return inner_->rows;
+            return inner_.rows;
         }
     }
     __host__ __device__ __forceinline__ unsigned int columns() const {
         if constexpr (op == Transpose) {
-            return inner_->rows;
+            return inner_.rows;
         } else {
-            return inner_->columns;
+            return inner_.columns;
         }
     }
     __device__ __forceinline__ constexpr MatrixLayout layout() const {
@@ -128,7 +135,7 @@ class GMutableMatrixDetails {
         }
     }
  private:
-    MutableMatrixDetails* inner_ = nullptr;
+    MutableMatrixDetails inner_;
 };
 
 template <Op op_A, Op op_B>
@@ -141,8 +148,8 @@ struct GGemmParams {
 };
 
 template <Op op_A, Op op_B>
-__device__ __forceinline__ void register_multiply(const GMutableMatrixDetails<op_A>& A,
-        const GMutableMatrixDetails<op_B>& B,
+__device__ __forceinline__ void register_multiply(const GConstMatrixDetails<op_A>& A,
+        const GConstMatrixDetails<op_B>& B,
         GMutableMatrixDetails<Identity>& C) {
 }
 
@@ -176,14 +183,14 @@ __global__ void tiled_multiply(GGemmParams<op_A, op_B> params) {
     extern __shared__ float shared[];
     const auto T = blockDim.y;
     auto a_tile_inner = MutableMatrixDetails{.data = shared, .rows = T, .columns = T};
-    auto a_tile = GMutableMatrixDetails<Identity>{&a_tile_inner};
+    auto a_tile = GMutableMatrixDetails<Identity>{a_tile_inner};
     auto b_tile_inner = MutableMatrixDetails{.data = shared + T * T, .rows = T, .columns = T};
-    auto b_tile = GMutableMatrixDetails<Identity>{&b_tile_inner};
+    auto b_tile = GMutableMatrixDetails<Identity>{b_tile_inner};
     // Remember that cuda indexes grid/block rows with y and columns with x, like the x and y axes
     // of a graph, not the rows and columns of a matrix.
     float final_data[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     auto final_inner = MutableMatrixDetails{.data = &final_data[0], .rows = 2u, .columns = 2u};
-    auto final = GMutableMatrixDetails<Identity>{&final_inner};
+    auto final = GMutableMatrixDetails<Identity>{final_inner};
     for (auto row = 0u; row < params.A.rows(); row += gridDim.y * blockDim.y) {
         for (auto column = 0u; column < params.B.columns();
                 column += target_elements_per_thread * gridDim.x * blockDim.x) {
@@ -199,7 +206,7 @@ __global__ void tiled_multiply(GGemmParams<op_A, op_B> params) {
                 wide_load(params.A, a_tile_corner + tile_load_index, a_tile, tile_load_index);
                 wide_load(params.B, b_tile_corner + tile_load_index, b_tile, tile_load_index);
                 __syncthreads();
-                register_multiply(a_tile, b_tile, final);
+                register_multiply(a_tile.to_const(), b_tile.to_const(), final);
             }
         }
     }
@@ -219,15 +226,15 @@ void run_tiled_multiply(GemmParams params,
     const auto cuda_grid = dim3pod_to_cuda_dim3(grid);
     const auto cuda_block = dim3pod_to_cuda_dim3(block);
     if (params.op_A == Identity && params.op_B == Identity) {
-        const auto A = GConstMatrixDetails<Identity>{&params.A};
-        const auto B = GConstMatrixDetails<Identity>{&params.B};
+        const auto A = GConstMatrixDetails<Identity>{params.A};
+        const auto B = GConstMatrixDetails<Identity>{params.B};
         auto C_inner =
                 MutableMatrixDetails{.data = params.C, .rows = A.rows(), .columns = B.columns()};
         auto g_params = GGemmParams<Identity, Identity>{.A = A,
                 .alpha = params.alpha,
                 .B = B,
                 .beta = params.beta,
-                .C = GMutableMatrixDetails<Identity>{&C_inner}};
+                .C = GMutableMatrixDetails<Identity>{C_inner}};
         tiled_multiply<<<cuda_grid, cuda_block, shared_mem_size>>>(g_params);
     }
     cudaDeviceSynchronize();
